@@ -109,7 +109,10 @@ export default function TransactionForm({ initial, initialType, onSubmit, onClos
       await onSubmit({ ...form, type });
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : t("transactions.form_error"));
+      const msg = err instanceof Error ? err.message : "";
+      // translate i18n error keys returned from the API
+      const display = msg.includes(".") && !msg.includes(" ") ? (t(msg) !== msg ? t(msg) : t("transactions.form_error")) : (msg || t("transactions.form_error"));
+      setError(display);
       setLoading(false);
     }
   }
