@@ -1,0 +1,120 @@
+{
+  "nav": {
+    "dashboard": "Dashboard", "transactions": "Transaktionen", "analytics": "Analytik",
+    "ledger": "Hauptbuch",
+    "budgets": "Budgets", "investments": "Investitionen", "debts": "Schulden",
+    "ai_insights": "KI-Einblicke", "settings": "Einstellungen",
+    "ai_assistant": "KI-Assistent",
+    "sign_in": "Anmelden", "sign_out": "Abmelden", "collapse": "Einklappen"
+  },
+  "common": {
+    "save": "Änderungen speichern", "saved": "Gespeichert", "cancel": "Abbrechen", "add": "Hinzufügen",
+    "delete": "Löschen", "loading": "Laden...", "no_data": "Noch keine Daten.",
+    "view_all": "Alle anzeigen →", "confirm_delete": "Diesen Eintrag löschen?"
+  },
+  "dashboard": {
+    "title": "Übersicht", "subtitle": "Ihre Finanzübersicht",
+    "total_balance": "Gesamtguthaben", "monthly_income": "Monatliches Einkommen",
+    "monthly_expenses": "Monatliche Ausgaben", "savings_rate": "Sparquote",
+    "recent_transactions": "Letzte Transaktionen", "daily_spending": "Tägliche Ausgaben",
+    "last_30_days": "Letzte 30 Tage", "by_category": "Nach Kategorie",
+    "this_month": "Diesen Monat", "income_vs_expenses": "Einnahmen vs. Ausgaben",
+    "last_6_months": "Letzte 6 Monate", "ai_insights": "KI-Einblicke",
+    "vs_last_month": "vs. letzten Monat"
+  },
+  "transactions": {
+    "title": "Transaktionen", "add": "Transaktion hinzufügen", "search": "Transaktionen suchen...",
+    "total_income": "Gesamteinnahmen", "total_expenses": "Gesamtausgaben", "net": "Netto",
+    "category": "Kategorie", "date": "Datum", "amount": "Betrag",
+    "title_field": "Titel", "notes": "Notizen", "notes_optional": "optional",
+    "income": "Einnahmen", "expense": "Ausgaben", "type": "Typ"
+  },
+  "investments": {
+    "title": "Investitionen", "subtitle": "Portfolio-Performance verfolgen",
+    "total_invested": "Gesamt investiert", "current_value": "Aktueller Wert",
+    "total_profit": "Gesamtgewinn", "return": "Rendite", "add": "Investition hinzufügen",
+    "portfolio_value": "Portfoliowert", "over_time": "Portfoliowert im Zeitverlauf",
+    "asset_name": "Anlage", "type": "Anlagetyp", "quantity": "Menge",
+    "buy_price": "Kaufpreis", "current_price": "Aktueller Preis", "profit_loss": "G&V",
+    "risk": "Risiko", "risk_low": "Niedrig", "risk_medium": "Mittel", "risk_high": "Hoch",
+    "date": "Kaufdatum", "amount_invested": "Investierter Betrag",
+    "types": { "stock": "Aktie", "crypto": "Krypto", "etf": "ETF", "real_estate": "Immobilien" }
+  },
+  "debts": {
+    "title": "Schulden", "subtitle": "Verbindlichkeiten verwalten",
+    "total_debt": "Gesamtschulden", "total_paid": "Gesamt bezahlt", "remaining": "Verbleibend",
+    "monthly_repayment": "Monatliche Rückzahlung", "add": "Schuld hinzufügen",
+    "creditor": "Gläubiger", "amount": "Ursprungsbetrag", "paid": "Bezahlter Betrag",
+    "interest_rate": "Zinssatz (%)", "due_date": "Fälligkeitsdatum",
+    "notes": "Notizen", "notes_optional": "optional", "payoff_progress": "Rückzahlungsfortschritt",
+    "status": { "paid": "Bezahlt", "pending": "Ausstehend", "overdue": "Überfällig" }
+  },
+  "analytics": {
+    "title": "Analytik", "subtitle": "Tiefgehende Finanzanalyse",
+    "spending_trends": "Monatliche Ausgabentrends", "heatmap": "Ausgaben-Heatmap nach Kategorie",
+    "budget_vs_actual": "Budget vs. Tatsächlich"
+  },
+  "budgets": {
+    "title": "Budgets", "subtitle": "Ausgaben im Vergleich zum Monatslimit",
+    "total_budget": "Gesamtbudget", "total_spent": "Gesamt ausgegeben",
+    "over_budget": "Über Budget", "new_budget": "Neues Budget", "by_category": "Nach Kategorie"
+  },
+  "ai_insights": {
+    "title": "KI-Einblicke", "subtitle": "Powered by Claude",
+    "warnings": "Warnungen", "positive_finds": "Positive Befunde", "tips": "Tipps",
+    "refresh": "Aktualisieren", "analyzing": "Analysiere...", "generate": "Einblicke generieren",
+    "confidence": "Konfidenz", "last_updated": "Zuletzt aktualisiert",
+    "no_data_title": "Noch keine Einblicke", "no_data_body": "Generieren Sie KI-Einblicke zur Finanzanalyse",
+    "empty_cta": "Klicken Sie Generieren für KI-gestützte Finanzeinblicke",
+    "dismiss": "Ablehnen", "mark_read": "Als gelesen markieren",
+    "severity": { "critical": "Kritisch", "warning": "Warnung", "positive": "Positiv", "info": "Info" },
+    "category": { "savings": "Sparen", "spending": "Ausgaben", "debt": "Schulden", "investment": "Investition", "income": "Einkommen", "cashflow": "Cashflow", "risk": "Risiko", "goal": "Ziel" },
+    "cached": "Zwischengespeichert", "generated_now": "Gerade generiert", "from_db": "Aus Datenbank"
+  },
+  "settings": {
+    "title": "Einstellungen", "subtitle": "Konto und Präferenzen verwalten",
+    "profile": "Profil", "currency": "Währung", "appearance": "Erscheinungsbild",
+    "notifications": "Benachrichtigungen", "ai": "KI-Einstellungen", "language": "Sprache",
+    "save": "Änderungen speichern", "saved": "Gespeichert",
+    "dark_mode": "Dunkelmodus", "light_mode": "Hellmodus",
+    "full_name": "Vollständiger Name", "email": "E-Mail", "change_avatar": "Avatar ändern",
+    "budget_alerts": "Budget-Benachrichtigungen", "budget_alerts_hint": "Bei Annäherung an Budgetgrenzen",
+    "weekly_summary": "Wöchentliche Zusammenfassung", "weekly_summary_hint": "Wöchentlichen Überblick erhalten",
+    "ai_alerts": "KI-Benachrichtigungen", "ai_alerts_hint": "Bei neuen Einblicken benachrichtigen",
+    "email_notifications": "E-Mail-Benachrichtigungen", "email_notifications_hint": "Benachrichtigungen per E-Mail",
+    "enable_ai": "KI-Einblicke aktivieren", "enable_ai_hint": "Claude zur Transaktionsanalyse verwenden",
+    "auto_refresh": "Auto-Aktualisierung", "auto_refresh_hint": "Nach jeder Transaktion aktualisieren",
+    "ai_model": "KI-Modell"
+  },
+  "topbar": {
+    "search": "Transaktionen suchen...", "notifications": "Benachrichtigungen",
+    "last_7_days": "Letzte 7 Tage", "last_30_days": "Letzte 30 Tage",
+    "last_3_months": "Letzte 3 Monate", "this_year": "Dieses Jahr"
+  },
+  "actions": {
+    "open": "Schnell hinzufügen", "close": "Schließen",
+    "group_cash": "Geldfluss", "group_entity": "Aufzeichnungen",
+    "income":       "Einnahme",
+    "expense":      "Ausgabe",
+    "investment":   "Investition",
+    "debt":         "Schuld",
+    "debt_payment": "Schuldenzahlung",
+    "work_payment": "Arbeitszahlung",
+    "work_session": "Arbeitssitzung",
+    "add_item": "{item} hinzufügen"
+  },
+  "ai_assistant": {
+    "title": "KI-Assistent", "subtitle": "Ihr persönlicher Finanzberater",
+    "placeholder": "Fragen Sie mich alles über Ihre Finanzen...",
+    "send": "Senden", "thinking": "Denke nach...", "clear": "Chat löschen",
+    "powered_by": "Powered by Claude",
+    "welcome_title": "Wie kann ich helfen?",
+    "welcome_subtitle": "Fragen Sie zu Ausgaben, Investitionen oder Budgets.",
+    "language_notice": "Antwortet auf",
+    "example_1": "Was sind meine größten Ausgabenkategorien?",
+    "example_2": "Wie kann ich meine Sparquote verbessern?",
+    "example_3": "Analysiere mein Anlageportfolio",
+    "empty_reply": "Keine Antwort erhalten. Bitte versuchen Sie es erneut.",
+    "connection_error": "Verbindungsfehler. Bitte prüfen Sie Ihr Netzwerk und versuchen Sie es erneut."
+  }
+}

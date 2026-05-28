@@ -1,0 +1,24 @@
+# Next.js
+.next/
+out/
+node_modules/
+.env.local
+.env*.local
+
+# Android
+android/.gradle/
+android/app/build/
+android/build/
+android/local.properties
+android/.idea/
+android/captures/
+android/*.iml
+*.keystore
+!debug.keystore
+
+# Misc
+.DS_Store
+*.log
+.vercel
+
+.vercel

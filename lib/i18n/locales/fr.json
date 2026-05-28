@@ -1,0 +1,100 @@
+{
+  "nav": {
+    "dashboard": "Tableau de bord", "transactions": "Transactions", "analytics": "Analyses",
+    "ledger": "Grand livre",
+    "budgets": "Budgets", "investments": "Investissements", "debts": "Dettes",
+    "ai_insights": "IA Insights", "settings": "Paramètres",
+    "ai_assistant": "Assistant IA",
+    "sign_in": "Se connecter", "sign_out": "Se déconnecter", "collapse": "Réduire"
+  },
+  "common": {
+    "save": "Enregistrer", "saved": "Enregistré", "cancel": "Annuler", "add": "Ajouter",
+    "delete": "Supprimer", "loading": "Chargement...", "no_data": "Aucune donnée.",
+    "view_all": "Tout voir →", "confirm_delete": "Supprimer cet élément ?"
+  },
+  "dashboard": {
+    "title": "Vue d'ensemble", "subtitle": "Votre aperçu financier",
+    "total_balance": "Solde total", "monthly_income": "Revenus mensuels",
+    "monthly_expenses": "Dépenses mensuelles", "savings_rate": "Taux d'épargne",
+    "recent_transactions": "Transactions récentes", "daily_spending": "Dépenses quotidiennes",
+    "last_30_days": "30 derniers jours", "by_category": "Par catégorie",
+    "this_month": "Ce mois-ci", "income_vs_expenses": "Revenus vs Dépenses",
+    "last_6_months": "6 derniers mois", "ai_insights": "IA Insights",
+    "vs_last_month": "vs mois dernier"
+  },
+  "transactions": {
+    "title": "Transactions", "add": "Ajouter une transaction", "search": "Rechercher...",
+    "total_income": "Total revenus", "total_expenses": "Total dépenses", "net": "Net",
+    "category": "Catégorie", "date": "Date", "amount": "Montant",
+    "title_field": "Titre", "notes": "Notes", "notes_optional": "optionnel",
+    "income": "Revenu", "expense": "Dépense", "type": "Type"
+  },
+  "investments": {
+    "title": "Investissements", "subtitle": "Suivez la performance de votre portefeuille",
+    "total_invested": "Total investi", "current_value": "Valeur actuelle",
+    "total_profit": "Profit total", "return": "Rendement", "add": "Ajouter un investissement",
+    "portfolio_value": "Valeur du portefeuille", "over_time": "Valeur du portefeuille dans le temps",
+    "asset_name": "Nom de l'actif", "type": "Type d'actif", "quantity": "Quantité",
+    "buy_price": "Prix d'achat", "current_price": "Prix actuel", "profit_loss": "P&P",
+    "risk": "Risque", "risk_low": "Faible", "risk_medium": "Moyen", "risk_high": "Élevé",
+    "date": "Date d'achat", "amount_invested": "Montant investi",
+    "types": { "stock": "Action", "crypto": "Crypto", "etf": "ETF", "real_estate": "Immobilier" }
+  },
+  "debts": {
+    "title": "Dettes", "subtitle": "Gérez vos passifs",
+    "total_debt": "Dette totale", "total_paid": "Total payé", "remaining": "Restant",
+    "monthly_repayment": "Remboursement mensuel", "add": "Ajouter une dette",
+    "creditor": "Créancier", "amount": "Montant initial", "paid": "Montant payé",
+    "interest_rate": "Taux d'intérêt (%)", "due_date": "Date d'échéance",
+    "notes": "Notes", "notes_optional": "optionnel", "payoff_progress": "Progression du remboursement",
+    "status": { "paid": "Payé", "pending": "En attente", "overdue": "En retard" }
+  },
+  "analytics": {
+    "title": "Analyses", "subtitle": "Analyse approfondie de vos finances",
+    "spending_trends": "Tendances mensuelles", "heatmap": "Carte thermique des dépenses",
+    "budget_vs_actual": "Budget vs Réel"
+  },
+  "budgets": {
+    "title": "Budgets", "subtitle": "Suivez les dépenses par rapport aux limites",
+    "total_budget": "Budget total", "total_spent": "Total dépensé",
+    "over_budget": "Hors budget", "new_budget": "Nouveau budget", "by_category": "Par catégorie"
+  },
+  "ai_insights": {
+    "title": "IA Insights", "subtitle": "Propulsé par Claude",
+    "warnings": "Avertissements", "positive_finds": "Points positifs", "tips": "Conseils",
+    "refresh": "Actualiser", "analyzing": "Analyse en cours...",
+    "confidence": "Confiance", "last_updated": "Dernière mise à jour"
+  },
+  "settings": {
+    "title": "Paramètres", "subtitle": "Gérez votre compte et vos préférences",
+    "profile": "Profil", "currency": "Devise", "appearance": "Apparence",
+    "notifications": "Notifications", "ai": "Paramètres IA", "language": "Langue",
+    "save": "Enregistrer", "saved": "Enregistré",
+    "dark_mode": "Mode sombre", "light_mode": "Mode clair",
+    "full_name": "Nom complet", "email": "E-mail", "change_avatar": "Changer l'avatar",
+    "budget_alerts": "Alertes budget", "budget_alerts_hint": "Notifier à l'approche des limites",
+    "weekly_summary": "Résumé hebdomadaire", "weekly_summary_hint": "Recevoir un récapitulatif",
+    "ai_alerts": "Alertes IA", "ai_alerts_hint": "Notifier des nouveaux insights",
+    "email_notifications": "Notifications email", "email_notifications_hint": "Recevoir par email",
+    "enable_ai": "Activer les insights IA", "enable_ai_hint": "Utiliser Claude pour analyser",
+    "auto_refresh": "Actualisation auto", "auto_refresh_hint": "Actualiser après chaque transaction",
+    "ai_model": "Modèle IA"
+  },
+  "topbar": {
+    "search": "Rechercher...", "notifications": "Notifications",
+    "last_7_days": "7 derniers jours", "last_30_days": "30 derniers jours",
+    "last_3_months": "3 derniers mois", "this_year": "Cette année"
+  },
+  "ai_assistant": {
+    "title": "Assistant IA", "subtitle": "Votre conseiller financier personnel",
+    "placeholder": "Posez-moi des questions sur vos finances...",
+    "send": "Envoyer", "thinking": "Réflexion...", "clear": "Effacer",
+    "powered_by": "Propulsé par Claude",
+    "welcome_title": "Comment puis-je vous aider ?",
+    "welcome_subtitle": "Posez des questions sur vos dépenses, investissements ou budgets.",
+    "language_notice": "Répond en",
+    "example_1": "Quelles sont mes principales dépenses ?",
+    "example_2": "Comment améliorer mon taux d'épargne ?",
+    "example_3": "Analyser mon portefeuille d'investissement"
+  }
+}

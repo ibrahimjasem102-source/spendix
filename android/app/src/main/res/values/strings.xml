@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Spendix</string>
+    <string name="title_activity_main">Spendix</string>
+    <string name="package_name">com.spendix.app</string>
+    <string name="custom_url_scheme">com.spendix.app</string>
+</resources>
