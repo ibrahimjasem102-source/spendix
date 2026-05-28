@@ -376,7 +376,7 @@ export default function SettingsPage() {
               <SettingRow label={t("settings.budget_alerts")} hint={t("settings.budget_alerts_hint")}>
                 <Toggle checked={notifs.budget} onChange={(v) => setNotifs(p => ({ ...p, budget: v }))} />
               </SettingRow>
-              <SettingRow label="تنبيهات الديون المتأخرة" hint="تنبّهني عند اقتراب موعد السداد أو تجاوزه">
+              <SettingRow label={t("settings.debt_reminders")} hint={t("settings.debt_reminders_hint")}>
                 <Toggle checked={notifs.debt_reminders} onChange={(v) => setNotifs(p => ({ ...p, debt_reminders: v }))} />
               </SettingRow>
               <SettingRow label={t("settings.weekly_summary")} hint={t("settings.weekly_summary_hint")}>

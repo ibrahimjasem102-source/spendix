@@ -109,7 +109,8 @@
     "no_results": "Keine passenden Transaktionen.",
     "filter_monthly_income": "Einnahmen diesen Monat",
     "filter_monthly_expenses": "Ausgaben diesen Monat",
-    "datetime_label": "Datum und Uhrzeit"
+    "datetime_label": "Datum und Uhrzeit",
+    "title_required": "Titel ist erforderlich"
   },
   "investments": {
     "title": "Investitionen",
@@ -210,7 +211,13 @@
     "delete_failed": "Löschen fehlgeschlagen — Schuld wiederhergestellt.",
     "payment_added": "Zahlung erfasst",
     "save_edit": "Änderungen speichern",
-    "no_data": "Noch keine Schulden. Erste hinzufügen."
+    "no_data": "Noch keine Schulden. Erste hinzufügen.",
+    "save_failed": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
+    "payment_failed": "Zahlung konnte nicht erfasst werden. Bitte erneut versuchen.",
+    "cleanup_success": "Saldo korrigiert — {{count}} doppelte Transaktionen entfernt",
+    "cleanup_failed": "Saldo konnte nicht korrigiert werden",
+    "guest_auth": "Anmelden um Daten zu speichern",
+    "guest_payment": "Anmelden um eine Zahlung zu erfassen"
   },
   "analytics": {
     "title": "Analytik",
@@ -349,7 +356,9 @@
     "notifications_hint": "Lege fest, welche Benachrichtigungen du erhaeltst",
     "ai_hint": "Konfiguriere deine KI-gestuetzten Einblicke",
     "model_fast": "Schnell und kosteneffizient",
-    "model_balanced": "Ausgewogene Leistung und Geschwindigkeit"
+    "model_balanced": "Ausgewogene Leistung und Geschwindigkeit",
+    "debt_reminders": "Erinnerungen für überfällige Schulden",
+    "debt_reminders_hint": "Benachrichtige mich, wenn ein Fälligkeitsdatum näher rückt oder überschritten wird"
   },
   "rooms": {
     "primary": "Hauptraum",
@@ -643,7 +652,13 @@
     "payment_deleted": "Zahlung geloescht",
     "fetch_error": "Arbeitsdaten konnten nicht geladen werden",
     "confirm_delete_session": "Sitzung loeschen? Verknuepfte Zahlungen werden nicht geloescht.",
-    "confirm_delete_payment": "Zahlung loeschen? Die verknuepfte Transaktion wird ebenfalls geloescht."
+    "confirm_delete_payment": "Zahlung loeschen? Die verknuepfte Transaktion wird ebenfalls geloescht.",
+    "total_hours": "Gesamte Arbeitsstunden",
+    "hours_unit": "Std",
+    "this_month": "diesen Monat",
+    "collection_rate": "Inkassorate",
+    "guest_session": "Anmelden um Arbeitssitzungen zu speichern",
+    "guest_payment_work": "Anmelden um eine Arbeitszahlung zu erfassen"
   },
   "notifications": {
     "title": "Benachrichtigungen",

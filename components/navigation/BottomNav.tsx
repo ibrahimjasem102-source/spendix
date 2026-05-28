@@ -123,8 +123,8 @@ function NavItem({
       onPointerLeave={cancelPress}
       onPointerCancel={cancelPress}
       className={cn(
-        "flex flex-col items-center justify-center gap-1 py-1 px-2 rounded-xl transition-all flex-1 min-w-0 min-h-[50px] select-none",
-        active   ? "text-cyan-400" : "text-gray-500 hover:text-gray-300",
+        "flex flex-col items-center justify-center gap-0.5 py-1 px-2 rounded-xl transition-all flex-1 min-w-0 min-h-[50px] select-none",
+        active ? "text-cyan-400" : "text-gray-500 hover:text-gray-300",
       )}
       style={{
         transition: "transform 0.1s ease-out",
@@ -133,27 +133,30 @@ function NavItem({
         backfaceVisibility: "hidden",
       }}
     >
-      <div className="relative">
-        <span className="w-[22px] h-[22px] flex items-center justify-center [&>svg]:h-full [&>svg]:w-full">
+      <div className={cn(
+        "relative px-1.5 py-1 rounded-[10px] transition-all duration-200",
+        active && "bg-cyan-400/[0.12]"
+      )}>
+        <span className="w-5 h-5 flex items-center justify-center [&>svg]:h-full [&>svg]:w-full">
           {item.icon}
         </span>
         {roomLocked && (
-          <span className="absolute -end-2 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-amber-400 text-[#071018]">
+          <span className="absolute -end-1.5 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-amber-400 text-[#071018]">
             <LockKeyhole className="h-2.5 w-2.5" strokeWidth={3} />
           </span>
         )}
         {!roomLocked && badge != null && badge > 0 && (
-          <span className="absolute -end-2 -top-1 flex h-[14px] min-w-[14px] items-center justify-center rounded-full bg-amber-400 px-0.5 text-[8px] font-black text-[#0B0F14]">
+          <span className="absolute -end-1.5 -top-1 flex h-[14px] min-w-[14px] items-center justify-center rounded-full bg-amber-400 px-0.5 text-[8px] font-black text-[#0B0F14]">
             {badge > 99 ? "99+" : badge}
           </span>
-        )}
-        {active && (
-          <span className="absolute -inset-1 rounded-xl bg-cyan-400/10 -z-10" />
         )}
       </div>
       <span className="text-[10px] font-semibold leading-none truncate w-full text-center max-w-[62px]">
         {label}
       </span>
+      {active && (
+        <span className="mt-0.5 w-3.5 h-[2px] rounded-full bg-cyan-400" />
+      )}
     </Link>
   );
 }

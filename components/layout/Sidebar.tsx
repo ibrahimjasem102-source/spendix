@@ -109,7 +109,7 @@ export default function Sidebar() {
                           className={cn(
                             "group relative flex min-h-[44px] items-center gap-3 rounded-2xl px-3 text-sm font-semibold transition-all",
                             active
-                              ? "bg-cyan-400/10 text-cyan-300 shadow-[0_0_0_1px_rgba(34,211,238,0.18)_inset]"
+                              ? "bg-gradient-to-r from-cyan-400/12 to-purple-400/6 text-cyan-300 shadow-[0_0_0_1px_rgba(34,211,238,0.20)_inset]"
                               : "text-[hsl(var(--text-3))] hover:bg-[hsl(var(--bg-input))] hover:text-[hsl(var(--text-1))]",
                             collapsed && "justify-center px-0"
                           )}

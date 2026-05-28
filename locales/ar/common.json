@@ -122,7 +122,8 @@
     "no_results": "لا توجد معاملات تطابق بحثك.",
     "filter_monthly_income": "دخل هذا الشهر",
     "filter_monthly_expenses": "مصروفات هذا الشهر",
-    "datetime_label": "التاريخ والوقت"
+    "datetime_label": "التاريخ والوقت",
+    "title_required": "العنوان مطلوب"
   },
   "investments": {
     "title": "الاستثمارات",
@@ -223,7 +224,13 @@
     "delete_failed": "فشل الحذف — تمت استعادة الدين.",
     "payment_added": "تم تسجيل الدفعة",
     "save_edit": "حفظ التعديلات",
-    "no_data": "لا توجد ديون بعد. أضف أولها."
+    "no_data": "لا توجد ديون بعد. أضف أولها.",
+    "save_failed": "فشل الحفظ. حاول مجددًا.",
+    "payment_failed": "فشل تسجيل الدفعة. حاول مجددًا.",
+    "cleanup_success": "تم إصلاح الرصيد — حُذفت {{count}} معاملة مكررة",
+    "cleanup_failed": "فشل إصلاح الرصيد",
+    "guest_auth": "سجّل دخولك لحفظ البيانات",
+    "guest_payment": "سجّل دخولك لتسجيل الدفعة"
   },
   "analytics": {
     "title": "التحليلات",
@@ -362,7 +369,9 @@
     "notifications_hint": "تحكم في التنبيهات التي تصلك",
     "ai_hint": "اضبط رؤى الذكاء الاصطناعي",
     "model_fast": "سريع وموفر للتكلفة",
-    "model_balanced": "توازن بين القوة والسرعة"
+    "model_balanced": "توازن بين القوة والسرعة",
+    "debt_reminders": "تنبيهات الديون المتأخرة",
+    "debt_reminders_hint": "تنبّهني عند اقتراب موعد السداد أو تجاوزه"
   },
   "rooms": {
     "primary": "الغرفة الرئيسية",
@@ -687,7 +696,13 @@
     "payment_deleted": "تم حذف الدفعة",
     "fetch_error": "تعذّر تحميل بيانات العمل",
     "confirm_delete_session": "حذف هذه الجلسة؟ لن يتم حذف الدفعات المرتبطة.",
-    "confirm_delete_payment": "حذف هذه الدفعة؟ ستُحذف المعاملة المرتبطة أيضاً."
+    "confirm_delete_payment": "حذف هذه الدفعة؟ ستُحذف المعاملة المرتبطة أيضاً.",
+    "total_hours": "إجمالي ساعات العمل",
+    "hours_unit": "ساعة",
+    "this_month": "هذا الشهر",
+    "collection_rate": "نسبة التحصيل",
+    "guest_session": "سجّل دخولك لحفظ جلسة العمل",
+    "guest_payment_work": "سجّل دخولك لتسجيل دفعة العمل"
   },
   "notifications": {
     "title": "الإشعارات",

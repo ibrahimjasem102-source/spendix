@@ -34,8 +34,8 @@ export default function CollapsibleSection({
 
   return (
     <div>
-      {/* Header */}
-      <button
+      {/* Header — hidden when title is empty */}
+      {title && <button
         onClick={toggle}
         className="flex items-center gap-2 w-full mb-3 group"
       >
@@ -54,7 +54,7 @@ export default function CollapsibleSection({
             <ChevronDown className="w-4 h-4 t3 group-hover:t2 transition-colors" />
           </motion.div>
         </div>
-      </button>
+      </button>}
 
       {/* Content */}
       <AnimatePresence initial={false}>

@@ -192,17 +192,17 @@ export default function WorkPage() {
           {/* Total hours */}
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-white/40 mb-2">
-              {t("work.total_hours") || "إجمالي ساعات العمل"}
+              {t("work.total_hours")}
             </p>
             <div className="flex items-end gap-3">
               <p className="text-4xl font-black text-white number-display">{totalHoursAll.toFixed(1)}</p>
-              <span className="mb-1 text-base font-bold text-cyan-400">{t("work.hours_unit") || "ساعة"}</span>
+              <span className="mb-1 text-base font-bold text-cyan-400">{t("work.hours_unit")}</span>
             </div>
             <div className="mt-3 flex items-center gap-2">
               <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-cyan-400/10 border border-cyan-400/20">
                 <Clock className="w-3 h-3 text-cyan-400" />
                 <span className="text-[11px] font-semibold text-cyan-400">
-                  {totalHoursMonth.toFixed(1)}h {t("work.this_month") || "هذا الشهر"}
+                  {totalHoursMonth.toFixed(1)}h {t("work.this_month")}
                 </span>
               </div>
             </div>
@@ -211,7 +211,7 @@ export default function WorkPage() {
           {/* Collection rate */}
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-white/40 mb-2">
-              {t("work.collection_rate") || "نسبة التحصيل"}
+              {t("work.collection_rate")}
             </p>
             <div className="flex items-end gap-2">
               <p className="text-4xl font-black text-white number-display">{collectionRate}</p>
@@ -229,7 +229,7 @@ export default function WorkPage() {
           {/* Avg rate */}
           <div className="sm:col-span-2 lg:col-span-1">
             <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-white/40 mb-2">
-              {t("work.avg_hourly") || "متوسط الأجر"}
+              {t("work.avg_hourly")}
             </p>
             <div className="flex items-end gap-2">
               <p className="text-4xl font-black text-white number-display">{avgHourlyRate.toFixed(0)}</p>
@@ -239,7 +239,7 @@ export default function WorkPage() {
               <div className="mt-3 flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-rose-400/10 border border-rose-400/20 w-fit">
                 <AlertCircle className="w-3 h-3 text-rose-400" />
                 <span className="text-[11px] font-semibold text-rose-400">
-                  {format(unpaidBalance)} {t("work.unpaid_balance") || "غير محصّل"}
+                  {format(unpaidBalance)} {t("work.unpaid_balance")}
                 </span>
               </div>
             )}
@@ -251,10 +251,10 @@ export default function WorkPage() {
       {/* ── KPIs ───────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {[
-          { label: t("work.hours_this_month"), value: `${totalHoursMonth.toFixed(1)}h`, sub: `${t("work.total_hours") || "إجمالي"} ${totalHoursAll.toFixed(1)}h`, color: "text-cyan-400",    bg: "bg-cyan-400/10",    icon: Timer      },
+          { label: t("work.hours_this_month"), value: `${totalHoursMonth.toFixed(1)}h`, sub: `${t("work.total_hours")} ${totalHoursAll.toFixed(1)}h`, color: "text-cyan-400",    bg: "bg-cyan-400/10",    icon: Timer      },
           { label: t("work.income_expected"),  value: format(totalExpected),            sub: `${sessions.length} ${t("work.sessions")}`,                          color: "text-amber-400",   bg: "bg-amber-400/10",   icon: TrendingUp },
           { label: t("work.income_received"),  value: format(totalReceived),            sub: `${payments.length} ${t("work.payments")}`,                          color: "text-emerald-400", bg: "bg-emerald-400/10", icon: DollarSign },
-          { label: t("work.unpaid_balance"),   value: format(unpaidBalance),            sub: `${collectionRate}% ${t("work.collection_rate") || "محصّل"}`,         color: "text-rose-400",    bg: "bg-rose-400/10",    icon: Briefcase  },
+          { label: t("work.unpaid_balance"),   value: format(unpaidBalance),            sub: `${collectionRate}% ${t("work.collection_rate")}`,         color: "text-rose-400",    bg: "bg-rose-400/10",    icon: Briefcase  },
         ].map((k) => (
           <div key={k.label} className="card p-4">
             <div className="flex items-center justify-between mb-3">

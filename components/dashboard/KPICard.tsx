@@ -27,34 +27,31 @@ export default function KPICard({
 
   const inner = (
     <>
-      <div className="flex items-start justify-between mb-4">
-        <div>
-          <p className="text-xs font-medium t2 uppercase tracking-wide">{title}</p>
-          <p className="text-2xl font-bold t1 mt-1.5 tracking-tight">{value}</p>
-        </div>
-        <div className={`p-2.5 rounded-xl ${iconBg}`}>
+      <div className="flex items-start justify-between mb-3">
+        <div className={`p-2 rounded-xl ${iconBg}`}>
           <Icon className={`w-4 h-4 ${iconColor}`} />
         </div>
-      </div>
-
-      <div className="flex items-end justify-between gap-4">
-        <div className="flex items-center gap-1.5">
-          {isUp
-            ? <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
-            : <TrendingDown className="w-3.5 h-3.5 text-rose-400" />
-          }
-          <span className={`text-xs font-medium ${isUp ? "text-emerald-400" : "text-rose-400"}`}>
-            {change > 0 ? "+" : ""}{change}%
-          </span>
-          <span className="text-xs t3">{changeLabel}</span>
-        </div>
-        <div className="w-24 h-10">
+        <div className="w-20 h-8">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData}>
-              <Line type="monotone" dataKey="v" stroke={sparkColor} strokeWidth={1.5} dot={false} activeDot={false} strokeOpacity={0.8} />
+              <Line type="monotone" dataKey="v" stroke={sparkColor} strokeWidth={1.5} dot={false} activeDot={false} strokeOpacity={0.75} />
             </LineChart>
           </ResponsiveContainer>
         </div>
+      </div>
+
+      <p className="text-[10px] font-semibold t3 uppercase tracking-wide mb-1">{title}</p>
+      <p className="text-xl sm:text-2xl font-bold t1 tracking-tight number-display mb-2">{value}</p>
+
+      <div className="flex items-center gap-1.5">
+        {isUp
+          ? <TrendingUp className="w-3 h-3 text-emerald-400" />
+          : <TrendingDown className="w-3 h-3 text-rose-400" />
+        }
+        <span className={`text-[11px] font-semibold ${isUp ? "text-emerald-400" : "text-rose-400"}`}>
+          {change > 0 ? "+" : ""}{change}%
+        </span>
+        <span className="text-[11px] t3">{changeLabel}</span>
       </div>
     </>
   );
@@ -62,14 +59,15 @@ export default function KPICard({
   if (href) {
     return (
       <a href={href}
-        className="card p-5 hover:shadow-lg hover:border-cyan-400/20 transition-all duration-200 group block">
+        className="modern-card p-4 sm:p-5 hover:border-cyan-400/20 transition-all duration-200 group block"
+        style={{ borderRadius: 20 }}>
         {inner}
       </a>
     );
   }
 
   return (
-    <div className="card p-5 hover:shadow-lg transition-all duration-200 group">
+    <div className="modern-card p-4 sm:p-5 transition-all duration-200 group" style={{ borderRadius: 20 }}>
       {inner}
     </div>
   );

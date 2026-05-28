@@ -65,10 +65,10 @@ export default function DebtsPage() {
     try {
       const res = await safeFetch("/api/debts/cleanup", { method: "POST" });
       const data = await res.json() as { cleaned?: number };
-      addToast(`تم إصلاح الرصيد — حُذفت ${data.cleaned ?? 0} معاملة مكررة`, "success");
+      addToast(t("debts.cleanup_success", { count: data.cleaned ?? 0 }), "success");
       invalidateDebtQueries(queryClient);
     } catch {
-      addToast("فشل إصلاح الرصيد", "error");
+      addToast(t("debts.cleanup_failed"), "error");
     } finally {
       setCleaning(false);
     }
@@ -106,7 +106,7 @@ export default function DebtsPage() {
 
   // ── Handlers ──────────────────────────────────────────────────
   async function handleSubmit(data: DebtFormData) {
-    if (isGuest) { addToast("سجّل دخولك لحفظ البيانات", "info"); setShowForm(false); return; }
+    if (isGuest) { addToast(t("debts.guest_auth"), "info"); setShowForm(false); return; }
     try {
       if (editing) {
         await updateMut.mutateAsync({ id: editing.id, data });
@@ -124,7 +124,7 @@ export default function DebtsPage() {
   }
 
   async function handlePayment(debt: Debt, data: DebtPaymentFormData) {
-    if (isGuest) { addToast("سجّل دخولك لتسجيل الدفعة", "info"); setShowPayment(null); return; }
+    if (isGuest) { addToast(t("debts.guest_payment"), "info"); setShowPayment(null); return; }
     try {
       await paymentMut.mutateAsync({ debtId: debt.id, data });
       addToast(t("debts.payment_added"), "success");

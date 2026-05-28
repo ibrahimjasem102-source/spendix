@@ -123,7 +123,8 @@
     "no_results": "No transactions match your search.",
     "filter_monthly_income": "Income this month",
     "filter_monthly_expenses": "Expenses this month",
-    "datetime_label": "Date & Time"
+    "datetime_label": "Date & Time",
+    "title_required": "Title is required"
   },
   "investments": {
     "title": "Investments",
@@ -224,7 +225,13 @@
     "delete_failed": "Delete failed — debt restored.",
     "payment_added": "Payment recorded",
     "save_edit": "Save changes",
-    "no_data": "No debts yet. Add your first one."
+    "no_data": "No debts yet. Add your first one.",
+    "save_failed": "Failed to save. Please try again.",
+    "payment_failed": "Failed to record payment. Please try again.",
+    "cleanup_success": "Balance fixed — {{count}} duplicate transactions removed",
+    "cleanup_failed": "Failed to fix balance",
+    "guest_auth": "Sign in to save data",
+    "guest_payment": "Sign in to record a payment"
   },
   "analytics": {
     "title": "Analytics",
@@ -363,7 +370,9 @@
     "notifications_hint": "Control what alerts you receive",
     "ai_hint": "Configure your AI-powered insights",
     "model_fast": "Fast and cost-efficient",
-    "model_balanced": "Balanced power and speed"
+    "model_balanced": "Balanced power and speed",
+    "debt_reminders": "Overdue Debt Reminders",
+    "debt_reminders_hint": "Notify me when a debt due date is approaching or passed"
   },
   "rooms": {
     "primary": "Primary Room",
@@ -688,7 +697,13 @@
     "payment_deleted": "Payment deleted",
     "fetch_error": "Could not load work data",
     "confirm_delete_session": "Delete this session? Linked payments will not be deleted.",
-    "confirm_delete_payment": "Delete this payment? The linked transaction will also be deleted."
+    "confirm_delete_payment": "Delete this payment? The linked transaction will also be deleted.",
+    "total_hours": "Total Hours Worked",
+    "hours_unit": "hr",
+    "this_month": "this month",
+    "collection_rate": "Collection Rate",
+    "guest_session": "Sign in to save work sessions",
+    "guest_payment_work": "Sign in to record a work payment"
   },
   "notifications": {
     "title": "Notifications",
