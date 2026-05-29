@@ -12,7 +12,8 @@ type FinancialDomain =
   | "investments"
   | "work"
   | "notifications"
-  | "contacts";
+  | "contacts"
+  | "accounts";
 
 export function invalidateDomains(queryClient: QueryClient, domains: FinancialDomain[]) {
   domains.forEach((domain) => {
@@ -45,6 +46,9 @@ export function invalidateDomains(queryClient: QueryClient, domains: FinancialDo
         break;
       case "contacts":
         void queryClient.invalidateQueries({ queryKey: queryKeys.contacts.all, refetchType: "all" });
+        break;
+      case "accounts":
+        void queryClient.invalidateQueries({ queryKey: queryKeys.accounts.all, refetchType: "all" });
         break;
     }
   });

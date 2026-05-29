@@ -6,12 +6,12 @@
     "ai_insights": "AI", "settings": "Settings",
     "ai_assistant": "Assistant",
     "sign_in": "Sign in", "sign_out": "Sign out", "collapse": "Collapse",
-    "more": "More", "work": "Work", "profile": "Profile", "hub": "Hub"
+    "more": "More", "work": "Work", "profile": "Profile", "hub": "Hub", "accounts": "Accounts"
   },
   "common": {
     "save": "Save changes", "saved": "Saved", "saving": "Saving...", "cancel": "Cancel", "add": "Add",
     "delete": "Delete", "loading": "Loading...", "no_data": "No data yet.",
-    "view_all": "View all →", "confirm_delete": "Delete this item?", "close": "Close", "retry": "Retry", "unknown_error": "Something went wrong"
+    "view_all": "View all →", "confirm_delete": "Delete this item?", "close": "Close", "retry": "Retry", "unknown_error": "Something went wrong", "error": "Something went wrong"
   },
   "dashboard": {
     "title": "Overview", "subtitle": "Your financial snapshot",
@@ -39,7 +39,37 @@
     "amount_positive": "Amount must be greater than zero",
     "title_required": "Title is required",
     "form_error": "Something went wrong, please try again",
-    "fetch_error": "Failed to load transactions"
+    "fetch_error": "Failed to load transactions",
+    "account": "Account", "no_account": "No account"
+  },
+  "accounts": {
+    "title": "Accounts", "subtitle": "Manage your financial accounts",
+    "add": "Add Account", "add_first": "Add your first account",
+    "new": "New Account", "edit": "Edit Account", "save_edit": "Save Changes",
+    "add_account": "Create Account",
+    "name": "Account name", "name_placeholder": "e.g. Revolut, Sparkasse, Cash...",
+    "name_required": "Account name is required",
+    "type": "Account type",
+    "type_cash": "Cash", "type_bank": "Bank", "type_credit_card": "Card",
+    "type_wallet": "Wallet", "type_savings": "Savings",
+    "initial_balance": "Starting balance",
+    "initial_balance_hint": "Your current balance in this account when you start tracking",
+    "set_default": "Default account",
+    "set_default_hint": "Auto-select when adding transactions",
+    "balance": "Current balance",
+    "initial": "Starting",
+    "transactions": "transactions",
+    "accounts": "accounts",
+    "total_balance": "Total balance across all accounts",
+    "default": "Default",
+    "negative": "negative",
+    "sort_by": "Sort by",
+    "sort_balance": "Balance",
+    "sort_name": "Name",
+    "delete_confirm": "Delete this account? Linked transactions will not be deleted.",
+    "delete_hint": "This action cannot be undone.",
+    "empty_title": "No accounts yet",
+    "empty_subtitle": "Add your first account to start tracking where your money lives."
   },
   "investments": {
     "title": "Investments", "subtitle": "Track your portfolio performance",

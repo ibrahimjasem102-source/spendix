@@ -6,9 +6,11 @@ import { boundedInt, readJson } from "@/lib/api/request";
 import { TransactionFormData } from "@/types";
 
 const TRANSACTION_SELECT =
+  "id,user_id,category_id,account_id,title,notes,amount,type,source,related_source_id,contact_id,transaction_date,created_at,updated_at,category:categories(id, name, color, icon),account:accounts(id, name, type)";
+const TRANSACTION_SELECT_NO_ACCOUNT =
   "id,user_id,category_id,title,notes,amount,type,source,related_source_id,contact_id,transaction_date,created_at,updated_at,category:categories(id, name, color, icon)";
 const TRANSACTION_SELECT_NO_CATEGORY =
-  "id,user_id,category_id,title,notes,amount,type,source,related_source_id,contact_id,transaction_date,created_at,updated_at";
+  "id,user_id,category_id,account_id,title,notes,amount,type,source,related_source_id,contact_id,transaction_date,created_at,updated_at";
 const LEGACY_TRANSACTION_SELECT =
   "id,user_id,category_id,title,notes,amount,type,transaction_date,created_at,updated_at,category:categories(id, name, color)";
 const LEGACY_TRANSACTION_SELECT_NO_CATEGORY =
@@ -17,7 +19,9 @@ const LEGACY_TRANSACTION_SELECT_NO_CATEGORY =
 function isOptionalColumnError(message: string) {
   return message.includes("transactions.source") ||
     message.includes("transactions.contact_id") ||
+    message.includes("transactions.account_id") ||
     message.includes("categories.icon") ||
+    message.includes("accounts") ||
     message.includes("related_source_id") ||
     message.includes("transactions_source_check") ||
     message.includes("violates check constraint") ||
@@ -45,6 +49,7 @@ export async function GET(request: Request) {
 
   for (const select of [
     TRANSACTION_SELECT,
+    TRANSACTION_SELECT_NO_ACCOUNT,
     TRANSACTION_SELECT_NO_CATEGORY,
     LEGACY_TRANSACTION_SELECT,
     LEGACY_TRANSACTION_SELECT_NO_CATEGORY,
@@ -87,6 +92,7 @@ export async function POST(request: Request) {
     source: body.source ?? "manual",
     related_source_id: body.related_source_id ?? null,
     contact_id: body.contact_id ?? null,
+    account_id: body.account_id ?? null,
     category_id: body.category_id || null,
     transaction_date: body.transaction_date,
   };
@@ -104,7 +110,7 @@ export async function POST(request: Request) {
   let error = result.error;
 
   if (error && isOptionalColumnError(error.message)) {
-    const { source: _source, related_source_id: _relatedSourceId, contact_id: _contactId, ...legacyPayload } = payload;
+    const { source: _source, related_source_id: _relatedSourceId, contact_id: _contactId, account_id: _accountId, ...legacyPayload } = payload;
     const legacy = await supabase
       .from("transactions")
       .insert(legacyPayload)

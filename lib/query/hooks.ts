@@ -18,6 +18,7 @@ import {
 import { safeFetch } from "@/lib/fetch-safe";
 import { financialBus } from "@/lib/finance/eventBus";
 import type {
+  Account, AccountFormData,
   AppNotification, Debt, DebtFormData, DebtPaymentFormData,
   Budget, BudgetFormData, BudgetSummary, Category,
   Investment, InvestmentFormData,
@@ -864,6 +865,90 @@ export function useDeleteWorkPayment() {
       financialBus.emit("work:payment_deleted", { id });
     },
     onSettled: () => invalidateWork(qc),
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
+// ACCOUNTS
+// ══════════════════════════════════════════════════════════════
+
+export function useAccounts(enabled = true) {
+  return useQuery({
+    queryKey: queryKeys.accounts.list(),
+    enabled,
+    queryFn: async () => {
+      try {
+        const data = await fetchJson<{ accounts: Account[] }>("/api/accounts");
+        return data.accounts ?? [];
+      } catch (error) {
+        console.warn("[Spendix] Accounts fetch failed", error);
+        return [];
+      }
+    },
+    staleTime: 30_000,
+  });
+}
+
+export function useCreateAccount() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: AccountFormData) =>
+      fetchJson<{ account: Account }>("/api/accounts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      }),
+    onSuccess: ({ account }) => {
+      financialBus.emit("account:created", { id: account.id, name: account.name });
+    },
+    onSettled: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.accounts.all, refetchType: "all" });
+    },
+  });
+}
+
+export function useUpdateAccount() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<AccountFormData> }) =>
+      fetchJson<{ account: Account }>(`/api/accounts/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      }),
+    onSuccess: (_, { id }) => {
+      financialBus.emit("account:updated", { id });
+    },
+    onSettled: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.accounts.all, refetchType: "all" });
+    },
+  });
+}
+
+export function useDeleteAccount() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      await safeFetch(`/api/accounts/${id}`, { method: "DELETE" }).then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      });
+      return id;
+    },
+    onMutate: async (id) => {
+      await qc.cancelQueries({ queryKey: queryKeys.accounts.all });
+      const previous = qc.getQueryData<Account[]>(queryKeys.accounts.list());
+      qc.setQueryData<Account[]>(queryKeys.accounts.list(), (old = []) => old.filter((a) => a.id !== id));
+      return { previous };
+    },
+    onError: (_e, _id, ctx) => {
+      if (ctx?.previous) qc.setQueryData(queryKeys.accounts.list(), ctx.previous);
+    },
+    onSuccess: (id) => {
+      financialBus.emit("account:deleted", { id });
+    },
+    onSettled: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.accounts.all, refetchType: "all" });
+    },
   });
 }
 

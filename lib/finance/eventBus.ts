@@ -24,6 +24,10 @@ export type FinancialEventMap = {
   // Goals / Achievements
   "goal:progress_updated":  { goalId: string; progress: number; completed: boolean };
   "achievement:unlocked":   { achievementId: string };
+  // Accounts
+  "account:created":        { id: string; name: string };
+  "account:updated":        { id: string };
+  "account:deleted":        { id: string };
   // Internal signals
   "balance:changed":        { balance: number };
 };

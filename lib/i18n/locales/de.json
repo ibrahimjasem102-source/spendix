@@ -6,7 +6,7 @@
     "ai_insights": "KI-Einblicke", "settings": "Einstellungen",
     "ai_assistant": "KI-Assistent",
     "sign_in": "Anmelden", "sign_out": "Abmelden", "collapse": "Einklappen",
-    "profile": "Profil", "hub": "Hub"
+    "profile": "Profil", "hub": "Hub", "accounts": "Konten"
   },
   "common": {
     "save": "Änderungen speichern", "saved": "Gespeichert", "cancel": "Abbrechen", "add": "Hinzufügen",
@@ -28,7 +28,37 @@
     "total_income": "Gesamteinnahmen", "total_expenses": "Gesamtausgaben", "net": "Netto",
     "category": "Kategorie", "date": "Datum", "amount": "Betrag",
     "title_field": "Titel", "notes": "Notizen", "notes_optional": "optional",
-    "income": "Einnahmen", "expense": "Ausgaben", "type": "Typ"
+    "income": "Einnahmen", "expense": "Ausgaben", "type": "Typ",
+    "account": "Konto", "no_account": "Kein Konto"
+  },
+  "accounts": {
+    "title": "Konten", "subtitle": "Verwalten Sie Ihre Finanzkonten",
+    "add": "Konto hinzufügen", "add_first": "Erstes Konto hinzufügen",
+    "new": "Neues Konto", "edit": "Konto bearbeiten", "save_edit": "Änderungen speichern",
+    "add_account": "Konto erstellen",
+    "name": "Kontoname", "name_placeholder": "z.B. Revolut, Sparkasse, Bargeld...",
+    "name_required": "Kontoname ist erforderlich",
+    "type": "Kontotyp",
+    "type_cash": "Bargeld", "type_bank": "Bank", "type_credit_card": "Karte",
+    "type_wallet": "Wallet", "type_savings": "Sparen",
+    "initial_balance": "Startguthaben",
+    "initial_balance_hint": "Ihr aktueller Kontostand bei Beginn der Nachverfolgung",
+    "set_default": "Standardkonto",
+    "set_default_hint": "Automatisch beim Hinzufügen von Transaktionen auswählen",
+    "balance": "Aktueller Kontostand",
+    "initial": "Start",
+    "transactions": "Transaktionen",
+    "accounts": "Konten",
+    "total_balance": "Gesamtguthaben aller Konten",
+    "default": "Standard",
+    "negative": "negativ",
+    "sort_by": "Sortieren nach",
+    "sort_balance": "Kontostand",
+    "sort_name": "Name",
+    "delete_confirm": "Dieses Konto löschen? Verknüpfte Transaktionen werden nicht gelöscht.",
+    "delete_hint": "Diese Aktion kann nicht rückgängig gemacht werden.",
+    "empty_title": "Noch keine Konten",
+    "empty_subtitle": "Fügen Sie Ihr erstes Konto hinzu, um zu verfolgen, wo Ihr Geld liegt."
   },
   "investments": {
     "title": "Investitionen", "subtitle": "Portfolio-Performance verfolgen",

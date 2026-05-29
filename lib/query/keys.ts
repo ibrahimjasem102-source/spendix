@@ -41,4 +41,8 @@ export const queryKeys = {
     all: ["contacts"] as const,
     list: () => [...queryKeys.contacts.all, "list"] as const,
   },
+  accounts: {
+    all: ["accounts"] as const,
+    list: () => [...queryKeys.accounts.all, "list"] as const,
+  },
 };

@@ -40,6 +40,9 @@ const EVENT_DOMAINS: Record<string, Domain[]> = {
   "work:session_deleted":  ["work", "dashboard"],
   "work:payment_received": ["work", "transactions", "dashboard", "analytics"],
   "work:payment_deleted":  ["work", "transactions", "dashboard", "analytics"],
+  "account:created":       ["accounts"],
+  "account:updated":       ["accounts"],
+  "account:deleted":       ["accounts", "transactions"],
 };
 
 export function FinancialEventBridge() {

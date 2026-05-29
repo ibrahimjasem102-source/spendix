@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ArrowDownRight, ArrowUpRight, Check, ChevronLeft, ChevronRight } from "lucide-react";
-import { Category, Transaction, TransactionFormData, TransactionType } from "@/types";
+import { X, ArrowDownRight, ArrowUpRight, Check, ChevronLeft, ChevronRight, Banknote, Building2, CreditCard, Wallet, PiggyBank } from "lucide-react";
+import { Account, AccountType, Category, Transaction, TransactionFormData, TransactionType } from "@/types";
 import { useTranslation } from "@/lib/i18n";
 import { useCurrency } from "@/lib/currency";
 import { spring, tapTransition } from "@/lib/motion";
@@ -11,6 +11,13 @@ import { useGuest } from "@/contexts/GuestContext";
 import { GUEST_CATEGORIES } from "@/lib/guest/categories";
 import CategoryIcon from "@/components/categories/CategoryIcon";
 import { safeFetch } from "@/lib/fetch-safe";
+
+const ACCOUNT_ICONS: Record<AccountType, React.ElementType> = {
+  cash: Banknote, bank: Building2, credit_card: CreditCard, wallet: Wallet, savings: PiggyBank,
+};
+const ACCOUNT_COLORS: Record<AccountType, string> = {
+  cash: "#10B981", bank: "#3B82F6", credit_card: "#8B5CF6", wallet: "#F59E0B", savings: "#06B6D4",
+};
 
 interface Props {
   initial?: Transaction;
@@ -38,12 +45,14 @@ export default function TransactionForm({ initial, initialType, onSubmit, onClos
   const startType: TransactionType = initial?.type ?? initialType ?? "expense";
   const [type,       setType]       = useState<TransactionType>(startType);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [accounts, setAccounts] = useState<Account[]>([]);
   const [form, setForm] = useState<TransactionFormData>({
     type:             startType,
     title:            initial?.title            ?? "",
     notes:            initial?.notes            ?? "",
     amount:           initial?.amount           ?? 0,
     category_id:      initial?.category_id      ?? null,
+    account_id:       initial?.account_id       ?? null,
     transaction_date: initial?.transaction_date ?? today,
   });
   const [rawAmount, setRawAmount] = useState(initial?.amount ? fmt(Number(initial.amount)) : "");
@@ -52,6 +61,7 @@ export default function TransactionForm({ initial, initialType, onSubmit, onClos
 
   const amountRef  = useRef<HTMLInputElement>(null);
   const catRowRef  = useRef<HTMLDivElement>(null);
+  const accRowRef  = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!isEdit) setTimeout(() => amountRef.current?.focus(), 120);
@@ -64,6 +74,19 @@ export default function TransactionForm({ initial, initialType, onSubmit, onClos
       .then((r) => r.json())
       .then(({ categories: c }) => setCategories(c ?? []))
       .catch(() => setCategories([]));
+    safeFetch("/api/accounts")
+      .then((r) => r.json())
+      .then(({ accounts: a }) => {
+        const list: Account[] = a ?? [];
+        setAccounts(list);
+        // Auto-select default account on new transaction
+        if (!isEdit && !form.account_id) {
+          const def = list.find((acc: Account) => acc.is_default);
+          if (def) setForm((p) => ({ ...p, account_id: def.id }));
+        }
+      })
+      .catch(() => setAccounts([]));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [guestLoading, isGuest]);
 
   useEffect(() => {
@@ -125,6 +148,12 @@ export default function TransactionForm({ initial, initialType, onSubmit, onClos
   function scrollCats(dir: "left" | "right") {
     if (!catRowRef.current) return;
     catRowRef.current.scrollBy({ left: dir === "left" ? -120 : 120, behavior: "smooth" });
+  }
+
+  // Scroll account row
+  function scrollAccounts(dir: "left" | "right") {
+    if (!accRowRef.current) return;
+    accRowRef.current.scrollBy({ left: dir === "left" ? -120 : 120, behavior: "smooth" });
   }
 
   return (
@@ -310,6 +339,78 @@ export default function TransactionForm({ initial, initialType, onSubmit, onClos
                         <CategoryIcon icon={(cat as Category & { icon?: string }).icon} color={cat.color} size="sm" />
                         <span className="text-[9px] font-semibold whitespace-nowrap" style={{ color: isSelected ? cat.color : "hsl(var(--text-2))" }}>
                           {cat.name}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* ── Account ───────────────────────────────── */}
+            {accounts.length > 0 && (
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-[10px] font-semibold t3 uppercase tracking-[0.12em]">
+                    {t("transactions.account")}
+                  </label>
+                  <div className="flex gap-1">
+                    <button type="button" onClick={() => scrollAccounts("left")}
+                      className="w-6 h-6 rounded-lg bg-[hsl(var(--bg-input))] flex items-center justify-center t3 hover:t1 transition-all">
+                      <ChevronLeft className="w-3 h-3" />
+                    </button>
+                    <button type="button" onClick={() => scrollAccounts("right")}
+                      className="w-6 h-6 rounded-lg bg-[hsl(var(--bg-input))] flex items-center justify-center t3 hover:t1 transition-all">
+                      <ChevronRight className="w-3 h-3" />
+                    </button>
+                  </div>
+                </div>
+                <div
+                  ref={accRowRef}
+                  className="flex gap-2 overflow-x-auto pb-1"
+                  style={{ scrollbarWidth: "none", WebkitOverflowScrolling: "touch" }}
+                >
+                  {/* No account */}
+                  <button type="button" onClick={() => set("account_id", null)}
+                    className={`flex-none flex flex-col items-center gap-1.5 px-3 py-2.5 rounded-2xl border transition-all min-w-[64px] ${
+                      !form.account_id
+                        ? `${accentBg} ${accentBorder} border-[1.5px]`
+                        : "bg-[hsl(var(--bg-input))] border-[hsl(var(--border))]"
+                    }`}>
+                    <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-[hsl(var(--bg-card-2))]">
+                      <span className="text-base t3">—</span>
+                    </div>
+                    <span className="text-[9px] font-semibold t3 whitespace-nowrap">{t("transactions.no_account")}</span>
+                  </button>
+                  {accounts.map((acc) => {
+                    const isSelected = form.account_id === acc.id;
+                    const color = ACCOUNT_COLORS[acc.type] ?? "#3B82F6";
+                    const Icon = ACCOUNT_ICONS[acc.type] ?? Wallet;
+                    return (
+                      <button key={acc.id} type="button" onClick={() => set("account_id", acc.id)}
+                        className="flex-none flex flex-col items-center gap-1.5 px-3 py-2.5 rounded-2xl border transition-all min-w-[64px] relative"
+                        style={isSelected ? {
+                          backgroundColor: `${color}14`,
+                          borderColor: `${color}45`,
+                          borderWidth: 1.5,
+                        } : {
+                          backgroundColor: "hsl(var(--bg-input))",
+                          borderColor: "hsl(var(--border))",
+                          borderWidth: 1,
+                        }}>
+                        {isSelected && (
+                          <span className="absolute top-1 end-1 w-3.5 h-3.5 rounded-full flex items-center justify-center"
+                            style={{ backgroundColor: color }}>
+                            <Check className="w-2 h-2 text-white" strokeWidth={3.5} />
+                          </span>
+                        )}
+                        <div className="w-9 h-9 rounded-xl flex items-center justify-center"
+                          style={{ backgroundColor: isSelected ? `${color}20` : "hsl(var(--bg-card-2))" }}>
+                          <Icon className="w-4 h-4" style={{ color: isSelected ? color : "hsl(var(--text-3))" }} />
+                        </div>
+                        <span className="text-[9px] font-semibold whitespace-nowrap max-w-[60px] truncate"
+                          style={{ color: isSelected ? color : "hsl(var(--text-2))" }}>
+                          {acc.name}
                         </span>
                       </button>
                     );

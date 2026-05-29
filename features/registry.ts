@@ -31,6 +31,7 @@ import { more }          from "./more/config";
 import { goals }         from "./goals/config";
 import { hub }           from "./hub/config";
 import { profile }       from "./profile/config";
+import { accounts }      from "./accounts/config";
 
 export const FEATURE_REGISTRY: FeatureModule[] = [
   // ── Primary ──────────────────────────────────────────────
@@ -40,6 +41,7 @@ export const FEATURE_REGISTRY: FeatureModule[] = [
   hub,
 
   // ── Finance ──────────────────────────────────────────────
+  accounts,
   investments,
   debts,
   work,

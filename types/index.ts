@@ -34,6 +34,33 @@ export interface CreateNotificationData {
   metadata?: Record<string, unknown>;
   scheduled_for?: string | null;
 }
+// ── Accounts ──────────────────────────────────────────────────
+export type AccountType = "cash" | "bank" | "credit_card" | "wallet" | "savings";
+
+export interface Account {
+  id: string;
+  user_id: string;
+  name: string;
+  type: AccountType;
+  currency: string;
+  initial_balance: number;
+  color?: string | null;
+  is_default: boolean;
+  created_at: string;
+  updated_at: string;
+  balance?: number;
+  transaction_count?: number;
+}
+
+export interface AccountFormData {
+  name: string;
+  type: AccountType;
+  currency?: string;
+  initial_balance: number;
+  color?: string | null;
+  is_default?: boolean;
+}
+
 export type TransactionSource = "manual" | "investment" | "debt" | "debt_payment" | "work" | "work_payment";
 export type WorkRecurrence    = "none" | "daily" | "weekly" | "monthly";
 export type WorkSessionStatus = "unpaid" | "partially_paid" | "paid";
@@ -126,18 +153,20 @@ export interface Transaction {
   id: string;
   user_id: string;
   category_id: string | null;
+  account_id?: string | null;
   title: string;
   notes?: string | null;
   amount: number;
   type: TransactionType;
   source?: TransactionSource;
   related_source_id?: string | null;
-  contact_id?: string | null;           // only for debt/debt_payment sources
+  contact_id?: string | null;
   transaction_date: string;
   created_at: string;
   updated_at: string;
   category?: Pick<Category, "id" | "name" | "color" | "icon"> | null;
   contact?: Pick<FinancialContact, "id" | "name" | "type"> | null;
+  account?: Pick<Account, "id" | "name" | "type"> | null;
 }
 
 export interface TransactionFormData {
@@ -146,6 +175,7 @@ export interface TransactionFormData {
   amount: number;
   type: TransactionType;
   category_id: string | null;
+  account_id?: string | null;
   transaction_date: string;
   source?: TransactionSource;
   related_source_id?: string | null;
