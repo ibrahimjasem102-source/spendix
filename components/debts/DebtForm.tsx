@@ -12,6 +12,7 @@ import { spring, tapTransition } from "@/lib/motion";
 
 interface Props {
   initial?: Debt;
+  initialDebtType?: DebtType;
   onSubmit: (data: DebtFormData) => Promise<void>;
   onClose: () => void;
 }
@@ -21,14 +22,14 @@ const TYPE_CONFIG: Record<DebtType, { icon: React.ElementType; color: string; bg
   receivable: { icon: ArrowDownToLine,   color: "text-emerald-400", bg: "bg-emerald-400/10", ring: "#34d399", label: "" },
 };
 
-export default function DebtForm({ initial, onSubmit, onClose }: Props) {
+export default function DebtForm({ initial, initialDebtType, onSubmit, onClose }: Props) {
   const { t } = useTranslation();
   const { symbol } = useCurrency();
   const isEdit = !!initial;
 
   const [form, setForm] = useState<DebtFormData>({
     person_or_entity: initial?.person_or_entity ?? "",
-    debt_type:        initial?.debt_type        ?? "payable",
+    debt_type:        initial?.debt_type        ?? initialDebtType ?? "payable",
     total_amount:     initial?.total_amount     ?? 0,
     due_date:         initial?.due_date         ?? null,
     notes:            initial?.notes            ?? null,

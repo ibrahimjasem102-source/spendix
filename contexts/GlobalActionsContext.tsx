@@ -3,15 +3,17 @@
 import { createContext, useContext, useState, useCallback } from "react";
 
 export type ModalType =
-  | "transaction"    // manual — income/expense toggle inside form
-  | "income"         // transaction pre-set to income
-  | "expense"        // transaction pre-set to expense
+  | "transaction"      // manual — income/expense toggle inside form
+  | "income"           // transaction pre-set to income
+  | "expense"          // transaction pre-set to expense
   | "investment"
-  | "debt"
-  | "debt_payment"   // requires debt selector step
-  | "work_payment"   // work payment flow
-  | "work_session"   // work session entry
-  | "goal"           // new financial goal
+  | "debt"             // generic debt form
+  | "debt_receivable"  // debt pre-set to receivable (money owed to me)
+  | "debt_payable"     // debt pre-set to payable (money I owe)
+  | "debt_payment"     // requires debt selector step
+  | "work_payment"     // work payment flow
+  | "work_session"     // work session entry
+  | "goal"             // new financial goal
   | null;
 
 interface GlobalActionsContextType {

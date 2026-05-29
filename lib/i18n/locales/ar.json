@@ -262,12 +262,17 @@
     "group_cash": "تدفق نقدي",
     "group_entity": "سجلات",
     "income": "دخل",
+    "income_hint": "راتب، مكافأة، ...",
     "expense": "مصروف",
+    "expense_hint": "فاتورة، خدمة، ...",
     "investment": "استثمار",
+    "investment_hint": "أسهم، عملات، عقارات",
     "debt": "دين",
     "debt_payment": "دفعة دين",
     "work_payment": "دفعة عمل",
+    "work_payment_hint": "استلام أجر من عميل",
     "work_session": "جلسة عمل",
+    "work_session_hint": "تتبع ساعات العمل",
     "add_item": "إضافة {item}"
   },
   "ai_assistant": {

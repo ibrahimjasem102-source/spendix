@@ -57,11 +57,15 @@ export default function GlobalModals() {
   }
 
   /* ── Debt ────────────────────────────────────────────────── */
-  if (activeModal === "debt") {
+  if (activeModal === "debt" || activeModal === "debt_receivable" || activeModal === "debt_payable") {
+    const preDebtType =
+      activeModal === "debt_receivable" ? "receivable" :
+      activeModal === "debt_payable"    ? "payable"    :
+      undefined;
     async function handleDebt(data: DebtFormData) {
       await createDebtMut.mutateAsync(data);
     }
-    return <DebtForm onSubmit={handleDebt} onClose={closeModal} />;
+    return <DebtForm initialDebtType={preDebtType} onSubmit={handleDebt} onClose={closeModal} />;
   }
 
   /* ── Debt Payment (2-step: select debt then pay) ─────────── */

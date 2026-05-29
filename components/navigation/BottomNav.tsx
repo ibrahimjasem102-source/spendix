@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus, ArrowUpRight, ArrowDownRight, TrendingUp,
-  CreditCard, DollarSign, Briefcase, Check, X,
+  CreditCard, DollarSign, Briefcase, Check, X, ChevronRight,
   LayoutDashboard, ArrowLeftRight, BarChart3, Landmark,
   Target, BookOpen, Sparkles, Bot, Settings, Bell, Grid3X3,
   Goal, LockKeyhole, Wallet,
@@ -25,18 +25,20 @@ const FAB_H = 52;
 const LONG_PRESS_MS = 500;
 const tapTransition = { type: "tween", duration: 0.1 } as const;
 
-// ── Action sheet items ────────────────────────────────────────
-const CASH_ACTIONS: { type: ModalType; icon: React.ElementType; labelKey: string; color: string; bg: string }[] = [
-  { type: "income",  icon: ArrowUpRight,  labelKey: "actions.income",  color: "text-emerald-400", bg: "bg-emerald-400/10" },
-  { type: "expense", icon: ArrowDownRight, labelKey: "actions.expense", color: "text-rose-400",    bg: "bg-rose-400/10"   },
+// ── Two-section action items ───────────────────────────────────
+type ActionItem = { type: ModalType; icon: React.ElementType; labelKey: string; hintKey: string; hex: string };
+
+const INCOME_ITEMS: ActionItem[] = [
+  { type: "income",          icon: ArrowUpRight,  labelKey: "actions.income",       hintKey: "actions.income_hint",        hex: "#10B981" },
+  { type: "debt_receivable", icon: DollarSign,    labelKey: "debts.receivable",     hintKey: "debts.receivable_hint",      hex: "#34d399" },
+  { type: "work_payment",    icon: Briefcase,     labelKey: "actions.work_payment", hintKey: "actions.work_payment_hint",  hex: "#22d3ee" },
 ];
-const ENTITY_ACTIONS: { type: ModalType; icon: React.ElementType; labelKey: string; color: string; bg: string }[] = [
-  { type: "investment",  icon: TrendingUp, labelKey: "actions.investment",  color: "text-purple-400",  bg: "bg-purple-400/10"  },
-  { type: "debt",        icon: CreditCard, labelKey: "actions.debt",        color: "text-orange-400",  bg: "bg-orange-400/10"  },
-  { type: "debt_payment",icon: DollarSign, labelKey: "actions.debt_payment",color: "text-amber-400",   bg: "bg-amber-400/10"   },
-  { type: "work_session",icon: Briefcase,  labelKey: "actions.work_session",color: "text-cyan-400",    bg: "bg-cyan-400/10"    },
-  { type: "work_payment",icon: DollarSign, labelKey: "actions.work_payment",color: "text-emerald-400", bg: "bg-emerald-400/10" },
-  { type: "goal",        icon: Goal,       labelKey: "actions.goal",        color: "text-amber-400",   bg: "bg-amber-400/10"   },
+
+const EXPENSE_ITEMS: ActionItem[] = [
+  { type: "expense",         icon: ArrowDownRight, labelKey: "actions.expense",      hintKey: "actions.expense_hint",       hex: "#F43F5E" },
+  { type: "investment",      icon: TrendingUp,     labelKey: "nav.investments",      hintKey: "actions.investment_hint",    hex: "#a78bfa" },
+  { type: "debt_payable",    icon: CreditCard,     labelKey: "debts.payable",        hintKey: "debts.payable_hint",         hex: "#fb923c" },
+  { type: "work_session",    icon: Briefcase,      labelKey: "actions.work_session", hintKey: "actions.work_session_hint",  hex: "#22d3ee" },
 ];
 
 // Icon map for picker
@@ -321,7 +323,7 @@ export default function BottomNav() {
                 }}>
 
                 {/* Handle + close */}
-                <div className="flex items-center justify-between px-4 pt-4 pb-2">
+                <div className="flex items-center justify-between px-4 pt-4 pb-3">
                   <div className="w-8 h-1 rounded-full bg-white/10 mx-auto absolute left-1/2 -translate-x-1/2 top-2.5" />
                   <div className="flex items-center gap-2">
                     <div className="p-1.5 rounded-xl bg-gradient-to-br from-cyan-400/20 to-purple-600/20">
@@ -335,67 +337,85 @@ export default function BottomNav() {
                   </motion.button>
                 </div>
 
-                {/* Income / Expense — hero row */}
-                <div className="px-3 pt-1 pb-3 grid grid-cols-2 gap-2.5">
-                  {CASH_ACTIONS.map((a, i) => {
-                    const isIncome = a.type === "income";
-                    return (
-                      <motion.button key={String(a.type)}
-                        onClick={() => { toggleFAB(); openModal(a.type); }}
-                        initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                        transition={{ type: "spring", stiffness: 400, damping: 30, delay: i * 0.04 }}
-                        whileTap={{ scale: 0.96 }}
-                        className="relative flex flex-col items-start gap-2.5 px-4 py-4 rounded-[1.4rem] overflow-hidden"
-                        style={{
-                          background: isIncome
-                            ? "linear-gradient(135deg, rgba(52,211,153,0.18) 0%, rgba(16,185,129,0.08) 100%)"
-                            : "linear-gradient(135deg, rgba(251,113,133,0.18) 0%, rgba(244,63,94,0.08) 100%)",
-                          border: isIncome ? "1px solid rgba(52,211,153,0.22)" : "1px solid rgba(251,113,133,0.22)",
-                        }}>
-                        {/* Glow blob */}
-                        <div className="absolute -top-4 -end-4 w-16 h-16 rounded-full opacity-20 blur-2xl pointer-events-none"
-                          style={{ background: isIncome ? "#34d399" : "#fb7185" }} />
-                        <div className={`p-2.5 rounded-2xl ${a.bg}`}>
-                          <a.icon className={`w-5 h-5 ${a.color}`} />
-                        </div>
-                        <div>
-                          <p className={`text-sm font-bold ${a.color}`}>{t(a.labelKey)}</p>
-                          <p className="text-[10px] t3 mt-0.5">
-                            {isIncome ? t("actions.income_hint") || "+أضف دخلاً" : t("actions.expense_hint") || "+أضف مصروفاً"}
-                          </p>
-                        </div>
-                      </motion.button>
-                    );
-                  })}
-                </div>
+                {/* ── Two-section layout ──────────────────────── */}
+                <div className="px-3 pb-3 space-y-2.5">
 
-                {/* Divider */}
-                <div className="mx-4 h-px bg-[hsl(var(--border-2))]" />
-
-                {/* Entity actions — 3-column grid */}
-                <div className="p-3 pb-4">
-                  <p className="text-[9px] font-bold t3 uppercase tracking-[0.18em] px-1 mb-3">{t("actions.group_entity")}</p>
-                  <div className="grid grid-cols-3 gap-2">
-                    {ENTITY_ACTIONS.map((a, i) => (
-                      <motion.button key={String(a.type)}
-                        onClick={() => { toggleFAB(); openModal(a.type); }}
-                        initial={{ opacity: 0, scale: 0.88 }} animate={{ opacity: 1, scale: 1 }}
-                        transition={{ type: "spring", stiffness: 400, damping: 28, delay: 0.06 + i * 0.04 }}
-                        whileTap={{ scale: 0.94 }}
-                        className="flex flex-col items-center gap-2 py-3.5 px-2 rounded-[1.25rem] transition-all"
-                        style={{
-                          backgroundColor: "hsl(var(--bg-input))",
-                          border: "1px solid hsl(var(--border-2))",
-                        }}>
-                        <div className={`p-2.5 rounded-2xl ${a.bg}`}>
-                          <a.icon className={`w-4 h-4 ${a.color}`} />
+                  {/* Income section */}
+                  {[
+                    { items: INCOME_ITEMS,   sectionColor: "#10B981", sectionLabelKey: "transactions.income",  SectionIcon: ArrowUpRight  },
+                    { items: EXPENSE_ITEMS,  sectionColor: "#F43F5E", sectionLabelKey: "transactions.expense", SectionIcon: ArrowDownRight },
+                  ].map(({ items, sectionColor, sectionLabelKey, SectionIcon }, si) => (
+                    <motion.div key={sectionLabelKey}
+                      initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+                      transition={{ type: "spring", stiffness: 380, damping: 30, delay: si * 0.06 }}
+                      className="rounded-2xl overflow-hidden"
+                      style={{ border: `1px solid ${sectionColor}22` }}
+                    >
+                      {/* Section header */}
+                      <div className="flex items-center gap-2 px-3.5 py-2.5"
+                        style={{ background: `${sectionColor}12` }}>
+                        <div className="p-1 rounded-lg" style={{ backgroundColor: `${sectionColor}20` }}>
+                          <SectionIcon className="w-3.5 h-3.5" style={{ color: sectionColor }} />
                         </div>
-                        <span className={`text-[10px] font-semibold text-center leading-tight ${a.color}`}>
-                          {t(a.labelKey)}
+                        <span className="text-xs font-bold" style={{ color: sectionColor }}>
+                          {t(sectionLabelKey)}
                         </span>
-                      </motion.button>
-                    ))}
-                  </div>
+                      </div>
+
+                      {/* Sub-items */}
+                      <div style={{ backgroundColor: "hsl(var(--bg-card))" }}>
+                        {items.map((item, idx) => (
+                          <motion.button
+                            key={String(item.type)}
+                            onClick={() => { toggleFAB(); openModal(item.type); }}
+                            whileTap={{ scale: 0.985 }} transition={tapTransition}
+                            className="flex items-center gap-3 w-full px-3.5 py-3 transition-colors text-start"
+                            style={{
+                              borderTop: idx === 0 ? "none" : `1px solid hsl(var(--border-2))`,
+                            }}
+                            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "hsl(var(--bg-input))")}
+                            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "")}
+                          >
+                            <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
+                              style={{ backgroundColor: `${item.hex}18` }}>
+                              <item.icon className="w-4 h-4" style={{ color: item.hex }} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-semibold t1 leading-snug">{t(item.labelKey)}</p>
+                              <p className="text-[10px] t3 leading-snug mt-0.5 truncate">
+                                {t(item.hintKey) !== item.hintKey ? t(item.hintKey) : ""}
+                              </p>
+                            </div>
+                            <ChevronRight className="w-3.5 h-3.5 shrink-0" style={{ color: `${item.hex}60` }} />
+                          </motion.button>
+                        ))}
+                      </div>
+                    </motion.div>
+                  ))}
+
+                  {/* Goal — standalone */}
+                  <motion.button
+                    onClick={() => { toggleFAB(); openModal("goal"); }}
+                    initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+                    transition={{ type: "spring", stiffness: 380, damping: 30, delay: 0.12 }}
+                    whileTap={{ scale: 0.97 }}
+                    className="flex items-center gap-3 w-full px-3.5 py-3 rounded-2xl transition-all"
+                    style={{
+                      backgroundColor: "hsl(var(--bg-card))",
+                      border: "1px solid #f59e0b22",
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "hsl(var(--bg-input))")}
+                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "hsl(var(--bg-card))")}
+                  >
+                    <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-amber-400/15 shrink-0">
+                      <Goal className="w-4 h-4 text-amber-400" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold t1">{t("actions.goal")}</p>
+                    </div>
+                    <ChevronRight className="w-3.5 h-3.5 text-amber-400/50 shrink-0" />
+                  </motion.button>
+
                 </div>
 
               </div>
