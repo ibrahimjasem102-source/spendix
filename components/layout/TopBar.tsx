@@ -162,6 +162,10 @@ export default function TopBar() {
                   {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
                   {theme === "dark" ? t("topbar.switch_light") : t("topbar.switch_dark")}
                 </button>
+                <Link href="/profile" onClick={closeMenus} className={itemClass}>
+                  <User className="h-4 w-4" />
+                  {t("nav.profile")}
+                </Link>
                 <Link href="/settings" onClick={closeMenus} className={itemClass}>
                   <Settings className="h-4 w-4" />
                   {t("nav.settings")}

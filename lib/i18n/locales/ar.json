@@ -14,7 +14,8 @@
     "sign_out": "تسجيل الخروج",
     "collapse": "طي",
     "more": "المزيد",
-    "work": "العمل"
+    "work": "العمل",
+    "profile": "الملف الشخصي"
   },
   "common": {
     "save": "حفظ التغييرات",
@@ -276,6 +277,30 @@
     "work_session": "جلسة عمل",
     "work_session_hint": "تتبع ساعات العمل",
     "add_item": "إضافة {item}"
+  },
+  "profile": {
+    "title": "الملف الشخصي",
+    "subtitle": "هويتك المالية",
+    "health_score": "نقاط الصحة المالية",
+    "health_excellent": "ممتاز",
+    "health_good": "جيد",
+    "health_fair": "مقبول",
+    "health_poor": "يحتاج تحسين",
+    "badges": "الإنجازات",
+    "badge_first_step": "الخطوة الأولى",
+    "badge_saver": "مدخر",
+    "badge_investor": "مستثمر",
+    "badge_hard_worker": "مجتهد",
+    "badge_debt_free": "خالٍ من الديون",
+    "badge_balanced": "متوازن",
+    "activity": "ملخص النشاط",
+    "total_transactions": "إجمالي المعاملات",
+    "all_time_income": "إجمالي الدخل الكلي",
+    "all_time_expenses": "إجمالي المصروفات الكلية",
+    "work_income": "دخل العمل",
+    "net_position": "الوضع الصافي",
+    "in_your_favor": "(لصالحك)",
+    "you_owe": "(عليك)"
   },
   "ai_assistant": {
     "title": "المساعد الذكي",

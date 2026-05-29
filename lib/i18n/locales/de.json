@@ -5,7 +5,8 @@
     "budgets": "Budgets", "investments": "Investitionen", "debts": "Schulden",
     "ai_insights": "KI-Einblicke", "settings": "Einstellungen",
     "ai_assistant": "KI-Assistent",
-    "sign_in": "Anmelden", "sign_out": "Abmelden", "collapse": "Einklappen"
+    "sign_in": "Anmelden", "sign_out": "Abmelden", "collapse": "Einklappen",
+    "profile": "Profil"
   },
   "common": {
     "save": "Änderungen speichern", "saved": "Gespeichert", "cancel": "Abbrechen", "add": "Hinzufügen",
@@ -109,6 +110,21 @@
     "work_session":      "Arbeitssitzung",
     "work_session_hint": "Arbeitsstunden erfassen",
     "add_item": "{item} hinzufügen"
+  },
+  "profile": {
+    "title": "Profil", "subtitle": "Ihre finanzielle Identität",
+    "health_score": "Gesundheitsscore",
+    "health_excellent": "Ausgezeichnet", "health_good": "Gut",
+    "health_fair": "Mittel", "health_poor": "Verbesserungsbedarf",
+    "badges": "Errungenschaften",
+    "badge_first_step": "Erster Schritt", "badge_saver": "Sparer",
+    "badge_investor": "Investor", "badge_hard_worker": "Fleißig",
+    "badge_debt_free": "Schuldenfrei", "badge_balanced": "Ausgewogen",
+    "activity": "Aktivitätsübersicht",
+    "total_transactions": "Transaktionen gesamt",
+    "all_time_income": "Gesamteinnahmen", "all_time_expenses": "Gesamtausgaben",
+    "work_income": "Arbeitseinkommen", "net_position": "Nettoposition",
+    "in_your_favor": "(zu Ihren Gunsten)", "you_owe": "(Sie schulden)"
   },
   "ai_assistant": {
     "title": "KI-Assistent", "subtitle": "Ihr persönlicher Finanzberater",

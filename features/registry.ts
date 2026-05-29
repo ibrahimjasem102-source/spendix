@@ -29,6 +29,7 @@ import { settings }      from "./settings/config";
 import { ledger }        from "./ledger/config";
 import { more }          from "./more/config";
 import { goals }         from "./goals/config";
+import { profile }       from "./profile/config";
 
 export const FEATURE_REGISTRY: FeatureModule[] = [
   // ── Primary ──────────────────────────────────────────────
@@ -54,6 +55,7 @@ export const FEATURE_REGISTRY: FeatureModule[] = [
 
   // ── Legacy / not in nav ───────────────────────────────────
   ledger,
+  profile,
 ];
 
 // Active (not disabled)

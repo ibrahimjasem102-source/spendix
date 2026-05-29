@@ -6,7 +6,7 @@
     "ai_insights": "AI", "settings": "Settings",
     "ai_assistant": "Assistant",
     "sign_in": "Sign in", "sign_out": "Sign out", "collapse": "Collapse",
-    "more": "More", "work": "Work"
+    "more": "More", "work": "Work", "profile": "Profile"
   },
   "common": {
     "save": "Save changes", "saved": "Saved", "saving": "Saving...", "cancel": "Cancel", "add": "Add",
@@ -142,6 +142,21 @@
     "work_session":      "Work Session",
     "work_session_hint": "Track work hours",
     "add_item": "Add {item}"
+  },
+  "profile": {
+    "title": "Profile", "subtitle": "Your financial identity",
+    "health_score": "Health Score",
+    "health_excellent": "Excellent", "health_good": "Good",
+    "health_fair": "Fair", "health_poor": "Needs Attention",
+    "badges": "Achievements",
+    "badge_first_step": "First Step", "badge_saver": "Saver",
+    "badge_investor": "Investor", "badge_hard_worker": "Hard Worker",
+    "badge_debt_free": "Debt Free", "badge_balanced": "Balanced",
+    "activity": "Activity Summary",
+    "total_transactions": "Total Transactions",
+    "all_time_income": "All-time Income", "all_time_expenses": "All-time Expenses",
+    "work_income": "Work Income", "net_position": "Net Position",
+    "in_your_favor": "(in your favor)", "you_owe": "(you owe)"
   },
   "ai_assistant": {
     "title": "AI Assistant",

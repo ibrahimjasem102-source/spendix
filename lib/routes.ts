@@ -17,6 +17,7 @@ export const ROUTES = {
   notifications: "/notifications",
   settings:      "/settings",
   more:          "/more",
+  profile:       "/profile",
 } as const;
 
 export type AppRoute = (typeof ROUTES)[keyof typeof ROUTES];
