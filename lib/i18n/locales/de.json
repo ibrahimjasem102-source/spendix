@@ -6,7 +6,7 @@
     "ai_insights": "KI-Einblicke", "settings": "Einstellungen",
     "ai_assistant": "KI-Assistent",
     "sign_in": "Anmelden", "sign_out": "Abmelden", "collapse": "Einklappen",
-    "profile": "Profil"
+    "profile": "Profil", "hub": "Hub"
   },
   "common": {
     "save": "Änderungen speichern", "saved": "Gespeichert", "cancel": "Abbrechen", "add": "Hinzufügen",
@@ -110,6 +110,38 @@
     "work_session":      "Arbeitssitzung",
     "work_session_hint": "Arbeitsstunden erfassen",
     "add_item": "{item} hinzufügen"
+  },
+  "hub": {
+    "title": "Finanz-Hub", "subtitle": "Ihr vollständiges Finanzbild",
+    "net_worth": "Nettovermögen", "net_worth_sub": "Vermögen minus Verbindlichkeiten",
+    "cash": "Kassenbestand", "portfolio": "Portfolio", "debt": "Gesamtschulden",
+    "risk": "Risikoscore", "risk_low": "Niedriges Risiko", "risk_medium": "Mittleres Risiko",
+    "risk_high": "Hohes Risiko", "risk_critical": "Kritisches Risiko",
+    "risk_safety": "Sicherheitsscore",
+    "forecast": "6-Monats-Prognose", "forecast_sub": "Basierend auf Ihren Durchschnittswerten",
+    "projected_income": "Proj. Einnahmen", "projected_expenses": "Proj. Ausgaben",
+    "emergency_fund": "Notfallfonds", "emergency_months": "Monate abgedeckt",
+    "debt_to_income": "Schulden / Einkommen", "savings_runway": "Sparreichweite",
+    "achievements": "Errungenschaften", "total_points": "Punkte",
+    "level": "Level",
+    "level_1": "Anfänger", "level_2": "Lernender", "level_3": "Organisiert",
+    "level_4": "Planer", "level_5": "Sparer", "level_6": "Experte",
+    "achievement_first_step": "Erster Schritt", "achievement_active_user": "Aktiver Nutzer",
+    "achievement_saver": "Sparer", "achievement_super_saver": "Super-Sparer",
+    "achievement_investor": "Investor", "achievement_profit_maker": "Gewinnmacher",
+    "achievement_hard_worker": "Fleißig", "achievement_debt_free": "Schuldenfrei",
+    "achievement_balanced": "Ausgewogen", "achievement_positive_balance": "Im Plus",
+    "achievement_no_overdue": "Pünktlich", "achievement_monthly_saver": "Monatssparer",
+    "risk_high_debt": "Hohes Schulden-Einkommens-Verhältnis",
+    "risk_med_debt": "Erhöhtes Schuldenniveau",
+    "risk_overdue": "Sie haben überfällige Schulden",
+    "risk_no_emergency": "Kein Notfallfonds",
+    "risk_low_emergency": "Notfallfonds zu niedrig (< 3 Monate)",
+    "risk_negative_savings": "Ausgaben übersteigen Einnahmen",
+    "risk_low_savings": "Niedrige Sparquote",
+    "risk_concentrated": "Portfolio zu stark konzentriert",
+    "months": "Mo.", "all_time": "Gesamt",
+    "x_mo": "{n} Mo."
   },
   "profile": {
     "title": "Profil", "subtitle": "Ihre finanzielle Identität",

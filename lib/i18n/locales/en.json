@@ -6,7 +6,7 @@
     "ai_insights": "AI", "settings": "Settings",
     "ai_assistant": "Assistant",
     "sign_in": "Sign in", "sign_out": "Sign out", "collapse": "Collapse",
-    "more": "More", "work": "Work", "profile": "Profile"
+    "more": "More", "work": "Work", "profile": "Profile", "hub": "Hub"
   },
   "common": {
     "save": "Save changes", "saved": "Saved", "saving": "Saving...", "cancel": "Cancel", "add": "Add",
@@ -142,6 +142,38 @@
     "work_session":      "Work Session",
     "work_session_hint": "Track work hours",
     "add_item": "Add {item}"
+  },
+  "hub": {
+    "title": "Financial Hub", "subtitle": "Your complete financial picture",
+    "net_worth": "Net Worth", "net_worth_sub": "Assets minus liabilities",
+    "cash": "Cash Balance", "portfolio": "Portfolio", "debt": "Total Debt",
+    "risk": "Risk Score", "risk_low": "Low Risk", "risk_medium": "Medium Risk",
+    "risk_high": "High Risk", "risk_critical": "Critical Risk",
+    "risk_safety": "Safety Score",
+    "forecast": "6-Month Forecast", "forecast_sub": "Based on your averages",
+    "projected_income": "Proj. Income", "projected_expenses": "Proj. Expenses",
+    "emergency_fund": "Emergency Fund", "emergency_months": "mo. covered",
+    "debt_to_income": "Debt / Income", "savings_runway": "Savings Runway",
+    "achievements": "Achievements", "total_points": "Points",
+    "level": "Level",
+    "level_1": "Beginner", "level_2": "Learner", "level_3": "Organized",
+    "level_4": "Planner", "level_5": "Saver", "level_6": "Expert",
+    "achievement_first_step": "First Step", "achievement_active_user": "Active User",
+    "achievement_saver": "Saver", "achievement_super_saver": "Super Saver",
+    "achievement_investor": "Investor", "achievement_profit_maker": "Profit Maker",
+    "achievement_hard_worker": "Hard Worker", "achievement_debt_free": "Debt Free",
+    "achievement_balanced": "Balanced", "achievement_positive_balance": "In the Black",
+    "achievement_no_overdue": "On Time", "achievement_monthly_saver": "Monthly Saver",
+    "risk_high_debt": "High debt-to-income ratio",
+    "risk_med_debt": "Elevated debt level",
+    "risk_overdue": "You have overdue debts",
+    "risk_no_emergency": "No emergency fund",
+    "risk_low_emergency": "Emergency fund is low (< 3 months)",
+    "risk_negative_savings": "Spending exceeds income",
+    "risk_low_savings": "Low savings rate",
+    "risk_concentrated": "Portfolio concentrated in few assets",
+    "months": "mo.", "all_time": "All-time",
+    "x_mo": "{n} mo."
   },
   "profile": {
     "title": "Profile", "subtitle": "Your financial identity",

@@ -29,6 +29,7 @@ import { settings }      from "./settings/config";
 import { ledger }        from "./ledger/config";
 import { more }          from "./more/config";
 import { goals }         from "./goals/config";
+import { hub }           from "./hub/config";
 import { profile }       from "./profile/config";
 
 export const FEATURE_REGISTRY: FeatureModule[] = [
@@ -36,6 +37,7 @@ export const FEATURE_REGISTRY: FeatureModule[] = [
   dashboard,
   transactions,
   analytics,
+  hub,
 
   // ── Finance ──────────────────────────────────────────────
   investments,

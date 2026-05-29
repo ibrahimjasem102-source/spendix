@@ -18,6 +18,7 @@ export const ROUTES = {
   settings:      "/settings",
   more:          "/more",
   profile:       "/profile",
+  hub:           "/hub",
 } as const;
 
 export type AppRoute = (typeof ROUTES)[keyof typeof ROUTES];
