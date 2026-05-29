@@ -77,11 +77,11 @@ export default function WorkPaymentForm({ initial, sessions = [], defaultSession
       <motion.div
         initial={{ y: 60, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
         exit={{ y: 60, opacity: 0 }} transition={spring}
-        className="w-full sm:max-w-md rounded-t-[2rem] sm:rounded-[1.75rem] overflow-hidden"
-        style={{ backgroundColor: "hsl(var(--bg-card))", border: "1px solid hsl(var(--border))" }}>
+        className="w-full sm:max-w-md rounded-t-[2rem] sm:rounded-[1.75rem] overflow-hidden flex flex-col"
+        style={{ backgroundColor: "hsl(var(--bg-card))", border: "1px solid hsl(var(--border))", maxHeight: "92dvh" }}>
 
         {/* Header */}
-        <div className="relative px-5 pt-5 pb-4" style={{ background: `${RING}12` }}>
+        <div className="shrink-0 relative px-5 pt-5 pb-4" style={{ background: `${RING}12` }}>
           <div className="w-10 h-1 rounded-full bg-white/10 mx-auto mb-4 sm:hidden" />
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -99,8 +99,8 @@ export default function WorkPaymentForm({ initial, sessions = [], defaultSession
           </div>
         </div>
 
-        <form onSubmit={handleSubmit}>
-          <div className="px-5 py-4 space-y-5 max-h-[85vh] overflow-y-auto">
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto min-h-0 flex flex-col">
+          <div className="px-5 py-4 space-y-5 flex-1">
 
             {/* Session selector */}
             {unpaidSessions.length > 0 && (
@@ -183,7 +183,7 @@ export default function WorkPaymentForm({ initial, sessions = [], defaultSession
           </div>
 
           {/* Submit */}
-          <div className="px-5 pt-2" style={{ paddingBottom: "max(20px, calc(env(safe-area-inset-bottom, 0px) + 8px))" }}>
+          <div className="shrink-0 px-5 pt-2" style={{ paddingBottom: "max(20px, calc(env(safe-area-inset-bottom, 0px) + 8px))" }}>
             <motion.button type="submit" disabled={loading || form.amount <= 0}
               whileTap={{ scale: 0.97 }} transition={tapTransition}
               className="w-full py-3.5 rounded-2xl text-sm font-bold text-[#0B0F14] transition-all disabled:opacity-40"
