@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ArrowDownRight, ArrowUpRight, Check } from "lucide-react";
+import { X, ArrowDownRight, ArrowUpRight, Check, ChevronLeft, ChevronRight } from "lucide-react";
 import { Category, Transaction, TransactionFormData, TransactionType } from "@/types";
 import { useTranslation } from "@/lib/i18n";
 import { useCurrency } from "@/lib/currency";
@@ -27,8 +27,7 @@ function fmt(v: number) {
   return v % 1 === 0 ? String(v) : v.toFixed(2);
 }
 
-// Quick amount presets
-const QUICK_AMOUNTS = [10, 25, 50, 100, 200, 500];
+const QUICK_AMOUNTS = [5, 10, 25, 50, 100, 200];
 
 export default function TransactionForm({ initial, initialType, onSubmit, onClose }: Props) {
   const { t } = useTranslation();
@@ -51,7 +50,8 @@ export default function TransactionForm({ initial, initialType, onSubmit, onClos
   const [loading,  setLoading]  = useState(false);
   const [error,    setError]    = useState("");
 
-  const amountRef = useRef<HTMLInputElement>(null);
+  const amountRef  = useRef<HTMLInputElement>(null);
+  const catRowRef  = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!isEdit) setTimeout(() => amountRef.current?.focus(), 120);
@@ -59,10 +59,7 @@ export default function TransactionForm({ initial, initialType, onSubmit, onClos
 
   useEffect(() => {
     if (guestLoading) return;
-    if (isGuest) {
-      setCategories(GUEST_CATEGORIES);
-      return;
-    }
+    if (isGuest) { setCategories(GUEST_CATEGORIES); return; }
     safeFetch("/api/categories")
       .then((r) => r.json())
       .then(({ categories: c }) => setCategories(c ?? []))
@@ -94,8 +91,7 @@ export default function TransactionForm({ initial, initialType, onSubmit, onClos
   function handleTypeChange(nextType: TransactionType) {
     setType(nextType);
     setForm((p) => ({
-      ...p,
-      type: nextType,
+      ...p, type: nextType,
       category_id: p.type === nextType ? p.category_id : null,
     }));
   }
@@ -110,191 +106,209 @@ export default function TransactionForm({ initial, initialType, onSubmit, onClos
       onClose();
     } catch (err) {
       const msg = err instanceof Error ? err.message : "";
-      // translate i18n error keys returned from the API
-      const display = msg.includes(".") && !msg.includes(" ") ? (t(msg) !== msg ? t(msg) : t("transactions.form_error")) : (msg || t("transactions.form_error"));
+      const display = msg.includes(".") && !msg.includes(" ")
+        ? (t(msg) !== msg ? t(msg) : t("transactions.form_error"))
+        : (msg || t("transactions.form_error"));
       setError(display);
       setLoading(false);
     }
   }
 
-  const filtered = categories.filter((c) => c.type === type);
-  const isExpense = type === "expense";
-  const accent    = isExpense ? "#F43F5E" : "#10B981";
-  const accentBg  = isExpense ? "bg-rose-400/10"    : "bg-emerald-400/10";
-  const accentText= isExpense ? "text-rose-400"     : "text-emerald-400";
-  const accentBorder = isExpense ? "border-rose-400/30" : "border-emerald-400/30";
+  const filtered    = categories.filter((c) => c.type === type);
+  const isExpense   = type === "expense";
+  const accent      = isExpense ? "#F43F5E" : "#10B981";
+  const accentBg    = isExpense ? "bg-rose-400/10"    : "bg-emerald-400/10";
+  const accentText  = isExpense ? "text-rose-400"     : "text-emerald-400";
+  const accentBorder= isExpense ? "border-rose-400/25": "border-emerald-400/25";
+
+  // Scroll category row
+  function scrollCats(dir: "left" | "right") {
+    if (!catRowRef.current) return;
+    catRowRef.current.scrollBy({ left: dir === "left" ? -120 : 120, behavior: "smooth" });
+  }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+    <div
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
       style={{
-        backgroundColor: "rgba(19,26,34,0.68)",
-        backdropFilter: "blur(6px)",
-        WebkitBackdropFilter: "blur(6px)",
-        transform: "translate3d(0,0,0)",
-        backfaceVisibility: "hidden",
+        backgroundColor: "rgba(11,15,20,0.72)",
+        backdropFilter: "blur(8px)",
+        WebkitBackdropFilter: "blur(8px)",
       }}
-      onClick={(e) => e.target === e.currentTarget && onClose()}>
-
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
       <motion.div
-        initial={{ y: 60, opacity: 0 }}
+        initial={{ y: 80, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        exit={{ y: 60, opacity: 0 }}
+        exit={{ y: 80, opacity: 0 }}
         transition={{ ...spring }}
-        className="w-full sm:max-w-md rounded-t-[2rem] sm:rounded-[1.75rem] overflow-y-auto"
+        className="w-full sm:max-w-md rounded-t-[2rem] sm:rounded-[1.75rem] overflow-hidden flex flex-col"
         style={{
           backgroundColor: "hsl(var(--bg-card))",
           border: "1px solid hsl(var(--border))",
-          transform: "translate3d(0,0,0)",
-          backfaceVisibility: "hidden",
           maxHeight: "92dvh",
         }}
       >
-        {/* ── Type toggle header ─────────────────────────────── */}
-        <div className="relative px-5 pt-5 pb-4" style={{ background: `${accent}10` }}>
-          {/* Drag handle (mobile) */}
-          <div className="w-10 h-1 rounded-full bg-white/10 mx-auto mb-4 sm:hidden" />
+        {/* ── Header: drag handle + type toggle ────────── */}
+        <div className="shrink-0 px-5 pt-4 pb-3" style={{ background: `${accent}0D` }}>
+          {/* Drag handle */}
+          <div className="w-10 h-1 rounded-full bg-white/12 mx-auto mb-3 sm:hidden" />
 
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-bold t1">
-              {isEdit ? t("transactions.edit") : (isExpense ? t("transactions.add_expense") : t("transactions.add_income"))}
-            </h2>
-            <button onClick={onClose} className="p-1.5 rounded-xl t3 hover:t1 hover:bg-white/5 transition-all">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-xs font-bold t3 uppercase tracking-widest">
+              {isEdit ? t("transactions.edit") : t("transactions.new")}
+            </p>
+            <button onClick={onClose}
+              className="w-8 h-8 rounded-xl flex items-center justify-center t3 hover:t1 hover:bg-white/8 transition-all">
               <X className="w-4 h-4" />
             </button>
           </div>
 
-          {/* Type switcher */}
-          <div className="flex gap-1.5 bg-[hsl(var(--bg-input))] p-1 rounded-2xl">
-            {(["expense", "income"] as const).map((item) => (
-              <motion.button
-                key={item}
-                type="button"
-                onClick={() => handleTypeChange(item)}
-                layout
-                whileTap={{ scale: 0.98 }}
-                transition={tapTransition}
-                className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-semibold transition-colors relative z-10 ${
-                  type === item ? (item === "expense" ? "text-rose-400" : "text-emerald-400") : "t3"
-                }`}
-                style={type === item ? {
-                  backgroundColor: item === "expense" ? "rgba(244,63,94,0.12)" : "rgba(16,185,129,0.12)",
-                  boxShadow: `0 0 0 1px ${item === "expense" ? "rgba(244,63,94,0.25)" : "rgba(16,185,129,0.25)"}`,
-                } : {}}>
-                {item === "expense"
-                  ? <ArrowDownRight className="w-3.5 h-3.5" />
-                  : <ArrowUpRight   className="w-3.5 h-3.5" />}
-                {t(`transactions.${item}`)}
-              </motion.button>
-            ))}
+          {/* Type toggle */}
+          <div className="flex gap-1 bg-black/12 rounded-2xl p-1">
+            {(["expense", "income"] as const).map((item) => {
+              const isActive = type === item;
+              const col = item === "expense" ? "#F43F5E" : "#10B981";
+              return (
+                <motion.button
+                  key={item} type="button"
+                  onClick={() => handleTypeChange(item)}
+                  whileTap={{ scale: 0.97 }} transition={tapTransition}
+                  className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all"
+                  style={isActive ? {
+                    backgroundColor: `${col}18`,
+                    color: col,
+                    boxShadow: `0 0 0 1.5px ${col}30`,
+                  } : { color: "hsl(var(--text-3))" }}
+                >
+                  {item === "expense"
+                    ? <ArrowDownRight className="w-4 h-4" />
+                    : <ArrowUpRight   className="w-4 h-4" />}
+                  {t(`transactions.${item}`)}
+                </motion.button>
+              );
+            })}
           </div>
         </div>
 
-        <form onSubmit={handleSubmit}>
-          <div className="px-5 py-4 space-y-4 max-h-[85vh] overflow-y-auto">
+        {/* ── Scrollable body ───────────────────────────── */}
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto min-h-0">
+          <div className="px-5 py-5 space-y-5">
 
-            {/* ── Amount ─────────────────────────────────────── */}
-            <div>
-              <label className="block text-xs font-medium t3 uppercase tracking-wide mb-2">
+            {/* ── Amount (centered big display) ─────────── */}
+            <div className="text-center">
+              <p className="text-[10px] font-semibold t3 uppercase tracking-[0.14em] mb-3">
                 {t("transactions.amount")}
-              </label>
-              <div className="relative">
-                <span className="absolute start-3 top-1/2 -translate-y-1/2 text-sm font-bold t3 select-none whitespace-nowrap">
-                  {symbol}
-                </span>
+              </p>
+              <div className="relative flex items-center justify-center gap-2">
+                <span className="text-xl font-bold t3 select-none">{symbol}</span>
                 <input
                   ref={amountRef}
-                  type="number"
-                  inputMode="decimal"
-                  min="0.01"
-                  step="0.01"
+                  type="number" inputMode="decimal" min="0.01" step="0.01"
                   value={rawAmount}
                   onChange={(e) => handleAmount(e.target.value)}
                   placeholder="0.00"
-                  className="w-full ps-14 pe-4 py-4 text-3xl font-bold number-display rounded-2xl bg-[hsl(var(--bg-input))] border focus:outline-none transition-all"
-                  style={{
-                    color: rawAmount ? accent : undefined,
-                    borderColor: rawAmount ? `${accent}40` : "hsl(var(--border))",
-                  }}
+                  className="text-5xl font-bold bg-transparent border-none outline-none tabular-nums text-center w-48 placeholder:text-[hsl(var(--text-3))]"
+                  style={{ color: rawAmount ? accent : undefined }}
                 />
-              </div>
-
-              {/* Quick amounts */}
-              <div className="flex gap-1.5 mt-2.5 flex-wrap">
-                {QUICK_AMOUNTS.map((n) => (
-                  <button key={n} type="button" onClick={() => addQuick(n)}
-                    className={`px-3 py-1 rounded-xl text-xs font-semibold border transition-all hover:scale-105 ${accentBg} ${accentText} ${accentBorder}`}>
-                    +{n}
-                  </button>
-                ))}
                 {form.amount > 0 && (
-                  <button type="button" onClick={() => { setRawAmount(""); set("amount", 0); }}
-                    className="px-3 py-1 rounded-xl text-xs font-medium t3 hover:t1 border border-[hsl(var(--border))] transition-all">
-                    x
+                  <button type="button"
+                    onClick={() => { setRawAmount(""); set("amount", 0); }}
+                    className="absolute -end-1 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-[hsl(var(--bg-input))] flex items-center justify-center t3 hover:t1 transition-all">
+                    <X className="w-3.5 h-3.5" />
                   </button>
                 )}
               </div>
+
+              {/* Quick amounts */}
+              <div className="flex justify-center gap-2 mt-4 flex-wrap">
+                {QUICK_AMOUNTS.map((n) => (
+                  <motion.button key={n} type="button"
+                    onClick={() => addQuick(n)}
+                    whileTap={{ scale: 0.94 }} transition={tapTransition}
+                    className={`px-3.5 py-1.5 rounded-xl text-xs font-bold border transition-all ${accentBg} ${accentText} ${accentBorder}`}>
+                    +{n}
+                  </motion.button>
+                ))}
+              </div>
             </div>
 
-            {/* ── Title ──────────────────────────────────────── */}
+            {/* Separator */}
+            <div className="h-px bg-[hsl(var(--border-2))]" />
+
+            {/* ── Title ─────────────────────────────────── */}
             <div>
-              <label className="block text-xs font-medium t3 uppercase tracking-wide mb-2">
+              <label className="block text-[10px] font-semibold t3 uppercase tracking-[0.12em] mb-2">
                 {t("transactions.title_field")}
               </label>
               <input
-                type="text"
-                required
+                type="text" required
                 value={form.title}
                 onChange={(e) => set("title", e.target.value)}
-                className="field text-sm"
+                className="field text-sm font-medium"
                 placeholder={t("transactions.title_placeholder")}
               />
             </div>
 
-            {/* ── Category ───────────────────────────────────── */}
-            {(filtered.length > 0 || categories.length > 0) && (
+            {/* ── Category (horizontal scroll) ──────────── */}
+            {filtered.length > 0 && (
               <div>
-                <label className="block text-xs font-medium t3 uppercase tracking-wide mb-2">
-                  {t("transactions.category")}
-                </label>
-                <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-[10px] font-semibold t3 uppercase tracking-[0.12em]">
+                    {t("transactions.category")}
+                  </label>
+                  <div className="flex gap-1">
+                    <button type="button" onClick={() => scrollCats("left")}
+                      className="w-6 h-6 rounded-lg bg-[hsl(var(--bg-input))] flex items-center justify-center t3 hover:t1 transition-all">
+                      <ChevronLeft className="w-3 h-3" />
+                    </button>
+                    <button type="button" onClick={() => scrollCats("right")}
+                      className="w-6 h-6 rounded-lg bg-[hsl(var(--bg-input))] flex items-center justify-center t3 hover:t1 transition-all">
+                      <ChevronRight className="w-3 h-3" />
+                    </button>
+                  </div>
+                </div>
+
+                <div
+                  ref={catRowRef}
+                  className="flex gap-2 overflow-x-auto pb-1"
+                  style={{ scrollbarWidth: "none", WebkitOverflowScrolling: "touch" }}
+                >
                   {/* No category */}
                   <button type="button" onClick={() => set("category_id", null)}
-                    className={`flex flex-col items-center gap-1.5 p-2 rounded-xl border transition-all ${
+                    className={`flex-none flex flex-col items-center gap-1.5 px-3 py-2.5 rounded-2xl border transition-all min-w-[64px] ${
                       !form.category_id
-                        ? `${accentBg} ${accentBorder} border-2`
+                        ? `${accentBg} ${accentBorder} border-[1.5px]`
                         : "bg-[hsl(var(--bg-input))] border-[hsl(var(--border))]"
                     }`}>
-                    <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-[hsl(var(--bg-card-2))]">
-                      <span className="text-sm t3">-</span>
+                    <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-[hsl(var(--bg-card-2))]">
+                      <span className="text-base t3">—</span>
                     </div>
-                    <span className="text-[9px] font-medium t3 truncate w-full text-center leading-tight">
-                      {t("transactions.uncategorized")}
-                    </span>
+                    <span className="text-[9px] font-semibold t3 whitespace-nowrap">{t("transactions.uncategorized")}</span>
                   </button>
 
                   {filtered.map((cat) => {
                     const isSelected = form.category_id === cat.id;
                     return (
                       <button key={cat.id} type="button" onClick={() => set("category_id", cat.id)}
-                        className="relative flex flex-col items-center gap-1.5 p-2 rounded-xl border transition-all"
+                        className="flex-none flex flex-col items-center gap-1.5 px-3 py-2.5 rounded-2xl border transition-all min-w-[64px] relative"
                         style={isSelected ? {
-                          backgroundColor: `${cat.color}12`,
-                          borderColor: `${cat.color}50`,
-                          borderWidth: 2,
+                          backgroundColor: `${cat.color}14`,
+                          borderColor: `${cat.color}45`,
+                          borderWidth: 1.5,
                         } : {
                           backgroundColor: "hsl(var(--bg-input))",
                           borderColor: "hsl(var(--border))",
                           borderWidth: 1,
                         }}>
                         {isSelected && (
-                          <span className="absolute top-0.5 end-0.5 w-3.5 h-3.5 rounded-full flex items-center justify-center z-10"
+                          <span className="absolute top-1 end-1 w-3.5 h-3.5 rounded-full flex items-center justify-center"
                             style={{ backgroundColor: cat.color }}>
                             <Check className="w-2 h-2 text-white" strokeWidth={3.5} />
                           </span>
                         )}
                         <CategoryIcon icon={(cat as Category & { icon?: string }).icon} color={cat.color} size="sm" />
-                        <span className={`text-[9px] font-medium truncate w-full text-center leading-tight ${isSelected ? "" : "t2"}`}
-                          style={isSelected ? { color: cat.color } : {}}>
+                        <span className="text-[9px] font-semibold whitespace-nowrap" style={{ color: isSelected ? cat.color : "hsl(var(--text-2))" }}>
                           {cat.name}
                         </span>
                       </button>
@@ -304,23 +318,22 @@ export default function TransactionForm({ initial, initialType, onSubmit, onClos
               </div>
             )}
 
-            {/* ── Date ───────────────────────────────────────── */}
+            {/* ── Date ──────────────────────────────────── */}
             <div>
-              <label className="block text-xs font-medium t3 uppercase tracking-wide mb-2">
+              <label className="block text-[10px] font-semibold t3 uppercase tracking-[0.12em] mb-2">
                 {t("transactions.date")}
               </label>
-              <div className="flex gap-1.5">
-                {/* Shortcuts */}
+              <div className="flex gap-2">
                 {[
                   { label: t("transactions.today"),     val: today     },
                   { label: t("transactions.yesterday"), val: yesterday },
                 ].map((s) => (
                   <button key={s.val} type="button"
                     onClick={() => set("transaction_date", s.val)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-medium border transition-all ${
+                    className={`px-3 py-2 rounded-xl text-xs font-semibold border transition-all whitespace-nowrap ${
                       form.transaction_date === s.val
-                        ? `${accentBg} ${accentText} ${accentBorder}`
-                        : "bg-[hsl(var(--bg-input))] t3 border-[hsl(var(--border))] hover:t1"
+                        ? `${accentBg} ${accentText} ${accentBorder} border-[1.5px]`
+                        : "bg-[hsl(var(--bg-input))] t3 border-[hsl(var(--border))] hover:t2"
                     }`}>
                     {s.label}
                   </button>
@@ -329,16 +342,16 @@ export default function TransactionForm({ initial, initialType, onSubmit, onClos
                   type="date"
                   value={form.transaction_date}
                   onChange={(e) => set("transaction_date", e.target.value)}
-                  className="field flex-1 text-sm py-1.5"
+                  className="field flex-1 text-sm py-2 min-w-0"
                 />
               </div>
             </div>
 
-            {/* ── Notes ──────────────────────────────────────── */}
+            {/* ── Notes ─────────────────────────────────── */}
             <div>
-              <label className="block text-xs font-medium t3 uppercase tracking-wide mb-2">
+              <label className="block text-[10px] font-semibold t3 uppercase tracking-[0.12em] mb-2">
                 {t("transactions.notes")}{" "}
-                <span className="normal-case font-normal opacity-50">({t("transactions.notes_optional")})</span>
+                <span className="normal-case font-normal opacity-40">({t("transactions.notes_optional")})</span>
               </label>
               <input
                 type="text"
@@ -349,33 +362,43 @@ export default function TransactionForm({ initial, initialType, onSubmit, onClos
               />
             </div>
 
-            {error && (
-              <motion.p initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
-                className="text-xs text-rose-400 bg-rose-400/10 border border-rose-400/20 px-3 py-2 rounded-xl">
-                {error}
-              </motion.p>
-            )}
+            {/* ── Error ─────────────────────────────────── */}
+            <AnimatePresence>
+              {error && (
+                <motion.p
+                  initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                  className="text-xs text-rose-400 bg-rose-400/10 border border-rose-400/20 px-3 py-2.5 rounded-xl"
+                >
+                  {error}
+                </motion.p>
+              )}
+            </AnimatePresence>
+
           </div>
 
-          {/* ── Submit ─────────────────────────────────────────── */}
-          <div className="px-5 pt-2" style={{ paddingBottom: "max(20px, calc(env(safe-area-inset-bottom, 0px) + 8px))" }}>
+          {/* ── Submit ────────────────────────────────────── */}
+          <div className="px-5 pb-safe-or-5 pt-2 shrink-0"
+            style={{ paddingBottom: "max(20px, calc(env(safe-area-inset-bottom, 0px) + 12px))" }}>
             <motion.button
               type="submit"
               disabled={loading || form.amount <= 0}
-              whileTap={{ scale: 0.97 }}
-              transition={tapTransition}
-              className="w-full py-3.5 rounded-2xl text-sm font-bold transition-all disabled:opacity-40 relative overflow-hidden"
-              style={{ background: `linear-gradient(135deg, ${accent}, ${isExpense ? "#E11D48" : "#059669"})` }}>
+              whileTap={{ scale: 0.97 }} transition={tapTransition}
+              className="w-full py-4 rounded-2xl text-sm font-bold text-white transition-all disabled:opacity-40 relative overflow-hidden"
+              style={{
+                background: `linear-gradient(135deg, ${accent} 0%, ${isExpense ? "#BE123C" : "#047857"} 100%)`,
+                boxShadow: `0 4px 20px ${accent}35`,
+              }}
+            >
               <AnimatePresence mode="wait">
                 {loading ? (
-                  <motion.span key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                    className="flex items-center justify-center gap-2 text-white">
+                  <motion.span key="load" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                    className="flex items-center justify-center gap-2">
                     <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                     {t("common.saving")}
                   </motion.span>
                 ) : (
                   <motion.span key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                    className="flex items-center justify-center gap-2 text-white">
+                    className="flex items-center justify-center gap-2">
                     {isEdit
                       ? <><Check className="w-4 h-4" />{t("transactions.save_edit")}</>
                       : isExpense
