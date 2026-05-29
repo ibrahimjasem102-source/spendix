@@ -140,12 +140,13 @@ export default function TransactionForm({ initial, initialType, onSubmit, onClos
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 60, opacity: 0 }}
         transition={{ ...spring }}
-        className="w-full sm:max-w-md rounded-t-[2rem] sm:rounded-[1.75rem] overflow-hidden"
+        className="w-full sm:max-w-md rounded-t-[2rem] sm:rounded-[1.75rem] overflow-y-auto"
         style={{
           backgroundColor: "hsl(var(--bg-card))",
           border: "1px solid hsl(var(--border))",
           transform: "translate3d(0,0,0)",
           backfaceVisibility: "hidden",
+          maxHeight: "92dvh",
         }}
       >
         {/* ── Type toggle header ─────────────────────────────── */}

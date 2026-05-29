@@ -16,7 +16,7 @@ export default function Breadcrumbs() {
 
   return (
     <nav
-      className="flex items-center gap-1.5 text-xs mb-5 px-0.5"
+      className="hidden sm:flex items-center gap-1.5 text-xs mb-4 px-0.5"
       aria-label="Breadcrumb"
     >
       <Link
@@ -24,7 +24,7 @@ export default function Breadcrumbs() {
         className="flex items-center gap-1 t3 hover:t2 transition-colors"
       >
         <Home className="w-3 h-3" />
-        <span>Home</span>
+        <span>{t("dashboard.title")}</span>
       </Link>
       <ChevronRight className="w-3 h-3 t3" />
       <span className="t2 font-medium">{t(item.title)}</span>

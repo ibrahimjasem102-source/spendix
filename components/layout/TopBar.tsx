@@ -57,7 +57,18 @@ export default function TopBar() {
   return (
     <header className="relative z-30 shrink-0 px-3 sm:px-4 lg:px-6 pt-3">
       <div className="modern-surface flex h-[60px] items-center gap-2 rounded-2xl px-2.5 sm:px-3">
-<Link href="/dashboard" className="hidden sm:flex lg:hidden items-center gap-2 px-2">
+        {/* Mobile: compact logo + page title */}
+        <div className="flex sm:hidden items-center gap-2 shrink-0 ps-0.5">
+          <Link href="/dashboard" className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-400 to-violet-500 shrink-0">
+            <Wallet className="h-4 w-4 text-white" />
+          </Link>
+          {page && pathname !== "/dashboard" && (
+            <span className="text-[13px] font-bold t1 truncate max-w-[90px]">{t(page.title)}</span>
+          )}
+        </div>
+
+        {/* SM–LG: logo only */}
+        <Link href="/dashboard" className="hidden sm:flex lg:hidden items-center gap-2 px-2">
           <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 to-violet-500">
             <Wallet className="h-4 w-4 text-white" />
           </div>
@@ -79,7 +90,7 @@ export default function TopBar() {
         <div className="ms-auto flex shrink-0 items-center gap-1.5">
           <button
             onClick={toggleTheme}
-            className="icon-button"
+            className="icon-button hidden sm:flex"
             title={theme === "dark" ? t("topbar.switch_light") : t("topbar.switch_dark")}
           >
             {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
@@ -147,6 +158,10 @@ export default function TopBar() {
                   ))}
                 </div>
 
+                <button onClick={() => { toggleTheme(); closeMenus(); }} className={`${itemClass} sm:hidden`}>
+                  {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                  {theme === "dark" ? t("topbar.switch_light") : t("topbar.switch_dark")}
+                </button>
                 <Link href="/settings" onClick={closeMenus} className={itemClass}>
                   <Settings className="h-4 w-4" />
                   {t("nav.settings")}

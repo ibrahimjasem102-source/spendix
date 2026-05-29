@@ -46,9 +46,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                         */}
                         <div className="
                           w-full mx-auto
-                          px-4 sm:px-5 lg:px-7 xl:px-8
-                          pt-4 sm:pt-5 lg:pt-7
-                          pb-[calc(92px+env(safe-area-inset-bottom,0px))] lg:pb-8
+                          px-3 sm:px-5 lg:px-7 xl:px-8
+                          pt-3 sm:pt-5 lg:pt-7
+                          pb-[calc(88px+env(safe-area-inset-bottom,0px))] lg:pb-8
                           max-w-none 2xl:max-w-[1500px]
                         ">
                           <Breadcrumbs />

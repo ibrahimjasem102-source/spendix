@@ -327,13 +327,13 @@ export default function DashboardPage() {
   if (isLoading || (!isGuest && dashboardQuery.isLoading)) return <DashSkeleton />;
 
   return (
-    <div className="space-y-4 sm:space-y-5 lg:space-y-6 pb-2">
-      <div className="flex items-start justify-between gap-3">
-        <div>
+    <div className="space-y-3 sm:space-y-5 lg:space-y-6 pb-2">
+      <div className="flex items-center gap-3">
+        <div className="flex-1 min-w-0">
           <p className="text-[10px] sm:text-xs font-semibold t3 uppercase tracking-[0.12em] mb-0.5">
             {new Date().toLocaleDateString(dateLocale, { weekday: "long", month: "long", day: "numeric" })}
           </p>
-          <h1 className="text-xl sm:text-2xl font-bold t1">{greeting}</h1>
+          <h1 className="text-lg sm:text-2xl font-bold t1 truncate">{greeting}</h1>
         </div>
       </div>
 
