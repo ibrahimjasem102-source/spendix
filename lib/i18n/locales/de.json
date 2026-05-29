@@ -51,7 +51,9 @@
   },
   "analytics": {
     "title": "Analytik", "subtitle": "Tiefgehende Finanzanalyse",
-    "spending_trends": "Monatliche Ausgabentrends", "heatmap": "Ausgaben-Heatmap nach Kategorie",
+    "cockpit": "Finanzcockpit",
+    "spending_trends": "Einnahmen vs. Ausgaben", "trends_subtitle": "Letzte 6 Monate",
+    "heatmap": "Ausgaben-Heatmap nach Kategorie",
     "budget_vs_actual": "Budget vs. Tatsächlich"
   },
   "budgets": {

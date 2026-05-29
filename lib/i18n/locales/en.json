@@ -85,7 +85,9 @@
   },
   "analytics": {
     "title": "Analytics", "subtitle": "Deep dive into your financial patterns",
-    "spending_trends": "Monthly Spending Trends", "heatmap": "Category Spending Heatmap",
+    "cockpit": "Financial Cockpit",
+    "spending_trends": "Income vs Expenses Trend", "trends_subtitle": "Last 6 months",
+    "heatmap": "Category Spending Heatmap",
     "budget_vs_actual": "Budget vs Actual"
   },
   "budgets": {

@@ -405,49 +405,51 @@ export default function DashboardPage() {
         </div>
       </motion.div>
 
-      <div>
-        <div className="section-head">
-          <div className="section-head-bar" />
-          <h2 className="section-head-title">{t("nav.debts")}</h2>
-          <Link href="/debts" className="section-head-action">
-            {t("common.view_all")} <ChevronRight className="w-3 h-3" />
-          </Link>
+      {(engine.debtPayable > 0 || engine.debtReceivable > 0) && (
+        <div>
+          <div className="section-head">
+            <div className="section-head-bar" />
+            <h2 className="section-head-title">{t("nav.debts")}</h2>
+            <Link href="/debts" className="section-head-action">
+              {t("common.view_all")} <ChevronRight className="w-3 h-3" />
+            </Link>
+          </div>
+          <motion.div
+            variants={staggerContainer}
+            initial="hidden"
+            animate="visible"
+            className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3"
+          >
+            {[
+              {
+                label: t("relationship.total_receivables"),
+                value: format(engine.debtReceivable),
+                color: "text-emerald-400",
+              },
+              {
+                label: t("relationship.total_payables"),
+                value: format(engine.debtPayable),
+                color: "text-rose-400",
+              },
+              {
+                label: t("relationship.net_debt_exposure"),
+                value: format(engine.netDebt),
+                color: engine.netDebt >= 0 ? "text-cyan-400" : "text-amber-400",
+              },
+              {
+                label: t("relationship.debt_recovery_rate"),
+                value: `${Math.round(engine.debtRecoveryRate)}%`,
+                color: engine.overdueDebtsCount > 0 ? "text-amber-400" : "text-purple-400",
+              },
+            ].map((item) => (
+              <motion.div key={item.label} variants={staggerItem} className="metric-tile p-3 sm:p-4">
+                <p className="text-[9px] sm:text-[10px] t3 uppercase tracking-wide font-semibold leading-tight">{item.label}</p>
+                <p className={`text-base sm:text-lg font-bold number-display mt-1 ${item.color}`}>{item.value}</p>
+              </motion.div>
+            ))}
+          </motion.div>
         </div>
-        <motion.div
-          variants={staggerContainer}
-          initial="hidden"
-          animate="visible"
-          className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3"
-        >
-          {[
-            {
-              label: t("relationship.total_receivables"),
-              value: format(engine.debtReceivable),
-              color: "text-emerald-400",
-            },
-            {
-              label: t("relationship.total_payables"),
-              value: format(engine.debtPayable),
-              color: "text-rose-400",
-            },
-            {
-              label: t("relationship.net_debt_exposure"),
-              value: format(engine.netDebt),
-              color: engine.netDebt >= 0 ? "text-cyan-400" : "text-amber-400",
-            },
-            {
-              label: t("relationship.debt_recovery_rate"),
-              value: `${Math.round(engine.debtRecoveryRate)}%`,
-              color: engine.overdueDebtsCount > 0 ? "text-amber-400" : "text-purple-400",
-            },
-          ].map((item) => (
-            <motion.div key={item.label} variants={staggerItem} className="metric-tile p-3 sm:p-4">
-              <p className="text-[9px] sm:text-[10px] t3 uppercase tracking-wide font-semibold leading-tight">{item.label}</p>
-              <p className={`text-base sm:text-lg font-bold number-display mt-1 ${item.color}`}>{item.value}</p>
-            </motion.div>
-          ))}
-        </motion.div>
-      </div>
+      )}
 
       {/* ── Smart Insight Card (replaces 4-widget grid) ──── */}
       {currentDashboard.hasTransactions && (
@@ -462,22 +464,24 @@ export default function DashboardPage() {
         />
       )}
 
-      {/* ── Charts (collapsible) ──────────────────────── */}
-      <div className="card p-4 sm:p-5">
-        <div className="section-head">
-          <div className="section-head-bar" />
-          <h2 className="section-head-title">{t("dashboard.income_vs_expenses")}</h2>
+      {/* ── Charts (collapsible, only when data exists) ── */}
+      {currentDashboard.hasTransactions && (
+        <div className="card p-4 sm:p-5">
+          <div className="section-head">
+            <div className="section-head-bar" />
+            <h2 className="section-head-title">{t("dashboard.income_vs_expenses")}</h2>
+          </div>
+          <CollapsibleSection title="" storageKey="dash_charts" defaultOpen={true}>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <div className="lg:col-span-2"><SpendingLineChart data={currentDashboard.monthlyCashflow} /></div>
+              <CategoryDonut data={currentDashboard.spendingByCategory} />
+            </div>
+            <div className="mt-4">
+              <IncomeExpenseBar data={currentDashboard.incomeVsExpenses} />
+            </div>
+          </CollapsibleSection>
         </div>
-        <CollapsibleSection title="" storageKey="dash_charts" defaultOpen={true}>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            <div className="lg:col-span-2"><SpendingLineChart data={currentDashboard.monthlyCashflow} /></div>
-            <CategoryDonut data={currentDashboard.spendingByCategory} />
-          </div>
-          <div className="mt-4">
-            <IncomeExpenseBar data={currentDashboard.incomeVsExpenses} />
-          </div>
-        </CollapsibleSection>
-      </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
         <div className="lg:col-span-3 card p-4 sm:p-5">

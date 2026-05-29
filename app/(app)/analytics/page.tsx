@@ -167,13 +167,20 @@ export default function AnalyticsPage() {
     [charts]
   );
 
+  // Compute real savings rate from income/expense history (not from investments!)
+  const savingsRate = useMemo(() => {
+    const recent = [...charts.incomeVsExpenses].reverse().find((m) => m.income > 0);
+    if (!recent) return 0;
+    return Math.max(-99, Math.min(100, Math.round((recent.savings / recent.income) * 100)));
+  }, [charts.incomeVsExpenses]);
+
   if (analyticsQuery.isLoading) return <CardSkeleton />;
 
   return (
     <div className="space-y-5">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-bold t3 uppercase tracking-[0.12em] mb-1">Financial Cockpit</p>
+          <p className="text-xs font-bold t3 uppercase tracking-[0.12em] mb-1">{t("analytics.cockpit")}</p>
           <h1 className="text-xl font-bold t1">{t("analytics.title")}</h1>
           <p className="text-sm t2 mt-0.5">{t("analytics.subtitle")}</p>
         </div>
@@ -182,7 +189,7 @@ export default function AnalyticsPage() {
           className="flex items-center gap-1.5 text-xs font-medium text-cyan-400 hover:text-cyan-300 bg-cyan-400/10 hover:bg-cyan-400/15 px-3 py-2 rounded-xl transition-all pressable"
         >
           <RefreshCw className="h-3.5 w-3.5" />
-          {t("common.retry")}
+          {t("ai_insights.refresh")}
         </button>
       </div>
 
@@ -204,7 +211,7 @@ export default function AnalyticsPage() {
           { label: t("debts.remaining"), value: format(debts.total_remaining), tone: "text-amber-400" },
           { label: t("investments.current_value"), value: format(investments.current_value), tone: "text-purple-400" },
           { label: t("work.income_received"), value: format(work.received_work_income), tone: "text-cyan-400" },
-          { label: t("dashboard.savings_rate"), value: `${Math.round(investments.profit_loss_percentage)}%`, tone: investments.profit_loss >= 0 ? "text-emerald-400" : "text-rose-400" },
+          { label: t("dashboard.savings_rate"), value: `${savingsRate}%`, tone: savingsRate >= 20 ? "text-emerald-400" : savingsRate >= 0 ? "text-cyan-400" : "text-rose-400" },
         ].map((item) => (
           <div key={item.label} className="card p-4">
             <p className="text-[10px] t3 uppercase tracking-wide font-semibold">{item.label}</p>
@@ -217,7 +224,7 @@ export default function AnalyticsPage() {
         <div className="flex items-center justify-between mb-5">
           <div>
             <h3 className="text-sm font-semibold t1">{t("analytics.spending_trends")}</h3>
-            <p className="text-xs t2 mt-0.5">{t("analytics.trends_subtitle")}</p>
+            <p className="text-xs t2 mt-0.5">{t("dashboard.last_6_months")}</p>
           </div>
           <div className="flex items-center gap-3 text-xs t2">
             <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-emerald-400" />{t("transactions.income")}</span>
@@ -280,28 +287,35 @@ export default function AnalyticsPage() {
             <h3 className="text-sm font-semibold t1">{t("dashboard.by_category")}</h3>
             <p className="text-xs t2 mt-0.5">{t("dashboard.this_month")}</p>
           </div>
-          <ResponsiveContainer width="100%" height={220}>
-            <PieChart>
-              <Pie
-                data={charts.spendingByCategory.length > 0 ? charts.spendingByCategory : [{ name: t("common.no_data"), value: 1, color: "rgba(148,163,184,0.25)" }]}
-                cx="50%"
-                cy="50%"
-                innerRadius={56}
-                outerRadius={82}
-                dataKey="value"
-                strokeWidth={0}
-              >
-                {(charts.spendingByCategory.length > 0 ? charts.spendingByCategory : [{ color: "rgba(148,163,184,0.25)" }]).map((entry, index) => (
-                  <Cell key={index} fill={entry.color} />
-                ))}
-              </Pie>
-              <Tooltip
-                formatter={(value: number, name: string) => [charts.spendingByCategory.length > 0 ? format(value) : format(0), name]}
-                contentStyle={{ background: bgTip, border: `1px solid ${borTip}`, borderRadius: 12 }}
-                itemStyle={{ color: txtTip }}
-              />
-            </PieChart>
-          </ResponsiveContainer>
+          {charts.spendingByCategory.length === 0 ? (
+            <div className="h-[220px] flex flex-col items-center justify-center gap-3">
+              <div className="w-20 h-20 rounded-full border-4 border-dashed opacity-20" style={{ borderColor: "hsl(var(--border))" }} />
+              <p className="text-xs t3">{t("common.no_data")}</p>
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height={220}>
+              <PieChart>
+                <Pie
+                  data={charts.spendingByCategory}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={56}
+                  outerRadius={82}
+                  dataKey="value"
+                  strokeWidth={0}
+                >
+                  {charts.spendingByCategory.map((entry, index) => (
+                    <Cell key={index} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  formatter={(value: number, name: string) => [format(value), name]}
+                  contentStyle={{ background: bgTip, border: `1px solid ${borTip}`, borderRadius: 12 }}
+                  itemStyle={{ color: txtTip }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          )}
         </div>
       </div>
 
