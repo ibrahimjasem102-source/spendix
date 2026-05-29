@@ -7,6 +7,7 @@ import PageTransition from "@/components/navigation/PageTransition";
 import Breadcrumbs from "@/components/navigation/Breadcrumbs";
 import LastPageTracker from "@/components/navigation/LastPageTracker";
 import SchedulerTrigger from "@/components/layout/SchedulerTrigger";
+import { FinancialEventBridge } from "@/components/system/FinancialEventBridge";
 import LiveBackground from "@/components/layout/LiveBackground";
 import RoomGuard from "@/components/layout/RoomGuard";
 import { GuestProvider } from "@/contexts/GuestContext";
@@ -69,6 +70,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 <GlobalModals />
                 <LastPageTracker />
                 <SchedulerTrigger />
+                <FinancialEventBridge />
               </SidebarProvider>
             </RoomLockProvider>
           </GlobalActionsProvider>

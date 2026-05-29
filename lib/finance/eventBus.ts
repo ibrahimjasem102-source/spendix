@@ -1,16 +1,31 @@
 // Typed pub/sub for cross-module financial events
 
 export type FinancialEventMap = {
-  "balance:changed":        { balance: number };
+  // Cash flow
   "transaction:added":      { id: string; amount: number; direction: "inflow" | "outflow"; category?: string };
+  "transaction:updated":    { id: string; amount: number; direction: "inflow" | "outflow" };
   "transaction:deleted":    { id: string };
+  // Debts
+  "debt:created":           { debtId: string; amount: number; debtType: "payable" | "receivable" };
+  "debt:updated":           { debtId: string };
+  "debt:deleted":           { debtId: string };
   "debt:payment_recorded":  { debtId: string; amount: number; debtType: "payable" | "receivable" };
-  "debt:status_changed":    { debtId: string; status: "paid" | "pending" | "overdue" };
+  // Investments
+  "investment:added":       { id: string; amount: number };
   "investment:updated":     { id: string; previousValue: number; currentValue: number };
+  "investment:deleted":     { id: string };
+  "investment:profit":      { id: string; gain: number };
+  // Work
   "work:session_logged":    { hours: number };
+  "work:session_updated":   { id: string };
+  "work:session_deleted":   { id: string };
   "work:payment_received":  { amount: number };
+  "work:payment_deleted":   { id: string };
+  // Goals / Achievements
   "goal:progress_updated":  { goalId: string; progress: number; completed: boolean };
   "achievement:unlocked":   { achievementId: string };
+  // Internal signals
+  "balance:changed":        { balance: number };
 };
 
 type Handler<T> = (payload: T) => void;

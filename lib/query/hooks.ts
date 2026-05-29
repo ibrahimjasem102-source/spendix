@@ -16,6 +16,7 @@ import {
   invalidateWorkQueries,
 } from "@/lib/query/invalidation";
 import { safeFetch } from "@/lib/fetch-safe";
+import { financialBus } from "@/lib/finance/eventBus";
 import type {
   AppNotification, Debt, DebtFormData, DebtPaymentFormData,
   Budget, BudgetFormData, BudgetSummary, Category,
@@ -136,6 +137,10 @@ export function useCreateTransaction(isGuest = false) {
       qc.setQueryData<Transaction[]>(queryKeys.transactions.list(), (old = []) => [
         tx, ...old.filter((t) => !t.id.startsWith("optimistic-")),
       ]);
+      if (!isGuest) financialBus.emit("transaction:added", {
+        id: tx.id, amount: tx.amount,
+        direction: tx.type === "income" ? "inflow" : "outflow",
+      });
     },
     onSettled: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.transactions.list() });
@@ -175,6 +180,10 @@ export function useUpdateTransaction(isGuest = false) {
       qc.setQueryData<Transaction[]>(queryKeys.transactions.list(), (old = []) =>
         old.map((t) => t.id === tx.id ? tx : t)
       );
+      if (!isGuest) financialBus.emit("transaction:updated", {
+        id: tx.id, amount: tx.amount,
+        direction: tx.type === "income" ? "inflow" : "outflow",
+      });
     },
     onSettled: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.transactions.list() });
@@ -201,6 +210,9 @@ export function useDeleteTransaction(isGuest = false) {
     },
     onError: (_e, _id, ctx) => {
       qc.setQueryData(queryKeys.transactions.list(), ctx?.previous ?? []);
+    },
+    onSuccess: (id) => {
+      if (!isGuest) financialBus.emit("transaction:deleted", { id });
     },
     onSettled: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.transactions.list() });
@@ -433,6 +445,9 @@ export function useCreateDebt() {
       qc.setQueryData<Debt[]>(queryKeys.debts.list(), (old = []) => [
         debt, ...old.filter((d) => !d.id.startsWith("optimistic-")),
       ]);
+      financialBus.emit("debt:created", {
+        debtId: debt.id, amount: debt.total_amount, debtType: debt.debt_type,
+      });
     },
     onSettled: () => invalidateDebts(qc),
   });
@@ -460,6 +475,7 @@ export function useUpdateDebt() {
     onError: (_e, _v, ctx) => { if (ctx?.previous) qc.setQueryData(queryKeys.debts.list(), ctx.previous); },
     onSuccess: (debt) => {
       qc.setQueryData<Debt[]>(queryKeys.debts.list(), (old = []) => old.map((d) => d.id === debt.id ? debt : d));
+      financialBus.emit("debt:updated", { debtId: debt.id });
     },
     onSettled: () => invalidateDebts(qc),
   });
@@ -481,6 +497,9 @@ export function useDeleteDebt() {
       return { previous };
     },
     onError: (_e, _id, ctx) => { if (ctx?.previous) qc.setQueryData(queryKeys.debts.list(), ctx.previous); },
+    onSuccess: (id) => {
+      financialBus.emit("debt:deleted", { debtId: id });
+    },
     onSettled: () => invalidateDebts(qc),
   });
 }
@@ -500,6 +519,11 @@ export function useCreateDebtPayment() {
       qc.setQueryData<Debt[]>(queryKeys.debts.list(), (old = []) =>
         old.map((d) => d.id === updatedDebt.id ? updatedDebt : d)
       );
+      financialBus.emit("debt:payment_recorded", {
+        debtId: updatedDebt.id,
+        amount: updatedDebt.paid_amount,
+        debtType: updatedDebt.debt_type,
+      });
     },
     onSettled: () => invalidateDebts(qc),
   });
@@ -570,6 +594,7 @@ export function useCreateInvestment() {
       qc.setQueryData<Investment[]>(queryKeys.investments.list(), (old = []) => [
         inv, ...old.filter((i) => !i.id.startsWith("optimistic-")),
       ]);
+      financialBus.emit("investment:added", { id: inv.id, amount: inv.amount_invested });
     },
     onSettled: () => invalidateInvestments(qc),
   });
@@ -599,6 +624,11 @@ export function useUpdateInvestment() {
       qc.setQueryData<Investment[]>(queryKeys.investments.list(), (old = []) =>
         old.map((i) => i.id === inv.id ? inv : i)
       );
+      financialBus.emit("investment:updated", {
+        id: inv.id,
+        previousValue: inv.amount_invested,
+        currentValue:  inv.current_value ?? inv.amount_invested,
+      });
     },
     onSettled: () => invalidateInvestments(qc),
   });
@@ -620,6 +650,9 @@ export function useDeleteInvestment() {
       return { previous };
     },
     onError: (_e, _id, ctx) => { if (ctx?.previous) qc.setQueryData(queryKeys.investments.list(), ctx.previous); },
+    onSuccess: (id) => {
+      financialBus.emit("investment:deleted", { id });
+    },
     onSettled: () => invalidateInvestments(qc),
   });
 }
@@ -689,6 +722,7 @@ export function useCreateWorkSession() {
       qc.setQueryData<WorkSession[]>(queryKeys.work.sessions(), (old = []) => [
         session, ...old.filter((s) => !s.id.startsWith("optimistic-")),
       ]);
+      financialBus.emit("work:session_logged", { hours: session.hours_worked });
     },
     onSettled: () => invalidateWork(qc),
   });
@@ -718,6 +752,7 @@ export function useUpdateWorkSession() {
       qc.setQueryData<WorkSession[]>(queryKeys.work.sessions(), (old = []) =>
         old.map((s) => s.id === session.id ? session : s)
       );
+      financialBus.emit("work:session_updated", { id: session.id });
     },
     onSettled: () => invalidateWork(qc),
   });
@@ -739,6 +774,9 @@ export function useDeleteWorkSession() {
       return { previous };
     },
     onError: (_e, _id, ctx) => { if (ctx?.previous) qc.setQueryData(queryKeys.work.sessions(), ctx.previous); },
+    onSuccess: (id) => {
+      financialBus.emit("work:session_deleted", { id });
+    },
     onSettled: () => invalidateWork(qc),
   });
 }
@@ -776,6 +814,7 @@ export function useCreateWorkPayment() {
       qc.setQueryData<WorkPayment[]>(queryKeys.work.payments(), (old = []) => [
         payment, ...old.filter((p) => !p.id.startsWith("optimistic-")),
       ]);
+      financialBus.emit("work:payment_received", { amount: payment.amount });
     },
     onSettled: () => invalidateWork(qc),
   });
@@ -821,6 +860,9 @@ export function useDeleteWorkPayment() {
       return { previous };
     },
     onError: (_e, _id, ctx) => { if (ctx?.previous) qc.setQueryData(queryKeys.work.payments(), ctx.previous); },
+    onSuccess: (id) => {
+      financialBus.emit("work:payment_deleted", { id });
+    },
     onSettled: () => invalidateWork(qc),
   });
 }
