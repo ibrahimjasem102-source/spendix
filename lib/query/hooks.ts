@@ -22,6 +22,7 @@ import type {
   Account, AccountFormData,
   Bill, BillFormData, BillPayData,
   CalendarEvent,
+  FinancialContact, ContactFormData,
   Goal, GoalFormData,
   SavingsPot, SavingsPotFormData, SavingsTransaction, SavingsTxFormData,
   Subscription, SubscriptionFormData,
@@ -1426,6 +1427,86 @@ export function useWithdrawFromSavings() {
     },
     onSettled: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.savings.all, refetchType: "all" });
+    },
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
+// CONTACTS
+// ══════════════════════════════════════════════════════════════
+
+export function useContacts(enabled = true) {
+  return useQuery({
+    queryKey: queryKeys.contacts.list(),
+    enabled,
+    queryFn: async () => {
+      try {
+        const data = await fetchJson<{ contacts: FinancialContact[] }>("/api/contacts");
+        return data.contacts ?? [];
+      } catch (error) {
+        console.warn("[Spendix] Contacts fetch failed", error);
+        return [];
+      }
+    },
+    staleTime: 30_000,
+  });
+}
+
+export function useCreateContact() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: ContactFormData) =>
+      fetchJson<{ contact: FinancialContact }>("/api/contacts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      }),
+    onSuccess: ({ contact }) => {
+      qc.setQueryData<FinancialContact[]>(
+        queryKeys.contacts.list(),
+        (old = []) => [...old, contact].sort((a, b) => a.name.localeCompare(b.name)),
+      );
+    },
+    onSettled: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.contacts.all, refetchType: "all" });
+    },
+  });
+}
+
+export function useUpdateContact() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<ContactFormData> }) =>
+      fetchJson<{ contact: FinancialContact }>(`/api/contacts/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      }),
+    onSettled: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.contacts.all, refetchType: "all" });
+    },
+  });
+}
+
+export function useDeleteContact() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) =>
+      fetchJson<void>(`/api/contacts/${id}`, { method: "DELETE" }),
+    onMutate: async (id) => {
+      await qc.cancelQueries({ queryKey: queryKeys.contacts.list() });
+      const previous = qc.getQueryData<FinancialContact[]>(queryKeys.contacts.list());
+      qc.setQueryData<FinancialContact[]>(
+        queryKeys.contacts.list(),
+        (old = []) => old.filter((c) => c.id !== id),
+      );
+      return { previous };
+    },
+    onError: (_e, _id, ctx) => {
+      if (ctx?.previous) qc.setQueryData(queryKeys.contacts.list(), ctx.previous);
+    },
+    onSettled: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.contacts.all, refetchType: "all" });
     },
   });
 }
