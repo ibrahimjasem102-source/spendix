@@ -6,10 +6,12 @@ import { safeFetch } from "@/lib/fetch-safe";
 import {
   Sparkles, Loader2, RefreshCw, AlertTriangle, CheckCircle,
   TrendingUp, DollarSign, PiggyBank, Activity, Shield, Target, X,
+  Zap, TrendingDown, CreditCard, BarChart2,
 } from "lucide-react";
 import { useTranslation } from "@/lib/i18n";
 import { fadeBlur, spring, staggerContainer, staggerItem } from "@/lib/motion";
 import type { AIInsightRecord, InsightCategory, InsightSeverity } from "@/lib/ai/aiTypes";
+import { useLocalInsights, type LocalInsight } from "@/lib/ai/localInsights";
 
 // ── Config maps ───────────────────────────────────────────────
 const SEVERITY_CONFIG: Record<InsightSeverity, {
@@ -32,8 +34,99 @@ const CATEGORY_ICONS: Record<InsightCategory, React.ElementType> = {
   goal:       Target,
 };
 
+// ── Source icons for local insights ──────────────────────────
+const SOURCE_ICON: Record<LocalInsight["source"], React.ElementType> = {
+  forecast:   BarChart2,
+  anomaly:    AlertTriangle,
+  prediction: TrendingUp,
+  debt:       CreditCard,
+  investment: TrendingDown,
+};
+
+// ── LocalInsightCard ──────────────────────────────────────────
+function LocalInsightCard({ insight, t }: { insight: LocalInsight; t: (k: string) => string }) {
+  const cfg     = SEVERITY_CONFIG[insight.severity];
+  const SrcIcon = SOURCE_ICON[insight.source];
+  const SevIcon = cfg.icon;
+
+  return (
+    <motion.div
+      variants={staggerItem}
+      transition={{ ...spring }}
+      className={`card p-5 ${cfg.border} ${cfg.bg}`}
+    >
+      <div className="flex items-start gap-4">
+        {/* Icons column */}
+        <div className="shrink-0 flex flex-col gap-1.5">
+          <div className="p-2.5 rounded-xl bg-[hsl(var(--bg-input))]">
+            <SevIcon className={`w-4 h-4 ${cfg.iconColor}`} />
+          </div>
+          <div className="p-1.5 rounded-lg bg-[hsl(var(--bg-input))]">
+            <SrcIcon className="w-3 h-3 t3" />
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap mb-2">
+            <h3 className="text-sm font-semibold t1">{insight.title}</h3>
+            <span className={`text-[10px] px-2 py-0.5 rounded-lg font-bold uppercase tracking-wide ${cfg.badge}`}>
+              {t(`ai_insights.severity.${insight.severity}`)}
+            </span>
+            <span className="text-[10px] px-2 py-0.5 rounded-lg font-medium bg-[hsl(var(--bg-input))] t3 capitalize">
+              {t(`ai_local.source_${insight.source}`)}
+            </span>
+          </div>
+
+          <p className="text-sm t2 leading-relaxed">{insight.body}</p>
+
+          {/* Metric callout */}
+          {insight.metric !== undefined && (
+            <div className="mt-2 inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[hsl(var(--bg-input))]">
+              <span className={`text-lg font-black ${cfg.iconColor}`}>{insight.metric}</span>
+              {insight.metricLabel && (
+                <span className="text-xs t3 font-medium">{insight.metricLabel}</span>
+              )}
+            </div>
+          )}
+
+          <div className="flex items-center gap-4 mt-3">
+            {/* Confidence bar */}
+            <div className="flex items-center gap-2">
+              <span className="text-xs t3">{t("ai_insights.confidence")}</span>
+              <div className="w-16 h-1.5 bg-[hsl(var(--border))] rounded-full overflow-hidden">
+                <div
+                  className="h-full rounded-full"
+                  style={{
+                    width: `${Math.round(insight.confidence * 100)}%`,
+                    background: insight.severity === "critical" ? "#F43F5E"
+                      : insight.severity === "positive" ? "#10B981"
+                      : "#06B6D4",
+                    opacity: 0.8,
+                  }}
+                />
+              </div>
+              <span className="text-xs font-medium t2">{Math.round(insight.confidence * 100)}%</span>
+            </div>
+
+            {insight.action && insight.actionUrl && (
+              <a
+                href={insight.actionUrl}
+                className={`text-xs font-semibold underline underline-offset-2 ${cfg.iconColor} hover:opacity-80 transition-opacity`}
+              >
+                {insight.action} →
+              </a>
+            )}
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
 export default function AIInsightsPage() {
   const { t, locale, formatDate } = useTranslation();
+  const { insights: localInsights, isLoading: localLoading } = useLocalInsights();
 
   const [insights, setInsights]   = useState<AIInsightRecord[]>([]);
   const [loading, setLoading]     = useState(false);
@@ -104,7 +197,49 @@ export default function AIInsightsPage() {
   const isBusy = loading || generating;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
+
+      {/* ── Live Analysis (local engines) ── */}
+      <section className="space-y-3">
+        <div className="flex items-center gap-2">
+          <Zap className="w-4 h-4 text-amber-400" />
+          <div>
+            <h2 className="text-sm font-bold t1">{t("ai_local.section_title")}</h2>
+            <p className="text-xs t3">{t("ai_local.section_sub")}</p>
+          </div>
+        </div>
+
+        {localLoading ? (
+          <div className="space-y-2">
+            {[1, 2].map((n) => (
+              <div key={n} className="card p-5 animate-pulse">
+                <div className="flex gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-[hsl(var(--bg-input))]" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 bg-[hsl(var(--bg-input))] rounded w-2/3" />
+                    <div className="h-3 bg-[hsl(var(--bg-input))] rounded w-full" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : localInsights.length === 0 ? (
+          <div className="card p-5 flex items-center gap-3">
+            <CheckCircle className="w-5 h-5 text-emerald-400 shrink-0" />
+            <p className="text-sm t2">{t("ai_local.no_insights")}</p>
+          </div>
+        ) : (
+          <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="space-y-3">
+            {localInsights.map((ins) => (
+              <LocalInsightCard key={ins.id} insight={ins} t={t} />
+            ))}
+          </motion.div>
+        )}
+      </section>
+
+      <div className="border-t border-[hsl(var(--border))]" />
+
+      {/* ── AI Analysis (LLM-powered) ── */}
       {/* Header */}
       <motion.div {...fadeBlur} className="flex items-center justify-between">
         <div>
