@@ -104,6 +104,7 @@ const SOURCE_META: Record<TransactionSource, { label: string; color: string }> =
   debt_payment: { label: "Debt payment", color: "#F59E0B" },
   work: { label: "Work", color: "#14B8A6" },
   work_payment: { label: "Work payment", color: "#10B981" },
+  subscription: { label: "Subscription", color: "#8B5CF6" },
 };
 
 function numberValue(value: unknown) {

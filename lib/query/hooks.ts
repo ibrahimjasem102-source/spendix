@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -21,6 +22,7 @@ import type {
   Account, AccountFormData,
   Bill, BillFormData, BillPayData,
   CalendarEvent,
+  Goal, GoalFormData,
   Subscription, SubscriptionFormData,
   AppNotification, Debt, DebtFormData, DebtPaymentFormData,
   Budget, BudgetFormData, BudgetSummary, Category,
@@ -1182,5 +1184,110 @@ export function useNotifications(enabled = true) {
       return data;
     },
     staleTime: 15_000,
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
+// GOALS
+// ══════════════════════════════════════════════════════════════
+
+export function useGoals(enabled = true) {
+  return useQuery({
+    queryKey: queryKeys.goals.list(),
+    enabled,
+    queryFn: async () => {
+      try {
+        const data = await fetchJson<{ goals: Goal[] }>("/api/goals");
+        return data.goals ?? [];
+      } catch (error) {
+        console.warn("[Spendix] Goals fetch failed", error);
+        return [];
+      }
+    },
+    staleTime: 30_000,
+  });
+}
+
+export function useCreateGoal() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: GoalFormData) =>
+      fetchJson<{ goal: Goal }>("/api/goals", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      }),
+    onSuccess: () => {
+      financialBus.emit("goal:progress_updated", { goalId: "", progress: 0, completed: false });
+    },
+    onSettled: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.goals.all, refetchType: "all" });
+    },
+  });
+}
+
+export function useUpdateGoal() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<GoalFormData> }) =>
+      fetchJson<{ goal: Goal }>(`/api/goals/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      }),
+    onSettled: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.goals.all, refetchType: "all" });
+    },
+  });
+}
+
+export function useDeleteGoal() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      await safeFetch(`/api/goals/${id}`, { method: "DELETE" }).then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      });
+      return id;
+    },
+    onMutate: async (id) => {
+      await qc.cancelQueries({ queryKey: queryKeys.goals.all });
+      const previous = qc.getQueryData<Goal[]>(queryKeys.goals.list());
+      qc.setQueryData<Goal[]>(queryKeys.goals.list(), (old = []) => old.filter((g) => g.id !== id));
+      return { previous };
+    },
+    onError: (_e, _id, ctx) => {
+      if (ctx?.previous) qc.setQueryData(queryKeys.goals.list(), ctx.previous);
+    },
+    onSettled: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.goals.all, refetchType: "all" });
+    },
+  });
+}
+
+export function useContributeToGoal() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, amount }: { id: string; amount: number }) =>
+      fetchJson<{ success: boolean; new_saved: number; completed: boolean }>(
+        `/api/goals/${id}/contribute`,
+        { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ amount }) }
+      ),
+    onSuccess: (res, { id }) => {
+      qc.setQueryData<Goal[]>(queryKeys.goals.list(), (old = []) =>
+        old.map((g) => g.id === id
+          ? { ...g, saved_amount: res.new_saved, computed_saved: res.new_saved,
+              progress: g.target_amount > 0 ? Math.min(100, Math.round((res.new_saved / g.target_amount) * 100)) : 0,
+              remaining: Math.max(0, g.target_amount - res.new_saved),
+              status: res.completed ? "completed" : g.status }
+          : g)
+      );
+      if (res.completed) {
+        financialBus.emit("goal:progress_updated", { goalId: id, progress: 100, completed: true });
+      }
+    },
+    onSettled: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.goals.all, refetchType: "all" });
+    },
   });
 }

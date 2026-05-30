@@ -57,4 +57,8 @@ export const queryKeys = {
     all: ["calendar"] as const,
     byMonth: (year: number, month: number) => [...queryKeys.calendar.all, year, month] as const,
   },
+  goals: {
+    all:  ["goals"] as const,
+    list: () => [...queryKeys.goals.all, "list"] as const,
+  },
 };

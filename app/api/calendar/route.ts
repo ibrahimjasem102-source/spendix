@@ -47,7 +47,7 @@ export async function GET(request: Request) {
       .limit(200);
 
     for (const tx of txs ?? []) {
-      const cat = tx.category as { name: string; color: string; icon?: string } | null;
+      const cat = (tx.category as unknown) as { name: string; color: string; icon?: string } | null;
       events.push({
         id:         tx.id,
         date:       tx.transaction_date,

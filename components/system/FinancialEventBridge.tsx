@@ -17,7 +17,7 @@
 
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { financialBus } from "@/lib/finance/eventBus";
+import { financialBus, type FinancialEventMap } from "@/lib/finance/eventBus";
 import { invalidateDomains } from "@/lib/query/invalidation";
 
 type Domain = Parameters<typeof invalidateDomains>[1][number];
@@ -25,16 +25,16 @@ type Domain = Parameters<typeof invalidateDomains>[1][number];
 // Maps each event to the list of domains that should be invalidated.
 // Hooks already invalidate their own primary query — bridge handles cross-module.
 const EVENT_DOMAINS: Record<string, Domain[]> = {
-  "transaction:added":     ["dashboard", "analytics", "budgets"],
-  "transaction:updated":   ["dashboard", "analytics", "budgets"],
-  "transaction:deleted":   ["dashboard", "analytics", "budgets"],
+  "transaction:added":     ["dashboard", "analytics", "budgets", "goals", "calendar"],
+  "transaction:updated":   ["dashboard", "analytics", "budgets", "goals"],
+  "transaction:deleted":   ["dashboard", "analytics", "budgets", "goals"],
   "debt:created":          ["debts", "transactions", "dashboard", "analytics"],
   "debt:updated":          ["debts", "dashboard", "analytics"],
-  "debt:deleted":          ["debts", "dashboard", "analytics"],
-  "debt:payment_recorded": ["debts", "transactions", "dashboard", "analytics", "budgets", "contacts"],
-  "investment:added":      ["investments", "dashboard", "analytics"],
-  "investment:updated":    ["investments", "dashboard", "analytics"],
-  "investment:deleted":    ["investments", "dashboard", "analytics"],
+  "debt:deleted":          ["debts", "dashboard", "analytics", "goals"],
+  "debt:payment_recorded": ["debts", "transactions", "dashboard", "analytics", "budgets", "contacts", "goals"],
+  "investment:added":      ["investments", "dashboard", "analytics", "goals"],
+  "investment:updated":    ["investments", "dashboard", "analytics", "goals"],
+  "investment:deleted":    ["investments", "dashboard", "analytics", "goals"],
   "work:session_logged":   ["work", "dashboard"],
   "work:session_updated":  ["work", "dashboard"],
   "work:session_deleted":  ["work", "dashboard"],
@@ -62,7 +62,7 @@ export function FinancialEventBridge() {
     // Wire each event type to its cross-module invalidation
     for (const [event, domains] of Object.entries(EVENT_DOMAINS)) {
       const unsub = financialBus.on(
-        event as keyof typeof EVENT_DOMAINS,
+        event as keyof FinancialEventMap,
         () => invalidateDomains(qc, domains),
       );
       unsubs.push(unsub);

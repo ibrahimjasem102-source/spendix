@@ -476,3 +476,46 @@ export interface WorkPaymentFormData {
   notes?: string | null;
   work_session_id?: string | null;
 }
+
+// ── Goals ─────────────────────────────────────────────────────
+export type GoalCategory     = "emergency" | "home" | "travel" | "education" | "car" | "retirement" | "other";
+export type GoalTrackingType = "manual" | "savings" | "income" | "investment" | "debt_payoff";
+export type GoalStatus       = "on_track" | "due_soon" | "overdue" | "completed";
+
+export interface Goal {
+  id: string;
+  user_id: string;
+  title: string;
+  target_amount: number;
+  saved_amount: number;          // stored value — used only for 'manual' tracking
+  monthly_contribution: number;
+  due_date: string | null;
+  category: GoalCategory;
+  tracking_type: GoalTrackingType;
+  linked_debt_id?: string | null;
+  start_date: string;
+  notes?: string | null;
+  color?: string | null;
+  created_at: string;
+  updated_at: string;
+  // computed by API
+  computed_saved: number;        // actual progress value (real data or saved_amount)
+  progress: number;              // 0-100
+  status: GoalStatus;
+  remaining: number;
+  days_until_due: number | null;
+}
+
+export interface GoalFormData {
+  title: string;
+  target_amount: number;
+  saved_amount?: number;
+  monthly_contribution?: number;
+  due_date?: string | null;
+  category: GoalCategory;
+  tracking_type: GoalTrackingType;
+  linked_debt_id?: string | null;
+  start_date?: string;
+  notes?: string | null;
+  color?: string | null;
+}

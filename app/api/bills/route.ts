@@ -33,7 +33,8 @@ export async function GET() {
 
   if (error) {
     const res = await supabase.from("bills").select(SELECT_PLAIN).eq("user_id", user.id).order("due_date", { ascending: true });
-    data = res.data; error = res.error;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    data = res.data as any; error = res.error;
   }
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
