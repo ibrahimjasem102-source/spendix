@@ -20,6 +20,9 @@ export default function SchedulerTrigger() {
     // Server-side scheduler (debts, analytics, investments, work)
     void safeFetch("/api/notifications/schedule", { method: "POST" }).catch(() => {});
 
+    // Subscription processor (auto-transactions + reminders)
+    void safeFetch("/api/subscriptions/process", { method: "POST" }).catch(() => {});
+
     // Client-side goal checker (reads localStorage goals)
     void runGoalChecker();
 

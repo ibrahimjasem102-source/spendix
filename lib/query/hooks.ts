@@ -19,6 +19,7 @@ import { safeFetch } from "@/lib/fetch-safe";
 import { financialBus } from "@/lib/finance/eventBus";
 import type {
   Account, AccountFormData,
+  Subscription, SubscriptionFormData,
   AppNotification, Debt, DebtFormData, DebtPaymentFormData,
   Budget, BudgetFormData, BudgetSummary, Category,
   Investment, InvestmentFormData,
@@ -948,6 +949,90 @@ export function useDeleteAccount() {
     },
     onSettled: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.accounts.all, refetchType: "all" });
+    },
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
+// SUBSCRIPTIONS
+// ══════════════════════════════════════════════════════════════
+
+export function useSubscriptions(enabled = true) {
+  return useQuery({
+    queryKey: queryKeys.subscriptions.list(),
+    enabled,
+    queryFn: async () => {
+      try {
+        const data = await fetchJson<{ subscriptions: Subscription[] }>("/api/subscriptions");
+        return data.subscriptions ?? [];
+      } catch (error) {
+        console.warn("[Spendix] Subscriptions fetch failed", error);
+        return [];
+      }
+    },
+    staleTime: 30_000,
+  });
+}
+
+export function useCreateSubscription() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: SubscriptionFormData) =>
+      fetchJson<{ subscription: Subscription }>("/api/subscriptions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      }),
+    onSuccess: ({ subscription }) => {
+      financialBus.emit("subscription:created", { id: subscription.id, name: subscription.name, amount: subscription.amount });
+    },
+    onSettled: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.subscriptions.all, refetchType: "all" });
+    },
+  });
+}
+
+export function useUpdateSubscription() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<SubscriptionFormData> }) =>
+      fetchJson<{ subscription: Subscription }>(`/api/subscriptions/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      }),
+    onSuccess: (_, { id }) => {
+      financialBus.emit("subscription:updated", { id });
+    },
+    onSettled: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.subscriptions.all, refetchType: "all" });
+    },
+  });
+}
+
+export function useDeleteSubscription() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      await safeFetch(`/api/subscriptions/${id}`, { method: "DELETE" }).then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      });
+      return id;
+    },
+    onMutate: async (id) => {
+      await qc.cancelQueries({ queryKey: queryKeys.subscriptions.all });
+      const previous = qc.getQueryData<Subscription[]>(queryKeys.subscriptions.list());
+      qc.setQueryData<Subscription[]>(queryKeys.subscriptions.list(), (old = []) => old.filter((s) => s.id !== id));
+      return { previous };
+    },
+    onError: (_e, _id, ctx) => {
+      if (ctx?.previous) qc.setQueryData(queryKeys.subscriptions.list(), ctx.previous);
+    },
+    onSuccess: (id) => {
+      financialBus.emit("subscription:deleted", { id });
+    },
+    onSettled: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.subscriptions.all, refetchType: "all" });
     },
   });
 }

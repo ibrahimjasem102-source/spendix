@@ -6,7 +6,7 @@
     "ai_insights": "AI", "settings": "Settings",
     "ai_assistant": "Assistant",
     "sign_in": "Sign in", "sign_out": "Sign out", "collapse": "Collapse",
-    "more": "More", "work": "Work", "profile": "Profile", "hub": "Hub", "accounts": "Accounts"
+    "more": "More", "work": "Work", "profile": "Profile", "hub": "Hub", "accounts": "Accounts", "subscriptions": "Subscriptions"
   },
   "common": {
     "save": "Save changes", "saved": "Saved", "saving": "Saving...", "cancel": "Cancel", "add": "Add",
@@ -70,6 +70,34 @@
     "delete_hint": "This action cannot be undone.",
     "empty_title": "No accounts yet",
     "empty_subtitle": "Add your first account to start tracking where your money lives."
+  },
+  "subscriptions": {
+    "title": "Subscriptions", "subtitle": "Track recurring payments automatically",
+    "add": "Add Subscription", "add_first": "Add your first subscription",
+    "new": "New Subscription", "edit": "Edit Subscription",
+    "save_edit": "Save Changes", "add_subscription": "Add Subscription",
+    "name": "Service name", "name_placeholder": "e.g. Netflix, Spotify, Gym...",
+    "name_required": "Name is required", "amount_positive": "Amount must be greater than 0",
+    "amount": "Amount", "billing_cycle": "Billing cycle",
+    "next_billing": "Next billing date", "color": "Color",
+    "account": "Charged to account",
+    "advanced": "Advanced options",
+    "remind_days": "Remind me (days before)",
+    "auto_transaction": "Auto-create transaction",
+    "auto_transaction_hint": "Automatically record expense when subscription renews",
+    "notes": "Notes", "notes_placeholder": "Optional notes",
+    "quick_pick": "Quick pick",
+    "weekly": "Weekly", "monthly": "Monthly", "quarterly": "Quarterly", "yearly": "Yearly",
+    "month": "month",
+    "monthly_total": "Monthly total", "yearly_total": "Yearly total", "active_count": "Active",
+    "due_soon": "Due soon", "upcoming": "Upcoming", "paused_section": "Paused",
+    "today": "Today", "tomorrow": "Tomorrow", "in": "In", "days": "days", "overdue": "Overdue",
+    "next": "Next", "auto": "Auto",
+    "paused": "Paused", "cancelled": "Cancelled",
+    "pause": "Pause", "resume": "Resume",
+    "delete_confirm": "Delete this subscription? No future transactions will be created.",
+    "empty_title": "No subscriptions yet",
+    "empty_subtitle": "Add your recurring services to track monthly spending and get reminders before charges."
   },
   "investments": {
     "title": "Investments", "subtitle": "Track your portfolio performance",

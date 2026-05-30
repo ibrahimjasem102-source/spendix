@@ -61,7 +61,53 @@ export interface AccountFormData {
   is_default?: boolean;
 }
 
-export type TransactionSource = "manual" | "investment" | "debt" | "debt_payment" | "work" | "work_payment";
+export type TransactionSource = "manual" | "investment" | "debt" | "debt_payment" | "work" | "work_payment" | "subscription";
+
+// ── Subscriptions ─────────────────────────────────────────────
+export type BillingCycle      = "weekly" | "monthly" | "quarterly" | "yearly";
+export type SubscriptionStatus = "active" | "paused" | "cancelled";
+
+export interface Subscription {
+  id: string;
+  user_id: string;
+  name: string;
+  amount: number;
+  currency: string;
+  billing_cycle: BillingCycle;
+  next_billing_date: string;
+  category_id?: string | null;
+  account_id?: string | null;
+  color?: string | null;
+  icon?: string | null;
+  notes?: string | null;
+  status: SubscriptionStatus;
+  remind_days_before: number;
+  auto_create_transaction: boolean;
+  last_billed_date?: string | null;
+  created_at: string;
+  updated_at: string;
+  // joined
+  category?: Pick<Category, "id" | "name" | "color" | "icon"> | null;
+  account?: Pick<Account, "id" | "name" | "type"> | null;
+  // computed
+  days_until_billing?: number;
+}
+
+export interface SubscriptionFormData {
+  name: string;
+  amount: number;
+  currency?: string;
+  billing_cycle: BillingCycle;
+  next_billing_date: string;
+  category_id?: string | null;
+  account_id?: string | null;
+  color?: string | null;
+  icon?: string | null;
+  notes?: string | null;
+  status?: SubscriptionStatus;
+  remind_days_before?: number;
+  auto_create_transaction?: boolean;
+}
 export type WorkRecurrence    = "none" | "daily" | "weekly" | "monthly";
 export type WorkSessionStatus = "unpaid" | "partially_paid" | "paid";
 export type InsightType       = "tip" | "warning" | "positive";

@@ -6,12 +6,12 @@
     "ai_insights": "KI-Einblicke", "settings": "Einstellungen",
     "ai_assistant": "KI-Assistent",
     "sign_in": "Anmelden", "sign_out": "Abmelden", "collapse": "Einklappen",
-    "profile": "Profil", "hub": "Hub", "accounts": "Konten"
+    "profile": "Profil", "hub": "Hub", "accounts": "Konten", "subscriptions": "Abonnements"
   },
   "common": {
     "save": "Änderungen speichern", "saved": "Gespeichert", "cancel": "Abbrechen", "add": "Hinzufügen",
     "delete": "Löschen", "loading": "Laden...", "no_data": "Noch keine Daten.",
-    "view_all": "Alle anzeigen →", "confirm_delete": "Diesen Eintrag löschen?"
+    "view_all": "Alle anzeigen →", "confirm_delete": "Diesen Eintrag löschen?", "error": "Etwas ist schiefgelaufen", "saving": "Speichern..."
   },
   "dashboard": {
     "title": "Übersicht", "subtitle": "Ihre Finanzübersicht",
@@ -59,6 +59,34 @@
     "delete_hint": "Diese Aktion kann nicht rückgängig gemacht werden.",
     "empty_title": "Noch keine Konten",
     "empty_subtitle": "Fügen Sie Ihr erstes Konto hinzu, um zu verfolgen, wo Ihr Geld liegt."
+  },
+  "subscriptions": {
+    "title": "Abonnements", "subtitle": "Wiederkehrende Zahlungen automatisch verfolgen",
+    "add": "Abonnement hinzufügen", "add_first": "Erstes Abonnement hinzufügen",
+    "new": "Neues Abonnement", "edit": "Abonnement bearbeiten",
+    "save_edit": "Änderungen speichern", "add_subscription": "Abonnement hinzufügen",
+    "name": "Dienstname", "name_placeholder": "z.B. Netflix, Spotify, Fitnessstudio...",
+    "name_required": "Name erforderlich", "amount_positive": "Betrag muss größer als 0 sein",
+    "amount": "Betrag", "billing_cycle": "Abrechnungszyklus",
+    "next_billing": "Nächstes Abrechnungsdatum", "color": "Farbe",
+    "account": "Abgerechnet auf Konto",
+    "advanced": "Erweiterte Optionen",
+    "remind_days": "Erinnerung (Tage vorher)",
+    "auto_transaction": "Transaktion automatisch erstellen",
+    "auto_transaction_hint": "Ausgabe automatisch erfassen, wenn Abonnement erneuert wird",
+    "notes": "Notizen", "notes_placeholder": "Optionale Notizen",
+    "quick_pick": "Schnellauswahl",
+    "weekly": "Wöchentlich", "monthly": "Monatlich", "quarterly": "Vierteljährlich", "yearly": "Jährlich",
+    "month": "Monat",
+    "monthly_total": "Monatliche Gesamtkosten", "yearly_total": "Jährliche Gesamtkosten", "active_count": "Aktiv",
+    "due_soon": "Bald fällig", "upcoming": "Anstehend", "paused_section": "Pausiert",
+    "today": "Heute", "tomorrow": "Morgen", "in": "In", "days": "Tagen", "overdue": "Überfällig",
+    "next": "Nächste", "auto": "Auto",
+    "paused": "Pausiert", "cancelled": "Storniert",
+    "pause": "Pausieren", "resume": "Fortsetzen",
+    "delete_confirm": "Dieses Abonnement löschen? Keine weiteren Transaktionen werden erstellt.",
+    "empty_title": "Noch keine Abonnements",
+    "empty_subtitle": "Fügen Sie Ihre wiederkehrenden Dienste hinzu, um monatliche Ausgaben zu verfolgen."
   },
   "investments": {
     "title": "Investitionen", "subtitle": "Portfolio-Performance verfolgen",

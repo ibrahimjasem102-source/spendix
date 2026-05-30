@@ -28,6 +28,11 @@ export type FinancialEventMap = {
   "account:created":        { id: string; name: string };
   "account:updated":        { id: string };
   "account:deleted":        { id: string };
+  // Subscriptions
+  "subscription:created":   { id: string; name: string; amount: number };
+  "subscription:updated":   { id: string };
+  "subscription:deleted":   { id: string };
+  "subscription:charged":   { id: string; name: string; amount: number };
   // Internal signals
   "balance:changed":        { balance: number };
 };
