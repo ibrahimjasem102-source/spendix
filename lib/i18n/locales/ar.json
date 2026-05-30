@@ -19,7 +19,8 @@
     "hub": "المركز",
     "accounts": "الحسابات",
     "subscriptions": "الاشتراكات",
-    "bills": "الفواتير"
+    "bills": "الفواتير",
+    "calendar": "التقويم"
   },
   "common": {
     "save": "حفظ التغييرات",
@@ -528,5 +529,35 @@
     "example_3": "تحليل محفظتي الاستثمارية",
     "empty_reply": "لم يتم استلام رد. يرجى المحاولة مرة أخرى.",
     "connection_error": "خطأ في الاتصال. يرجى التحقق من شبكتك والمحاولة مرة أخرى."
+  },
+  "calendar": {
+    "title": "التقويم المالي",
+    "subtitle": "جميع أحداثك المالية في مكان واحد",
+    "today": "اليوم",
+    "no_events": "لا أحداث",
+    "no_events_day": "لا أحداث مالية في هذا اليوم.",
+    "select_day": "اختر يومًا لعرض الأحداث",
+    "events_on": "أحداث في",
+    "loading": "جارٍ تحميل التقويم...",
+    "error": "فشل تحميل أحداث التقويم",
+    "legend": "أنواع الأحداث",
+    "type_income": "دخل",
+    "type_expense": "مصروف",
+    "type_bill_due": "فاتورة مستحقة",
+    "type_bill_paid": "فاتورة مدفوعة",
+    "type_bill_overdue": "فاتورة متأخرة",
+    "type_subscription": "اشتراك",
+    "type_debt_due": "دين مستحق",
+    "type_investment": "استثمار",
+    "type_work_session": "جلسة عمل",
+    "type_work_payment": "دفعة عمل",
+    "source_transaction": "معاملة",
+    "source_bill": "فاتورة",
+    "source_subscription": "اشتراك",
+    "source_debt": "دين",
+    "source_investment": "استثمار",
+    "source_work": "عمل",
+    "days_short": ["أحد", "اثن", "ثلا", "أرب", "خمس", "جمع", "سبت"],
+    "months": ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"]
   }
 }

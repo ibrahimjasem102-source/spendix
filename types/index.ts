@@ -63,6 +63,28 @@ export interface AccountFormData {
 
 export type TransactionSource = "manual" | "investment" | "debt" | "debt_payment" | "work" | "work_payment" | "subscription";
 
+// ── Calendar ──────────────────────────────────────────────────
+export type CalendarEventType =
+  | "income" | "expense"
+  | "bill_due" | "bill_paid" | "bill_overdue"
+  | "subscription"
+  | "debt_due"
+  | "investment"
+  | "work_session" | "work_payment";
+
+export interface CalendarEvent {
+  id: string;
+  date: string;        // YYYY-MM-DD
+  type: CalendarEventType;
+  title: string;
+  amount?: number | null;
+  icon?: string | null;
+  color: string;
+  source: string;      // "bill" | "subscription" | "debt" | "transaction" | "investment" | "work"
+  source_id: string;
+  action_url: string;
+}
+
 // ── Bills ─────────────────────────────────────────────────────
 export type BillStatus     = "unpaid" | "paid" | "overdue";
 export type BillRecurrence = "monthly" | "quarterly" | "yearly";

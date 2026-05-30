@@ -6,7 +6,7 @@
     "ai_insights": "KI-Einblicke", "settings": "Einstellungen",
     "ai_assistant": "KI-Assistent",
     "sign_in": "Anmelden", "sign_out": "Abmelden", "collapse": "Einklappen",
-    "profile": "Profil", "hub": "Hub", "accounts": "Konten", "subscriptions": "Abonnements", "bills": "Rechnungen"
+    "profile": "Profil", "hub": "Hub", "accounts": "Konten", "subscriptions": "Abonnements", "bills": "Rechnungen", "calendar": "Kalender"
   },
   "common": {
     "save": "Änderungen speichern", "saved": "Gespeichert", "cancel": "Abbrechen", "add": "Hinzufügen",
@@ -263,5 +263,35 @@
     "example_3": "Analysiere mein Anlageportfolio",
     "empty_reply": "Keine Antwort erhalten. Bitte versuchen Sie es erneut.",
     "connection_error": "Verbindungsfehler. Bitte prüfen Sie Ihr Netzwerk und versuchen Sie es erneut."
+  },
+  "calendar": {
+    "title": "Finanzkalender",
+    "subtitle": "Alle Ihre Finanzereignisse auf einen Blick",
+    "today": "Heute",
+    "no_events": "Keine Ereignisse",
+    "no_events_day": "Keine Finanzereignisse an diesem Tag.",
+    "select_day": "Wählen Sie einen Tag aus",
+    "events_on": "Ereignisse am",
+    "loading": "Kalender wird geladen...",
+    "error": "Fehler beim Laden der Ereignisse",
+    "legend": "Ereignistypen",
+    "type_income": "Einkommen",
+    "type_expense": "Ausgabe",
+    "type_bill_due": "Rechnung fällig",
+    "type_bill_paid": "Rechnung bezahlt",
+    "type_bill_overdue": "Überfällige Rechnung",
+    "type_subscription": "Abonnement",
+    "type_debt_due": "Schulden fällig",
+    "type_investment": "Investition",
+    "type_work_session": "Arbeitssitzung",
+    "type_work_payment": "Arbeitszahlung",
+    "source_transaction": "Transaktion",
+    "source_bill": "Rechnung",
+    "source_subscription": "Abonnement",
+    "source_debt": "Schulden",
+    "source_investment": "Investition",
+    "source_work": "Arbeit",
+    "days_short": ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"],
+    "months": ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"]
   }
 }

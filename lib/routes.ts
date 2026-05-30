@@ -22,6 +22,7 @@ export const ROUTES = {
   accounts:      "/accounts",
   subscriptions: "/subscriptions",
   bills:         "/bills",
+  calendar:      "/calendar",
 } as const;
 
 export type AppRoute = (typeof ROUTES)[keyof typeof ROUTES];

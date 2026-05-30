@@ -34,6 +34,7 @@ import { profile }       from "./profile/config";
 import { accounts }      from "./accounts/config";
 import { subscriptions } from "./subscriptions/config";
 import { bills }         from "./bills/config";
+import { calendar }      from "./calendar/config";
 
 export const FEATURE_REGISTRY: FeatureModule[] = [
   // ── Primary ──────────────────────────────────────────────
@@ -46,6 +47,7 @@ export const FEATURE_REGISTRY: FeatureModule[] = [
   accounts,
   subscriptions,
   bills,
+  calendar,
   investments,
   debts,
   work,

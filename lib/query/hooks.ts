@@ -20,6 +20,7 @@ import { financialBus } from "@/lib/finance/eventBus";
 import type {
   Account, AccountFormData,
   Bill, BillFormData, BillPayData,
+  CalendarEvent,
   Subscription, SubscriptionFormData,
   AppNotification, Debt, DebtFormData, DebtPaymentFormData,
   Budget, BudgetFormData, BudgetSummary, Category,
@@ -1142,6 +1143,29 @@ export function useDeleteSubscription() {
     onSettled: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.subscriptions.all, refetchType: "all" });
     },
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
+// CALENDAR
+// ══════════════════════════════════════════════════════════════
+
+export function useCalendar(year: number, month: number, enabled = true) {
+  return useQuery({
+    queryKey: queryKeys.calendar.byMonth(year, month),
+    enabled,
+    queryFn: async () => {
+      try {
+        const data = await fetchJson<{ events: CalendarEvent[] }>(
+          `/api/calendar?year=${year}&month=${month}`
+        );
+        return data.events ?? [];
+      } catch (error) {
+        console.warn("[Spendix] Calendar fetch failed", error);
+        return [];
+      }
+    },
+    staleTime: 60_000,
   });
 }
 

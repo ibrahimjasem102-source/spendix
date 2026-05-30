@@ -6,7 +6,7 @@
     "ai_insights": "AI", "settings": "Settings",
     "ai_assistant": "Assistant",
     "sign_in": "Sign in", "sign_out": "Sign out", "collapse": "Collapse",
-    "more": "More", "work": "Work", "profile": "Profile", "hub": "Hub", "accounts": "Accounts", "subscriptions": "Subscriptions", "bills": "Bills"
+    "more": "More", "work": "Work", "profile": "Profile", "hub": "Hub", "accounts": "Accounts", "subscriptions": "Subscriptions", "bills": "Bills", "calendar": "Calendar"
   },
   "common": {
     "save": "Save changes", "saved": "Saved", "saving": "Saving...", "cancel": "Cancel", "add": "Add",
@@ -296,5 +296,35 @@
     "example_3": "Analyze my investment portfolio",
     "empty_reply": "No response received. Please try again.",
     "connection_error": "Connection error. Please check your network and try again."
+  },
+  "calendar": {
+    "title": "Financial Calendar",
+    "subtitle": "All your financial events in one view",
+    "today": "Today",
+    "no_events": "No events",
+    "no_events_day": "No financial events on this day.",
+    "select_day": "Select a day to view events",
+    "events_on": "Events on",
+    "loading": "Loading calendar...",
+    "error": "Failed to load calendar events",
+    "legend": "Event types",
+    "type_income": "Income",
+    "type_expense": "Expense",
+    "type_bill_due": "Bill due",
+    "type_bill_paid": "Bill paid",
+    "type_bill_overdue": "Overdue bill",
+    "type_subscription": "Subscription",
+    "type_debt_due": "Debt due",
+    "type_investment": "Investment",
+    "type_work_session": "Work session",
+    "type_work_payment": "Work payment",
+    "source_transaction": "Transaction",
+    "source_bill": "Bill",
+    "source_subscription": "Subscription",
+    "source_debt": "Debt",
+    "source_investment": "Investment",
+    "source_work": "Work",
+    "days_short": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+    "months": ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
   }
 }
