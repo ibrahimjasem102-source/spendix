@@ -409,6 +409,19 @@
     "lock_now": "Raeume jetzt sperren",
     "disable_all": "Raumsperren deaktivieren"
   },
+  "search": {
+    "recent": "Letzte Suchen",
+    "clear_all": "Alle löschen",
+    "hint": "Tippen um alle Daten zu durchsuchen",
+    "no_results": "Keine Ergebnisse",
+    "no_results_sub": "Keine Ergebnisse für Ihre Suche",
+    "results": "Ergebnisse",
+    "navigate": "navigieren",
+    "select": "öffnen",
+    "close": "schließen",
+    "type_people": "Personen",
+    "filter_active": "klicken um Filter zu entfernen"
+  },
   "topbar": {
     "search": "Transaktionen suchen...",
     "notifications": "Benachrichtigungen",

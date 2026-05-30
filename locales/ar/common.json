@@ -422,6 +422,19 @@
     "lock_now": "قفل الغرف الآن",
     "disable_all": "إيقاف قفل الغرف"
   },
+  "search": {
+    "recent": "آخر البحوثات",
+    "clear_all": "مسح الكل",
+    "hint": "اكتب للبحث في جميع بياناتك",
+    "no_results": "لا نتائج",
+    "no_results_sub": "لم يُعثر على نتائج لبحثك",
+    "results": "نتيجة",
+    "navigate": "للتنقل",
+    "select": "للفتح",
+    "close": "للإغلاق",
+    "type_people": "الأشخاص",
+    "filter_active": "انقر لإلغاء الفلتر"
+  },
   "topbar": {
     "search": "ابحث في المعاملات...",
     "notifications": "الإشعارات",

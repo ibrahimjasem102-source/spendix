@@ -423,6 +423,19 @@
     "lock_now": "Lock rooms now",
     "disable_all": "Disable room locks"
   },
+  "search": {
+    "recent": "Recent Searches",
+    "clear_all": "Clear all",
+    "hint": "Type to search all your data",
+    "no_results": "No results",
+    "no_results_sub": "Nothing matched your search",
+    "results": "results",
+    "navigate": "navigate",
+    "select": "open",
+    "close": "close",
+    "type_people": "People",
+    "filter_active": "click to clear filter"
+  },
   "topbar": {
     "search": "Search transactions...",
     "notifications": "Notifications",

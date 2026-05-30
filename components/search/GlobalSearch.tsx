@@ -4,8 +4,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import {
-  ArrowUpRight, Briefcase, Clock, DollarSign, Landmark,
-  Loader2, Search, TrendingUp, X, Trash2,
+  ArrowUpRight, Briefcase, Clock, DollarSign, FileText, Landmark,
+  Loader2, PiggyBank, Search, Target, Trash2, UserRound, TrendingUp, X,
 } from "lucide-react";
 import { safeFetch } from "@/lib/fetch-safe";
 import { useCurrency } from "@/lib/currency";
@@ -22,31 +22,45 @@ const TYPE_ICON: Record<SearchResult["type"], React.ElementType> = {
   investment:   TrendingUp,
   work_session: Briefcase,
   work_payment: DollarSign,
+  goal:         Target,
+  contact:      UserRound,
+  savings:      PiggyBank,
 };
 
 const TYPE_CFG: Record<SearchResult["type"], { color: string; bg: string; labelKey: string }> = {
-  transaction:  { color: "text-cyan-400",    bg: "bg-cyan-400/10",    labelKey: "nav.transactions"    },
-  debt:         { color: "text-orange-400",  bg: "bg-orange-400/10",  labelKey: "nav.debts"           },
-  investment:   { color: "text-purple-400",  bg: "bg-purple-400/10",  labelKey: "nav.investments"     },
-  work_session: { color: "text-emerald-400", bg: "bg-emerald-400/10", labelKey: "nav.work"            },
-  work_payment: { color: "text-emerald-400", bg: "bg-emerald-400/10", labelKey: "actions.work_payment"},
+  transaction:  { color: "text-cyan-400",    bg: "bg-cyan-400/10",    labelKey: "nav.transactions"     },
+  debt:         { color: "text-orange-400",  bg: "bg-orange-400/10",  labelKey: "nav.debts"            },
+  investment:   { color: "text-purple-400",  bg: "bg-purple-400/10",  labelKey: "nav.investments"      },
+  work_session: { color: "text-emerald-400", bg: "bg-emerald-400/10", labelKey: "nav.work"             },
+  work_payment: { color: "text-emerald-400", bg: "bg-emerald-400/10", labelKey: "actions.work_payment" },
+  goal:         { color: "text-indigo-400",  bg: "bg-indigo-400/10",  labelKey: "nav.goals"            },
+  contact:      { color: "text-rose-400",    bg: "bg-rose-400/10",    labelKey: "search.type_people"   },
+  savings:      { color: "text-teal-400",    bg: "bg-teal-400/10",    labelKey: "nav.savings"          },
 };
 
-const TYPE_ORDER: SearchResult["type"][] = ["transaction", "debt", "investment", "work_session", "work_payment"];
+const TYPE_ORDER: SearchResult["type"][] = [
+  "transaction", "debt", "goal", "contact", "savings", "investment", "work_session", "work_payment",
+];
 
 function highlightMatch(text: string, query: string): React.ReactNode {
   if (!query.trim()) return text;
-  const idx = text.toLowerCase().indexOf(query.toLowerCase());
-  if (idx === -1) return text;
-  return (
-    <>
-      {text.slice(0, idx)}
-      <mark className="rounded bg-cyan-400/20 px-0.5 text-cyan-300 not-italic">
+  const lower = text.toLowerCase();
+  const q     = query.toLowerCase();
+  const parts: React.ReactNode[] = [];
+  let cursor = 0;
+  let idx = lower.indexOf(q, cursor);
+  while (idx !== -1) {
+    if (idx > cursor) parts.push(text.slice(cursor, idx));
+    parts.push(
+      <mark key={idx} className="rounded bg-cyan-400/20 px-0.5 text-cyan-300 not-italic">
         {text.slice(idx, idx + query.length)}
       </mark>
-      {text.slice(idx + query.length)}
-    </>
-  );
+    );
+    cursor = idx + query.length;
+    idx = lower.indexOf(q, cursor);
+  }
+  if (cursor < text.length) parts.push(text.slice(cursor));
+  return <>{parts}</>;
 }
 
 function loadRecents(): string[] {
@@ -71,13 +85,14 @@ export default function GlobalSearch() {
   const { t }  = useTranslation();
   const { format } = useCurrency();
 
-  const [query,   setQuery]   = useState("");
-  const [results, setResults] = useState<SearchResult[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [open,    setOpen]    = useState(false);
-  const [focused, setFocused] = useState(-1);
-  const [recents, setRecents] = useState<string[]>([]);
+  const [query,        setQuery]        = useState("");
+  const [results,      setResults]      = useState<SearchResult[]>([]);
+  const [loading,      setLoading]      = useState(false);
+  const [open,         setOpen]         = useState(false);
+  const [focused,      setFocused]      = useState(-1);
+  const [recents,      setRecents]      = useState<string[]>([]);
   const [inputFocused, setInputFocused] = useState(false);
+  const [activeFilter, setActiveFilter] = useState<SearchResult["type"] | null>(null);
 
   const ref      = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -104,15 +119,19 @@ export default function GlobalSearch() {
         inputRef.current?.focus();
         setInputFocused(true);
       }
-      if (e.key === "Escape") { setOpen(false); setInputFocused(false); setFocused(-1); }
+      if (e.key === "Escape") {
+        if (activeFilter) { setActiveFilter(null); return; }
+        setOpen(false); setInputFocused(false); setFocused(-1);
+      }
     }
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
-  }, []);
+  }, [activeFilter]);
 
   const doSearch = useCallback(async (term: string) => {
     if (term.length < 2) { setResults([]); setOpen(false); return; }
     setLoading(true);
+    setActiveFilter(null);
     try {
       const res  = await safeFetch(`/api/search?q=${encodeURIComponent(term)}`);
       const data = await res.json() as { results: SearchResult[] };
@@ -131,17 +150,22 @@ export default function GlobalSearch() {
     timer.current = setTimeout(() => void doSearch(val), 260);
   }
 
+  // Filtered results based on active type filter
+  const displayedResults = activeFilter
+    ? results.filter((r) => r.type === activeFilter)
+    : results;
+
   function handleKeyDown(e: React.KeyboardEvent) {
-    if (!open || results.length === 0) return;
-    if (e.key === "ArrowDown") { e.preventDefault(); setFocused((v) => Math.min(v + 1, results.length - 1)); }
+    if (!open || displayedResults.length === 0) return;
+    if (e.key === "ArrowDown") { e.preventDefault(); setFocused((v) => Math.min(v + 1, displayedResults.length - 1)); }
     if (e.key === "ArrowUp")   { e.preventDefault(); setFocused((v) => Math.max(v - 1, -1)); }
-    if (e.key === "Enter" && focused >= 0) handleSelect(results[focused]);
+    if (e.key === "Enter" && focused >= 0) handleSelect(displayedResults[focused]);
   }
 
   function handleSelect(result: SearchResult) {
     if (query.trim().length >= 2) setRecents(saveRecent(query.trim()));
     setOpen(false); setInputFocused(false);
-    setQuery(""); setResults([]);
+    setQuery(""); setResults([]); setActiveFilter(null);
     router.push(result.url);
   }
 
@@ -161,13 +185,25 @@ export default function GlobalSearch() {
     setRecents([]);
   }
 
-  function handleClear() { setQuery(""); setResults([]); setOpen(false); }
+  function handleClear() { setQuery(""); setResults([]); setOpen(false); setActiveFilter(null); }
 
-  const grouped    = results.reduce<Record<string, SearchResult[]>>((acc, r) => { (acc[r.type] ??= []).push(r); return acc; }, {});
-  const showRecents = inputFocused && query.length < 2 && recents.length > 0;
-  const showResults = open && results.length > 0;
-  const showEmpty   = open && !loading && query.length >= 2 && results.length === 0;
+  function toggleFilter(type: SearchResult["type"]) {
+    setActiveFilter((prev) => prev === type ? null : type);
+    setFocused(-1);
+  }
+
+  const grouped      = results.reduce<Record<string, SearchResult[]>>((acc, r) => { (acc[r.type] ??= []).push(r); return acc; }, {});
+  const typesPresent = TYPE_ORDER.filter((t) => grouped[t]?.length);
+  const showRecents  = inputFocused && query.length < 2 && recents.length > 0;
+  const showResults  = open && results.length > 0;
+  const showEmpty    = open && !loading && query.length >= 2 && results.length === 0;
   const dropdownOpen = showRecents || showResults || showEmpty;
+
+  // Group displayed results for rendering
+  const displayGrouped = displayedResults.reduce<Record<string, SearchResult[]>>(
+    (acc, r) => { (acc[r.type] ??= []).push(r); return acc; }, {}
+  );
+  const displayTypes = TYPE_ORDER.filter((t) => displayGrouped[t]?.length);
 
   return (
     <div ref={ref} className="relative flex-1">
@@ -213,22 +249,22 @@ export default function GlobalSearch() {
             style={{
               backgroundColor: "hsl(var(--bg-card))",
               border: "1px solid hsl(var(--border))",
-              maxHeight: "72vh",
+              maxHeight: "76vh",
             }}
           >
 
-            {/* ── Recent searches ────────────────────────────────── */}
+            {/* ── Recent searches ── */}
             {showRecents && (
               <>
                 <div className="flex items-center justify-between px-4 pt-3 pb-2">
                   <div className="flex items-center gap-2">
                     <Clock className="w-3.5 h-3.5 t3" />
-                    <p className="text-xs font-semibold t2">{t("search.recent") || "آخر البحوثات"}</p>
+                    <p className="text-xs font-semibold t2">{t("search.recent")}</p>
                   </div>
                   <button onClick={clearAll}
                     className="text-[10px] t3 hover:text-rose-400 transition-colors flex items-center gap-1">
                     <Trash2 className="w-3 h-3" />
-                    {t("search.clear_all") || "مسح الكل"}
+                    {t("search.clear_all")}
                   </button>
                 </div>
                 <div className="pb-2">
@@ -253,76 +289,98 @@ export default function GlobalSearch() {
                   ))}
                 </div>
                 <div className="mx-4 h-px bg-[hsl(var(--border-2))]" />
-                <p className="px-4 py-2 text-[10px] t3 text-center">
-                  {t("search.hint") || "اكتب للبحث في جميع بياناتك"}
-                </p>
+                <p className="px-4 py-2 text-[10px] t3 text-center">{t("search.hint")}</p>
               </>
             )}
 
-            {/* ── No results ─────────────────────────────────────── */}
+            {/* ── No results ── */}
             {showEmpty && (
               <div className="flex flex-col items-center gap-3 py-10 px-4">
                 <div className="w-11 h-11 rounded-2xl bg-[hsl(var(--bg-input))] flex items-center justify-center">
                   <Search className="w-5 h-5 t3 opacity-40" />
                 </div>
-                <p className="text-sm font-semibold t1">{t("search.no_results") || "لا نتائج"}</p>
-                <p className="text-xs t3 text-center">
-                  {t("search.no_results_sub") || `لم يُعثر على نتائج لـ "${query}"`}
-                </p>
+                <p className="text-sm font-semibold t1">{t("search.no_results")}</p>
+                <p className="text-xs t3 text-center">{t("search.no_results_sub")}</p>
               </div>
             )}
 
-            {/* ── Results ────────────────────────────────────────── */}
+            {/* ── Results ── */}
             {showResults && (
               <>
-                {/* Summary bar */}
-                <div className="flex items-center justify-between px-4 pt-3 pb-2 border-b border-[hsl(var(--border-2))]">
-                  <div className="flex items-center gap-2">
+                {/* Summary + filter bar */}
+                <div className="flex items-center gap-2 px-4 pt-3 pb-2.5 border-b border-[hsl(var(--border-2))] flex-wrap">
+                  <div className="flex items-center gap-1.5 shrink-0">
                     <Search className="w-3.5 h-3.5 t3" />
                     <p className="text-xs t2">
-                      <span className="font-bold t1">{results.length}</span>
-                      <span className="ms-1 t3">{t("search.results") || "نتيجة"}</span>
+                      <span className="font-bold t1">{displayedResults.length}</span>
+                      {activeFilter && (
+                        <span className="t3"> / {results.length}</span>
+                      )}
+                      <span className="ms-1 t3">{t("search.results")}</span>
                     </p>
                   </div>
-                  {/* Type pills */}
-                  <div className="flex items-center gap-1">
-                    {TYPE_ORDER.filter((type) => grouped[type]?.length).map((type) => {
-                      const cfg = TYPE_CFG[type];
-                      const Icon = TYPE_ICON[type];
+
+                  {/* Clickable type filter pills */}
+                  <div className="flex items-center gap-1 flex-wrap ms-auto">
+                    {typesPresent.map((type) => {
+                      const cfg    = TYPE_CFG[type];
+                      const Icon   = TYPE_ICON[type];
+                      const active = activeFilter === type;
                       return (
-                        <div key={type} className={`flex items-center gap-1 px-1.5 py-0.5 rounded-lg ${cfg.bg}`}>
-                          <Icon className={`w-2.5 h-2.5 ${cfg.color}`} />
-                          <span className={`text-[9px] font-bold ${cfg.color}`}>{grouped[type].length}</span>
-                        </div>
+                        <button
+                          key={type}
+                          onClick={() => toggleFilter(type)}
+                          className={`flex items-center gap-1 px-1.5 py-0.5 rounded-lg transition-all ${
+                            active
+                              ? `${cfg.bg} ring-1 ring-current/40 ${cfg.color}`
+                              : `${cfg.bg} ${cfg.color} opacity-60 hover:opacity-100`
+                          }`}
+                        >
+                          <Icon className="w-2.5 h-2.5" />
+                          <span className="text-[9px] font-bold">{grouped[type].length}</span>
+                          {active && <X className="w-2 h-2 ms-0.5" />}
+                        </button>
                       );
                     })}
                   </div>
                 </div>
 
+                {/* Active filter label */}
+                {activeFilter && (
+                  <div className="px-4 py-1.5 bg-[hsl(var(--bg-input))] border-b border-[hsl(var(--border-2))]">
+                    <p className={`text-[10px] font-semibold ${TYPE_CFG[activeFilter].color}`}>
+                      {t(TYPE_CFG[activeFilter].labelKey as Parameters<typeof t>[0])}
+                      <span className="t3 font-normal ms-1">— {t("search.filter_active")}</span>
+                    </p>
+                  </div>
+                )}
+
                 {/* Result rows */}
-                <div className="overflow-y-auto" style={{ maxHeight: "calc(72vh - 52px)" }}>
-                  {TYPE_ORDER.filter((type) => grouped[type]?.length).map((type) => {
+                <div className="overflow-y-auto" style={{ maxHeight: "calc(76vh - 56px)" }}>
+                  {displayTypes.map((type) => {
                     const cfg  = TYPE_CFG[type];
                     const Icon = TYPE_ICON[type];
                     return (
                       <div key={type}>
-                        {/* Section header */}
-                        <div className="sticky top-0 z-10 flex items-center gap-2 px-4 py-2"
-                          style={{ backgroundColor: "hsl(var(--bg-card))" }}>
-                          <div className={`p-1 rounded-lg ${cfg.bg}`}>
-                            <Icon className={`w-3 h-3 ${cfg.color}`} />
+                        {/* Section header — only shown when multiple types visible */}
+                        {!activeFilter && (
+                          <div className="sticky top-0 z-10 flex items-center gap-2 px-4 py-1.5"
+                            style={{ backgroundColor: "hsl(var(--bg-card))" }}>
+                            <div className={`p-1 rounded-lg ${cfg.bg}`}>
+                              <Icon className={`w-3 h-3 ${cfg.color}`} />
+                            </div>
+                            <p className={`text-[10px] font-bold uppercase tracking-wider ${cfg.color}`}>
+                              {t(cfg.labelKey as Parameters<typeof t>[0])}
+                            </p>
+                            <span className={`ms-auto text-[9px] font-bold px-1.5 py-0.5 rounded-full ${cfg.bg} ${cfg.color}`}>
+                              {displayGrouped[type].length}
+                            </span>
                           </div>
-                          <p className={`text-[10px] font-bold uppercase tracking-wider ${cfg.color}`}>
-                            {t(cfg.labelKey)}
-                          </p>
-                          <span className={`ms-auto text-[9px] font-bold px-1.5 py-0.5 rounded-full ${cfg.bg} ${cfg.color}`}>
-                            {grouped[type].length}
-                          </span>
-                        </div>
+                        )}
 
                         {/* Items */}
-                        {grouped[type].map((result, idx) => {
-                          const globalIdx = results.indexOf(result);
+                        {displayGrouped[type].map((result, idx) => {
+                          const globalIdx = displayedResults.indexOf(result);
                           const isActive  = focused === globalIdx;
                           const amountColor =
                             result.amountType === "income"  ? "text-emerald-400" :
@@ -339,7 +397,7 @@ export default function GlobalSearch() {
                               transition={{ ...spring, delay: idx * 0.025 }}
                               onClick={() => handleSelect(result)}
                               onMouseEnter={() => setFocused(globalIdx)}
-                              className={`flex w-full items-center gap-3 px-4 py-3 text-start transition-colors ${
+                              className={`flex w-full items-center gap-3 px-4 py-2.5 text-start transition-colors ${
                                 isActive ? "bg-[hsl(var(--bg-input))]" : "hover:bg-[hsl(var(--bg-input))]"
                               }`}
                             >
@@ -353,7 +411,16 @@ export default function GlobalSearch() {
                                 <p className="truncate text-sm font-semibold t1">
                                   {highlightMatch(result.title, query)}
                                 </p>
-                                <p className="truncate text-[11px] t3 mt-0.5">{result.subtitle}</p>
+                                {result.noteSnippet ? (
+                                  <div className="flex items-center gap-1 mt-0.5">
+                                    <FileText className="w-2.5 h-2.5 t3 shrink-0" />
+                                    <p className="truncate text-[11px] t3 italic">
+                                      {highlightMatch(result.noteSnippet, query)}
+                                    </p>
+                                  </div>
+                                ) : (
+                                  <p className="truncate text-[11px] t3 mt-0.5">{result.subtitle}</p>
+                                )}
                               </div>
 
                               {/* Amount */}
@@ -374,9 +441,9 @@ export default function GlobalSearch() {
                   })}
 
                   {/* Footer */}
-                  <div className="border-t border-[hsl(var(--border-2))] px-4 py-2.5 flex items-center justify-between">
+                  <div className="border-t border-[hsl(var(--border-2))] px-4 py-2 flex items-center justify-between">
                     <p className="text-[10px] t3">
-                      ↑↓ {t("search.navigate") || "للتنقل"} · Enter {t("search.select") || "للفتح"} · Esc {t("search.close") || "للإغلاق"}
+                      ↑↓ {t("search.navigate")} · Enter {t("search.select")} · Esc {t("search.close")}
                     </p>
                     <p className="text-[10px] t3">⌘K</p>
                   </div>
