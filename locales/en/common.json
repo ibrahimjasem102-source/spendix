@@ -28,7 +28,8 @@
     "subscriptions": "Subscriptions",
     "bills": "Bills",
     "calendar": "Calendar",
-    "savings": "Savings"
+    "savings": "Savings",
+    "net_worth": "Net Worth"
   },
   "common": {
     "save": "Save changes",
@@ -953,6 +954,38 @@
     "of_target": "of {{target}}",
     "tx_deposit": "Deposit",
     "tx_withdraw": "Withdrawal"
+  },
+  "net_worth": {
+    "title": "Net Worth",
+    "subtitle": "Your complete financial position",
+    "total": "Net Worth",
+    "total_positive": "Positive",
+    "total_negative": "Negative",
+    "assets": "Assets",
+    "liabilities": "Liabilities",
+    "cash": "Cash",
+    "cash_sub": "Cash accounts & digital wallets",
+    "banks": "Banks",
+    "banks_sub": "Bank & savings accounts",
+    "investments": "Investments",
+    "investments_sub": "Portfolio market value",
+    "debts": "Debts",
+    "debts_sub": "Outstanding debts owed",
+    "credit_cards": "Credit Cards",
+    "credit_cards_sub": "Credit card balances",
+    "no_cash": "No cash accounts added",
+    "no_banks": "No bank accounts added",
+    "no_investments": "No investments added",
+    "no_debts": "No outstanding debts",
+    "no_credit_cards": "No credit cards added",
+    "go_to": "Manage",
+    "total_assets": "Total Assets",
+    "total_liabilities": "Total Liabilities",
+    "items": "items",
+    "empty_cta": "Add your financial accounts to see your net worth",
+    "due": "Due {{date}}",
+    "gain": "Gain: {{pct}}%",
+    "loss": "Loss: {{pct}}%"
   },
   "profile": {
     "title": "Profile",

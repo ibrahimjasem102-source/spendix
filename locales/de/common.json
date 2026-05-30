@@ -27,7 +27,8 @@
     "subscriptions": "Abonnements",
     "bills": "Rechnungen",
     "calendar": "Kalender",
-    "savings": "Ersparnisse"
+    "savings": "Ersparnisse",
+    "net_worth": "Nettovermögen"
   },
   "common": {
     "save": "Änderungen speichern",
@@ -898,6 +899,38 @@
     "of_target": "von {{target}}",
     "tx_deposit": "Einzahlung",
     "tx_withdraw": "Abhebung"
+  },
+  "net_worth": {
+    "title": "Nettovermögen",
+    "subtitle": "Ihre vollständige finanzielle Position",
+    "total": "Nettovermögen",
+    "total_positive": "Positiv",
+    "total_negative": "Negativ",
+    "assets": "Aktiva",
+    "liabilities": "Verbindlichkeiten",
+    "cash": "Bargeld",
+    "cash_sub": "Bargeldkonten und digitale Geldbörsen",
+    "banks": "Banken",
+    "banks_sub": "Bank- und Sparkonten",
+    "investments": "Investitionen",
+    "investments_sub": "Marktportfoliowert",
+    "debts": "Schulden",
+    "debts_sub": "Ausstehende Verbindlichkeiten",
+    "credit_cards": "Kreditkarten",
+    "credit_cards_sub": "Kreditkartensalden",
+    "no_cash": "Keine Bargeldkonten hinzugefügt",
+    "no_banks": "Keine Bankkonten hinzugefügt",
+    "no_investments": "Keine Investitionen hinzugefügt",
+    "no_debts": "Keine ausstehenden Schulden",
+    "no_credit_cards": "Keine Kreditkarten hinzugefügt",
+    "go_to": "Verwalten",
+    "total_assets": "Gesamte Aktiva",
+    "total_liabilities": "Gesamte Verbindlichkeiten",
+    "items": "Einträge",
+    "empty_cta": "Fügen Sie Ihre Konten hinzu, um Ihr Nettovermögen zu sehen",
+    "due": "Fällig {{date}}",
+    "gain": "Gewinn: {{pct}}%",
+    "loss": "Verlust: {{pct}}%"
   },
   "profile": {
     "title": "Profil",

@@ -29,7 +29,8 @@
     "subscriptions": "الاشتراكات",
     "bills": "الفواتير",
     "calendar": "التقويم",
-    "savings": "المدخرات"
+    "savings": "المدخرات",
+    "net_worth": "صافي الثروة"
   },
   "common": {
     "save": "حفظ التغييرات",
@@ -952,6 +953,38 @@
     "of_target": "من {{target}}",
     "tx_deposit": "إيداع",
     "tx_withdraw": "سحب"
+  },
+  "net_worth": {
+    "title": "صافي الثروة",
+    "subtitle": "وضعك المالي الكامل",
+    "total": "صافي الثروة",
+    "total_positive": "موجب",
+    "total_negative": "سالب",
+    "assets": "الأصول",
+    "liabilities": "الالتزامات",
+    "cash": "نقد",
+    "cash_sub": "الحسابات النقدية والمحافظ الرقمية",
+    "banks": "بنوك",
+    "banks_sub": "الحسابات البنكية وحسابات التوفير",
+    "investments": "استثمارات",
+    "investments_sub": "القيمة السوقية للمحفظة",
+    "debts": "ديون",
+    "debts_sub": "الديون المستحقة عليك",
+    "credit_cards": "بطاقات ائتمان",
+    "credit_cards_sub": "أرصدة البطاقات الائتمانية",
+    "no_cash": "لم تُضف حسابات نقدية بعد",
+    "no_banks": "لم تُضف حسابات بنكية بعد",
+    "no_investments": "لم تُضف استثمارات بعد",
+    "no_debts": "لا ديون مستحقة",
+    "no_credit_cards": "لم تُضف بطاقات ائتمان",
+    "go_to": "إدارة",
+    "total_assets": "إجمالي الأصول",
+    "total_liabilities": "إجمالي الالتزامات",
+    "items": "عناصر",
+    "empty_cta": "أضف حساباتك المالية لعرض صافي ثروتك",
+    "due": "مستحق {{date}}",
+    "gain": "ربح: {{pct}}%",
+    "loss": "خسارة: {{pct}}%"
   },
   "profile": {
     "title": "الملف الشخصي",
