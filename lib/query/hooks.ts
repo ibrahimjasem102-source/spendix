@@ -23,6 +23,7 @@ import type {
   Bill, BillFormData, BillPayData,
   CalendarEvent,
   Goal, GoalFormData,
+  SavingsPot, SavingsPotFormData, SavingsTransaction, SavingsTxFormData,
   Subscription, SubscriptionFormData,
   AppNotification, Debt, DebtFormData, DebtPaymentFormData,
   Budget, BudgetFormData, BudgetSummary, Category,
@@ -1288,6 +1289,143 @@ export function useContributeToGoal() {
     },
     onSettled: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.goals.all, refetchType: "all" });
+    },
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
+// SAVINGS
+// ══════════════════════════════════════════════════════════════
+
+export function useSavingsPots(enabled = true) {
+  return useQuery({
+    queryKey: queryKeys.savings.pots(),
+    enabled,
+    queryFn: async () => {
+      try {
+        const data = await fetchJson<{ pots: SavingsPot[] }>("/api/savings");
+        return data.pots ?? [];
+      } catch (error) {
+        console.warn("[Spendix] Savings fetch failed", error);
+        return [];
+      }
+    },
+    staleTime: 30_000,
+  });
+}
+
+export function useSavingsTransactions(potId: string, enabled = true) {
+  return useQuery({
+    queryKey: queryKeys.savings.transactions(potId),
+    enabled: enabled && !!potId,
+    queryFn: async () => {
+      try {
+        const data = await fetchJson<{ transactions: SavingsTransaction[] }>(
+          `/api/savings/${potId}/transactions`
+        );
+        return data.transactions ?? [];
+      } catch {
+        return [];
+      }
+    },
+    staleTime: 30_000,
+  });
+}
+
+export function useCreateSavingsPot() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: SavingsPotFormData) =>
+      fetchJson<{ pot: SavingsPot }>("/api/savings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      }),
+    onSuccess: ({ pot }) => {
+      qc.setQueryData<SavingsPot[]>(queryKeys.savings.pots(), (old = []) => [pot, ...old]);
+    },
+    onSettled: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.savings.all, refetchType: "all" });
+    },
+  });
+}
+
+export function useUpdateSavingsPot() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<SavingsPotFormData> }) =>
+      fetchJson<{ pot: SavingsPot }>(`/api/savings/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      }),
+    onSuccess: ({ pot }) => {
+      qc.setQueryData<SavingsPot[]>(queryKeys.savings.pots(), (old = []) =>
+        old.map((p) => p.id === pot.id ? pot : p)
+      );
+    },
+    onSettled: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.savings.all, refetchType: "all" });
+    },
+  });
+}
+
+export function useDeleteSavingsPot() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      await safeFetch(`/api/savings/${id}`, { method: "DELETE" }).then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      });
+      return id;
+    },
+    onMutate: async (id) => {
+      await qc.cancelQueries({ queryKey: queryKeys.savings.pots() });
+      const previous = qc.getQueryData<SavingsPot[]>(queryKeys.savings.pots());
+      qc.setQueryData<SavingsPot[]>(queryKeys.savings.pots(), (old = []) => old.filter((p) => p.id !== id));
+      return { previous };
+    },
+    onError: (_e, _id, ctx) => {
+      if (ctx?.previous) qc.setQueryData(queryKeys.savings.pots(), ctx.previous);
+    },
+    onSettled: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.savings.all, refetchType: "all" });
+    },
+  });
+}
+
+export function useDepositToSavings() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ potId, data }: { potId: string; data: SavingsTxFormData }) =>
+      fetchJson<{ transaction: SavingsTransaction }>(`/api/savings/${potId}/deposit`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      }),
+    onSuccess: (_, { potId }) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.savings.transactions(potId), refetchType: "all" });
+    },
+    onSettled: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.savings.all, refetchType: "all" });
+    },
+  });
+}
+
+export function useWithdrawFromSavings() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ potId, data }: { potId: string; data: SavingsTxFormData }) =>
+      fetchJson<{ transaction: SavingsTransaction }>(`/api/savings/${potId}/withdraw`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      }),
+    onSuccess: (_, { potId }) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.savings.transactions(potId), refetchType: "all" });
+    },
+    onSettled: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.savings.all, refetchType: "all" });
     },
   });
 }

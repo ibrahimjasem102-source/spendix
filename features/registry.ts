@@ -35,6 +35,7 @@ import { accounts }      from "./accounts/config";
 import { subscriptions } from "./subscriptions/config";
 import { bills }         from "./bills/config";
 import { calendar }      from "./calendar/config";
+import { savings }      from "./savings/config";
 
 export const FEATURE_REGISTRY: FeatureModule[] = [
   // ── Primary ──────────────────────────────────────────────
@@ -50,6 +51,7 @@ export const FEATURE_REGISTRY: FeatureModule[] = [
   calendar,
   investments,
   debts,
+  savings,
   work,
   budgets,
   goals,

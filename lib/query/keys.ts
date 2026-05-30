@@ -61,4 +61,9 @@ export const queryKeys = {
     all:  ["goals"] as const,
     list: () => [...queryKeys.goals.all, "list"] as const,
   },
+  savings: {
+    all:          ["savings"] as const,
+    pots:         () => [...queryKeys.savings.all, "pots"] as const,
+    transactions: (potId: string) => [...queryKeys.savings.all, "transactions", potId] as const,
+  },
 };

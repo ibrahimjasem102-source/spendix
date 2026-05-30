@@ -51,6 +51,7 @@ const EVENT_DOMAINS: Record<string, Domain[]> = {
   "subscription:updated":   ["subscriptions"],
   "subscription:deleted":   ["subscriptions"],
   "subscription:charged":   ["subscriptions", "transactions", "dashboard", "analytics", "budgets"],
+  "goal:progress_updated":  ["goals"],
 };
 
 export function FinancialEventBridge() {

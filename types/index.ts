@@ -477,6 +477,51 @@ export interface WorkPaymentFormData {
   work_session_id?: string | null;
 }
 
+// ── Savings ───────────────────────────────────────────────────
+export type SavingsCategory = "emergency" | "travel" | "car" | "home" | "education" | "retirement" | "other";
+export type SavingsTxType   = "deposit" | "withdraw";
+
+export interface SavingsPot {
+  id: string;
+  user_id: string;
+  name: string;
+  category: SavingsCategory;
+  target_amount: number | null;
+  color: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+  // computed by API
+  balance: number;
+  progress: number;   // 0-100, only meaningful when target_amount > 0
+  tx_count: number;
+}
+
+export interface SavingsPotFormData {
+  name: string;
+  category: SavingsCategory;
+  target_amount?: number | null;
+  color?: string | null;
+  notes?: string | null;
+}
+
+export interface SavingsTransaction {
+  id: string;
+  user_id: string;
+  savings_pot_id: string;
+  type: SavingsTxType;
+  amount: number;
+  note: string | null;
+  date: string;         // YYYY-MM-DD
+  created_at: string;
+}
+
+export interface SavingsTxFormData {
+  amount: number;
+  note?: string | null;
+  date?: string;
+}
+
 // ── Goals ─────────────────────────────────────────────────────
 export type GoalCategory     = "emergency" | "home" | "travel" | "education" | "car" | "retirement" | "other";
 export type GoalTrackingType = "manual" | "savings" | "income" | "investment" | "debt_payoff";
