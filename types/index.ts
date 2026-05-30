@@ -63,6 +63,60 @@ export interface AccountFormData {
 
 export type TransactionSource = "manual" | "investment" | "debt" | "debt_payment" | "work" | "work_payment" | "subscription";
 
+// ── Bills ─────────────────────────────────────────────────────
+export type BillStatus     = "unpaid" | "paid" | "overdue";
+export type BillRecurrence = "monthly" | "quarterly" | "yearly";
+
+export interface Bill {
+  id: string;
+  user_id: string;
+  name: string;
+  amount?: number | null;
+  currency: string;
+  due_date: string;
+  category_id?: string | null;
+  account_id?: string | null;
+  is_recurring: boolean;
+  recurrence?: BillRecurrence | null;
+  color?: string | null;
+  icon?: string | null;
+  notes?: string | null;
+  status: BillStatus;
+  remind_days_before: number;
+  paid_at?: string | null;
+  transaction_id?: string | null;
+  created_at: string;
+  updated_at: string;
+  // joined
+  category?: Pick<Category, "id" | "name" | "color" | "icon"> | null;
+  account?: Pick<Account, "id" | "name" | "type"> | null;
+  // computed
+  days_until_due?: number;
+  effective_status?: BillStatus;
+}
+
+export interface BillFormData {
+  name: string;
+  amount?: number | null;
+  currency?: string;
+  due_date: string;
+  category_id?: string | null;
+  account_id?: string | null;
+  is_recurring?: boolean;
+  recurrence?: BillRecurrence | null;
+  color?: string | null;
+  icon?: string | null;
+  notes?: string | null;
+  remind_days_before?: number;
+}
+
+export interface BillPayData {
+  amount: number;
+  payment_date: string;
+  account_id?: string | null;
+  notes?: string | null;
+}
+
 // ── Subscriptions ─────────────────────────────────────────────
 export type BillingCycle      = "weekly" | "monthly" | "quarterly" | "yearly";
 export type SubscriptionStatus = "active" | "paused" | "cancelled";

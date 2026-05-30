@@ -28,6 +28,12 @@ export type FinancialEventMap = {
   "account:created":        { id: string; name: string };
   "account:updated":        { id: string };
   "account:deleted":        { id: string };
+  // Bills
+  "bill:created":   { id: string; name: string };
+  "bill:updated":   { id: string };
+  "bill:deleted":   { id: string };
+  "bill:paid":      { id: string; name: string; amount: number };
+  "bill:overdue":   { id: string; name: string };
   // Subscriptions
   "subscription:created":   { id: string; name: string; amount: number };
   "subscription:updated":   { id: string };

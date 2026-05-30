@@ -19,6 +19,7 @@ import { safeFetch } from "@/lib/fetch-safe";
 import { financialBus } from "@/lib/finance/eventBus";
 import type {
   Account, AccountFormData,
+  Bill, BillFormData, BillPayData,
   Subscription, SubscriptionFormData,
   AppNotification, Debt, DebtFormData, DebtPaymentFormData,
   Budget, BudgetFormData, BudgetSummary, Category,
@@ -949,6 +950,113 @@ export function useDeleteAccount() {
     },
     onSettled: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.accounts.all, refetchType: "all" });
+    },
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
+// BILLS
+// ══════════════════════════════════════════════════════════════
+
+export function useBills(enabled = true) {
+  return useQuery({
+    queryKey: queryKeys.bills.list(),
+    enabled,
+    queryFn: async () => {
+      try {
+        const data = await fetchJson<{ bills: Bill[] }>("/api/bills");
+        return data.bills ?? [];
+      } catch (error) {
+        console.warn("[Spendix] Bills fetch failed", error);
+        return [];
+      }
+    },
+    staleTime: 30_000,
+  });
+}
+
+export function useCreateBill() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: BillFormData) =>
+      fetchJson<{ bill: Bill }>("/api/bills", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      }),
+    onSuccess: ({ bill }) => {
+      financialBus.emit("bill:created", { id: bill.id, name: bill.name });
+    },
+    onSettled: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.bills.all, refetchType: "all" });
+    },
+  });
+}
+
+export function useUpdateBill() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<BillFormData> }) =>
+      fetchJson<{ bill: Bill }>(`/api/bills/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      }),
+    onSuccess: (_, { id }) => {
+      financialBus.emit("bill:updated", { id });
+    },
+    onSettled: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.bills.all, refetchType: "all" });
+    },
+  });
+}
+
+export function useDeleteBill() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      await safeFetch(`/api/bills/${id}`, { method: "DELETE" }).then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      });
+      return id;
+    },
+    onMutate: async (id) => {
+      await qc.cancelQueries({ queryKey: queryKeys.bills.all });
+      const previous = qc.getQueryData<Bill[]>(queryKeys.bills.list());
+      qc.setQueryData<Bill[]>(queryKeys.bills.list(), (old = []) => old.filter((b) => b.id !== id));
+      return { previous };
+    },
+    onError: (_e, _id, ctx) => {
+      if (ctx?.previous) qc.setQueryData(queryKeys.bills.list(), ctx.previous);
+    },
+    onSuccess: (id) => {
+      financialBus.emit("bill:deleted", { id });
+    },
+    onSettled: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.bills.all, refetchType: "all" });
+    },
+  });
+}
+
+export function usePayBill() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: BillPayData }) =>
+      fetchJson<{ success: boolean; transaction_id: string }>(`/api/bills/${id}/pay`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      }),
+    onSuccess: (_, { id }) => {
+      const bills = qc.getQueryData<Bill[]>(queryKeys.bills.list()) ?? [];
+      const bill  = bills.find((b) => b.id === id);
+      if (bill) financialBus.emit("bill:paid", { id, name: bill.name, amount: bill.amount ?? 0 });
+    },
+    onSettled: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.bills.all, refetchType: "all" });
+      void qc.invalidateQueries({ queryKey: queryKeys.transactions.all, refetchType: "all" });
+      void qc.invalidateQueries({ queryKey: queryKeys.dashboard.all, refetchType: "all" });
+      void qc.invalidateQueries({ queryKey: queryKeys.budgets.all, refetchType: "all" });
     },
   });
 }

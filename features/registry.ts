@@ -33,6 +33,7 @@ import { hub }           from "./hub/config";
 import { profile }       from "./profile/config";
 import { accounts }      from "./accounts/config";
 import { subscriptions } from "./subscriptions/config";
+import { bills }         from "./bills/config";
 
 export const FEATURE_REGISTRY: FeatureModule[] = [
   // ── Primary ──────────────────────────────────────────────
@@ -44,6 +45,7 @@ export const FEATURE_REGISTRY: FeatureModule[] = [
   // ── Finance ──────────────────────────────────────────────
   accounts,
   subscriptions,
+  bills,
   investments,
   debts,
   work,
