@@ -1,13 +1,14 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Plus, AlertTriangle, CheckCircle, Target, Loader2, Pencil, Trash2, Wallet } from "lucide-react";
+import { Plus, AlertTriangle, Check, CheckCircle, ChevronDown, Search, Target, Loader2, Pencil, Trash2, Wallet } from "lucide-react";
 import type { Budget, BudgetFormData, Category } from "@/types";
 import { useTranslation } from "@/lib/i18n";
 import { useCurrency } from "@/lib/currency";
 import { useToast } from "@/hooks/useToast";
 import ToastList from "@/components/ui/Toast";
 import ConfirmModal from "@/components/ui/ConfirmModal";
+import CategoryIcon from "@/components/categories/CategoryIcon";
 import { useGuest } from "@/contexts/GuestContext";
 import { useBudgets, useCreateBudget, useDeleteBudget, useUpdateBudget } from "@/lib/query/hooks";
 
@@ -19,6 +20,123 @@ const YEARS = Array.from({ length: 5 }, (_, index) => CURRENT_YEAR - 2 + index);
 
 function percentOf(spent: number, budget: number) {
   return budget > 0 ? Math.round((spent / budget) * 100) : 0;
+}
+
+function BudgetCategoryPicker({
+  categories,
+  value,
+  onChange,
+}: {
+  categories: Category[];
+  value: string;
+  onChange: (id: string) => void;
+}) {
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const selected = categories.find((category) => category.id === value);
+  const parentById = useMemo(
+    () => new Map(categories.map((category) => [category.id, category])),
+    [categories],
+  );
+  const filtered = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    if (!query) return categories;
+    return categories.filter((category) => {
+      const parentName = category.parent_id ? parentById.get(category.parent_id)?.name ?? "" : "";
+      return `${category.name} ${parentName}`.toLowerCase().includes(query);
+    });
+  }, [categories, parentById, search]);
+
+  return (
+    <div className="space-y-2">
+      <button
+        type="button"
+        onClick={() => setOpen((current) => !current)}
+        disabled={categories.length === 0}
+        className="flex min-h-[58px] w-full items-center justify-between gap-3 rounded-2xl border px-3.5 py-3 text-start transition-all disabled:opacity-60"
+        style={{ backgroundColor: "hsl(var(--bg-input))", borderColor: open ? "rgba(34,211,238,0.38)" : "hsl(var(--border))" }}
+      >
+        <span className="flex min-w-0 items-center gap-3">
+          {selected ? (
+            <CategoryIcon icon={selected.icon} color={selected.color} size="md" />
+          ) : (
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-cyan-400/10">
+              <Target className="h-5 w-5 text-cyan-400" />
+            </span>
+          )}
+          <span className="min-w-0">
+            <span className="block text-sm font-bold t1">
+              {selected?.name ?? t("budgets.category")}
+            </span>
+            <span className="mt-0.5 block truncate text-[11px] t3">
+              {selected?.parent_id
+                ? t("categories.subcategory_of", { name: parentById.get(selected.parent_id)?.name ?? "" })
+                : t("budgets.form_hint")}
+            </span>
+          </span>
+        </span>
+        <ChevronDown className={`h-4 w-4 shrink-0 t3 transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+
+      {open && (
+        <div
+          className="overflow-hidden rounded-2xl border"
+          style={{ backgroundColor: "hsl(var(--bg-card-2))", borderColor: "hsl(var(--border))" }}
+        >
+          <div className="border-b border-[hsl(var(--border-2))] p-2.5">
+            <div className="relative">
+              <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 t3" />
+              <input
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder={t("categories.search_placeholder")}
+                className="h-10 w-full rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--bg-input))] ps-9 pe-3 text-sm font-semibold t1 outline-none"
+              />
+            </div>
+          </div>
+
+          <div className="max-h-[260px] space-y-1 overflow-y-auto p-2 overscroll-contain">
+            {filtered.length === 0 ? (
+              <div className="px-3 py-8 text-center text-sm t3">{t("categories.empty")}</div>
+            ) : (
+              filtered.map((category) => {
+                const isSelected = category.id === value;
+                const parent = category.parent_id ? parentById.get(category.parent_id) : null;
+                return (
+                  <button
+                    key={category.id}
+                    type="button"
+                    onClick={() => {
+                      onChange(category.id);
+                      setOpen(false);
+                      setSearch("");
+                    }}
+                    className={`flex w-full items-center gap-3 rounded-2xl border px-3 py-2.5 text-start transition-all ${
+                      isSelected ? "border-cyan-400/35 bg-cyan-400/10" : "border-transparent hover:bg-[hsl(var(--bg-input))]"
+                    }`}
+                  >
+                    <CategoryIcon icon={category.icon} color={category.color} size="md" />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-bold t1">{category.name}</span>
+                      <span className="mt-0.5 block truncate text-[11px] t3">
+                        {parent ? t("categories.subcategory_of", { name: parent.name }) : t("categories.no_parent")}
+                      </span>
+                    </span>
+                    {isSelected && (
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-cyan-400 text-slate-950">
+                        <Check className="h-3.5 w-3.5" />
+                      </span>
+                    )}
+                  </button>
+                );
+              })
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 function BudgetFormModal({
@@ -86,15 +204,11 @@ function BudgetFormModal({
           <label className="block text-xs font-semibold t3 uppercase tracking-wide mb-2">
             {t("budgets.category")}
           </label>
-          <select
+          <BudgetCategoryPicker
+            categories={categories}
             value={form.category_id}
-            onChange={(event) => setForm((prev) => ({ ...prev, category_id: event.target.value }))}
-            className="field"
-          >
-            {categories.map((category) => (
-              <option key={category.id} value={category.id}>{category.name}</option>
-            ))}
-          </select>
+            onChange={(categoryId) => setForm((prev) => ({ ...prev, category_id: categoryId }))}
+          />
         </div>
 
         <div>
@@ -198,9 +312,14 @@ export default function BudgetsPage() {
   return (
     <div className="space-y-5">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-bold t1">{t("budgets.title")}</h1>
-          <p className="text-sm t2 mt-0.5">{t("budgets.subtitle")}</p>
+        <div className="flex min-w-0 items-center gap-2.5">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-amber-400/10">
+            <Wallet className="h-4 w-4 text-amber-400" />
+          </div>
+          <div className="min-w-0">
+            <h1 className="truncate text-xl font-black t1">{t("budgets.title")}</h1>
+            <p className="mt-0.5 text-xs font-medium t2">{t("budgets.subtitle")}</p>
+          </div>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <select value={month} onChange={(event) => setMonth(Number(event.target.value))} className="field w-auto">
@@ -215,8 +334,7 @@ export default function BudgetsPage() {
           </select>
           <button
             onClick={() => { setEditing(undefined); setShowForm(true); }}
-            disabled={availableCategories.length === 0}
-            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 disabled:opacity-40 text-[#0B0F17] rounded-xl text-sm font-semibold transition-all"
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-[#0B0F17] rounded-xl text-sm font-semibold transition-all"
           >
             <Plus className="w-3.5 h-3.5" />
             {t("budgets.new_budget")}
@@ -225,9 +343,14 @@ export default function BudgetsPage() {
       </div>
 
       {budgetsQuery.isError && (
-        <div className="card p-4 flex items-center justify-between gap-3 border-rose-400/20">
-          <p className="text-sm text-rose-400">{t("budgets.load_failed")}</p>
-          <button onClick={() => void budgetsQuery.refetch()} className="btn-ghost">{t("common.retry")}</button>
+        <div className="card p-4 border-rose-400/20 bg-rose-400/5 space-y-2">
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-sm font-semibold text-rose-400">{t("budgets.load_failed")}</p>
+            <button onClick={() => void budgetsQuery.refetch()} className="btn-ghost text-xs">{t("common.retry")}</button>
+          </div>
+          <p className="text-xs text-rose-300/80 font-mono break-all">
+            {(budgetsQuery.error as Error)?.message ?? "Unknown error"}
+          </p>
         </div>
       )}
 

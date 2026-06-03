@@ -7,7 +7,7 @@ export const aiInsights: FeatureModule = {
   title:     "nav.ai_insights",
   icon:      createElement(Sparkles),
   route:     "/ai-insights",
-  showInNav: true,
+  showInNav: false,
   group:     "ai",
   tone:      "investment",
 };

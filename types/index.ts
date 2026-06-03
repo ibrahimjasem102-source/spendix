@@ -1,8 +1,72 @@
 export type TransactionType        = "income" | "expense";
-export type NotificationType       = "info" | "success" | "warning" | "error" | "reminder" | "debt" | "budget" | "work" | "investment" | "ai" | "goal";
+
+// ── Households (shared financial groups) ─────────────────────
+export type HouseholdRole = "owner" | "admin" | "member";
+
+export interface Household {
+  id: string;
+  name: string;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface HouseholdMember {
+  household_id: string;
+  user_id: string;
+  role: HouseholdRole;
+  joined_at: string;
+  // joined from auth.users
+  email?: string;
+}
+
+export interface HouseholdInvitation {
+  id: string;
+  household_id: string;
+  email: string;
+  role: Exclude<HouseholdRole, "owner">;
+  token: string;
+  invited_by: string;
+  expires_at: string;
+  accepted_at: string | null;
+  created_at: string;
+  // joined
+  household?: Pick<Household, "id" | "name">;
+}
+
+export interface HouseholdSummary {
+  member_user_id: string;
+  member_email: string;
+  monthly_income: number;
+  monthly_expenses: number;
+  net_balance: number;
+  transaction_count: number;
+  member_role: HouseholdRole;
+  joined_at: string;
+}
+
+export interface HouseholdFormData {
+  name: string;
+}
+
+// ── Tags ──────────────────────────────────────────────────────
+export interface Tag {
+  id: string;
+  user_id: string;
+  name: string;
+  color: string;
+  created_at: string;
+  transaction_count?: number;
+}
+
+export interface TagFormData {
+  name: string;
+  color: string;
+}
+export type NotificationType       = "info" | "success" | "warning" | "error" | "reminder" | "debt" | "budget" | "work" | "investment" | "ai" | "goal" | "bill";
 export type NotificationStatus     = "unread" | "read" | "archived";
 export type NotificationPriority   = "low" | "normal" | "high";
-export type NotificationSource     = "manual" | "transaction" | "debt" | "debt_payment" | "investment" | "work" | "budget" | "ai" | "system" | "goal";
+export type NotificationSource     = "manual" | "transaction" | "debt" | "debt_payment" | "investment" | "work" | "budget" | "ai" | "system" | "goal" | "bill";
 
 export interface AppNotification {
   id: string;
@@ -66,7 +130,6 @@ export type TransactionSource = "manual" | "investment" | "debt" | "debt_payment
 // ── Calendar ──────────────────────────────────────────────────
 export type CalendarEventType =
   | "income" | "expense"
-  | "bill_due" | "bill_paid" | "bill_overdue"
   | "subscription"
   | "debt_due"
   | "investment"
@@ -83,60 +146,6 @@ export interface CalendarEvent {
   source: string;      // "bill" | "subscription" | "debt" | "transaction" | "investment" | "work"
   source_id: string;
   action_url: string;
-}
-
-// ── Bills ─────────────────────────────────────────────────────
-export type BillStatus     = "unpaid" | "paid" | "overdue";
-export type BillRecurrence = "monthly" | "quarterly" | "yearly";
-
-export interface Bill {
-  id: string;
-  user_id: string;
-  name: string;
-  amount?: number | null;
-  currency: string;
-  due_date: string;
-  category_id?: string | null;
-  account_id?: string | null;
-  is_recurring: boolean;
-  recurrence?: BillRecurrence | null;
-  color?: string | null;
-  icon?: string | null;
-  notes?: string | null;
-  status: BillStatus;
-  remind_days_before: number;
-  paid_at?: string | null;
-  transaction_id?: string | null;
-  created_at: string;
-  updated_at: string;
-  // joined
-  category?: Pick<Category, "id" | "name" | "color" | "icon"> | null;
-  account?: Pick<Account, "id" | "name" | "type"> | null;
-  // computed
-  days_until_due?: number;
-  effective_status?: BillStatus;
-}
-
-export interface BillFormData {
-  name: string;
-  amount?: number | null;
-  currency?: string;
-  due_date: string;
-  category_id?: string | null;
-  account_id?: string | null;
-  is_recurring?: boolean;
-  recurrence?: BillRecurrence | null;
-  color?: string | null;
-  icon?: string | null;
-  notes?: string | null;
-  remind_days_before?: number;
-}
-
-export interface BillPayData {
-  amount: number;
-  payment_date: string;
-  account_id?: string | null;
-  notes?: string | null;
 }
 
 // ── Subscriptions ─────────────────────────────────────────────
@@ -185,7 +194,7 @@ export interface SubscriptionFormData {
   auto_create_transaction?: boolean;
 }
 export type WorkRecurrence    = "none" | "daily" | "weekly" | "monthly";
-export type WorkSessionStatus = "unpaid" | "partially_paid" | "paid";
+export type WorkSessionStatus = "pending" | "paid" | "overdue";
 export type InsightType       = "tip" | "warning" | "positive";
 export type AssetType         = "stock" | "crypto" | "etf" | "real_estate" | "other";
 export type DebtType          = "payable" | "receivable";
@@ -267,6 +276,8 @@ export interface Category {
   type: TransactionType;
   color: string;
   icon?: string | null;
+  section?: "expense" | "income" | "investment" | "debt" | "work" | "general" | null;
+  parent_id?: string | null;
   created_at: string;
 }
 
@@ -289,6 +300,7 @@ export interface Transaction {
   category?: Pick<Category, "id" | "name" | "color" | "icon"> | null;
   contact?: Pick<FinancialContact, "id" | "name" | "type"> | null;
   account?: Pick<Account, "id" | "name" | "type"> | null;
+  tags?: Pick<Tag, "id" | "name" | "color">[];
 }
 
 export interface TransactionFormData {
@@ -302,6 +314,7 @@ export interface TransactionFormData {
   source?: TransactionSource;
   related_source_id?: string | null;
   contact_id?: string | null;
+  tag_ids?: string[];
 }
 
 export type BudgetStatus = "safe" | "near_limit" | "over";
@@ -381,6 +394,7 @@ export interface Debt {
   progress?: number;
   overdueDays?: number;
   paymentsCount?: number;
+  payments?: Pick<DebtPayment, "id" | "amount" | "payment_date" | "notes">[];
 }
 
 export interface DebtFormData {
@@ -433,8 +447,9 @@ export interface WorkSession {
   employer_or_client: string;
   hourly_rate: number;
   hours_worked: number;
-  expected_amount: number;        // generated: hourly_rate * hours_worked
+  expected_amount: number;
   work_date: string;
+  due_date?: string | null;
   notes?: string | null;
   recurrence: WorkRecurrence;
   recurrence_end_date?: string | null;
@@ -451,10 +466,10 @@ export interface WorkSessionFormData {
   hourly_rate: number;
   hours_worked: number;
   work_date: string;
+  due_date?: string | null;
   notes?: string | null;
   recurrence: WorkRecurrence;
   recurrence_end_date?: string | null;
-  paid_immediately?: boolean;     // if true, create a work_payment right away
 }
 
 export interface WorkPayment {
@@ -527,6 +542,13 @@ export type GoalCategory     = "emergency" | "home" | "travel" | "education" | "
 export type GoalTrackingType = "manual" | "savings" | "income" | "investment" | "debt_payoff";
 export type GoalStatus       = "on_track" | "due_soon" | "overdue" | "completed";
 
+export interface GoalMilestone {
+  id: string;
+  label: string;
+  amount: number;
+  reached?: boolean;  // computed: computed_saved >= amount
+}
+
 export interface Goal {
   id: string;
   user_id: string;
@@ -541,6 +563,8 @@ export interface Goal {
   start_date: string;
   notes?: string | null;
   color?: string | null;
+  milestones?: GoalMilestone[];
+  completed_at?: string | null;
   created_at: string;
   updated_at: string;
   // computed by API
@@ -563,4 +587,5 @@ export interface GoalFormData {
   start_date?: string;
   notes?: string | null;
   color?: string | null;
+  milestones?: GoalMilestone[];
 }

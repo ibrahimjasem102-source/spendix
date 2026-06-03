@@ -22,9 +22,7 @@ export default function SchedulerTrigger() {
 
     // Subscription processor (auto-transactions + reminders)
     void safeFetch("/api/subscriptions/process", { method: "POST" }).catch(() => {});
-
-    // Bills processor (overdue status + reminders)
-    void safeFetch("/api/bills/process", { method: "POST" }).catch(() => {});
+    void safeFetch("/api/recurring/process",     { method: "POST" }).catch(() => {});
 
     // Client-side goal checker (reads localStorage goals)
     void runGoalChecker();

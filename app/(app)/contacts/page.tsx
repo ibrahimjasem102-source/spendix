@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Users, User, Building2, Building, Package,
-  Search, Plus, Phone, Mail, FileText,
+  Users, User, UserRound, Building2, Building, Package,
+  Search, Plus,
   ChevronRight, Trash2, Pencil, X, AlertCircle,
-  ArrowUpRight, ArrowDownLeft,
+  ArrowUpRight, ArrowDownLeft, Smartphone, Loader2,
 } from "lucide-react";
 import { useTranslation } from "@/lib/i18n";
 import { useCurrency } from "@/lib/currency";
@@ -18,6 +18,8 @@ import {
   useContacts, useCreateContact, useUpdateContact, useDeleteContact,
   useDebts,
 } from "@/lib/query/hooks";
+import { usePhoneContactPicker } from "@/lib/hooks/usePhoneContactPicker";
+import { useGuest } from "@/contexts/GuestContext";
 import { ROUTES } from "@/lib/routes";
 import Link from "next/link";
 import type { ContactType, FinancialContact, ContactFormData } from "@/types";
@@ -77,6 +79,12 @@ function ContactFormModal({
   const isEditing = !!initial;
   const busy = createMut.isPending || updateMut.isPending;
 
+  // Hide the bottom navigation while this sheet is open
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent("spendix:nav-hide"));
+    return () => { window.dispatchEvent(new CustomEvent("spendix:nav-show")); };
+  }, []);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!form.name.trim()) return;
@@ -89,38 +97,56 @@ function ContactFormModal({
         email: form.email?.trim() || null,
         notes: form.notes?.trim() || null,
       };
+      console.log("[Contact] payload:", payload);
       if (isEditing) {
-        await updateMut.mutateAsync({ id: initial.id, data: payload });
+        const result = await updateMut.mutateAsync({ id: initial.id, data: payload });
+        console.log("[Contact] API response:", result);
         onSaved(t("contacts.updated"));
       } else {
-        await createMut.mutateAsync(payload);
+        const result = await createMut.mutateAsync(payload);
+        console.log("[Contact] API response:", result);
         onSaved(t("contacts.created"));
       }
       onClose();
-    } catch {
-      setError(t("contacts.save_error"));
+    } catch (err) {
+      console.error("[Contact] save error:", err);
+      const msg = err instanceof Error ? err.message : t("contacts.save_error");
+      setError(msg);
     }
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <motion.div
-        initial={{ opacity: 0, y: 24 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: 24 }}
-        className="w-full max-w-md bg-[hsl(var(--bg-card))] border border-[hsl(var(--border))] rounded-2xl p-6 space-y-5"
+    <motion.div
+      initial={{ y: "100%", opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      exit={{ y: "100%", opacity: 0 }}
+      transition={{ type: "spring", stiffness: 380, damping: 34 }}
+      className="fixed inset-0 z-[60] flex flex-col"
+      style={{ backgroundColor: "hsl(var(--bg-card))" }}
+    >
+      {/* ── Header ─────────────────────────────────────── */}
+      <div
+        className="flex items-center justify-between px-5 border-b border-[hsl(var(--border-2))] flex-shrink-0"
+        style={{
+          paddingTop:    "max(20px, env(safe-area-inset-top, 20px))",
+          paddingBottom: "16px",
+        }}
       >
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <h2 className="font-bold text-base t1">
-            {isEditing ? t("contacts.edit") : t("contacts.add")}
-          </h2>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-white/10 t3 transition-colors">
-            <X className="w-4 h-4" />
-          </button>
-        </div>
+        <h2 className="font-bold text-base t1">
+          {isEditing ? t("contacts.edit") : t("contacts.add")}
+        </h2>
+        <button
+          onClick={onClose}
+          className="p-2 rounded-xl hover:bg-[hsl(var(--bg-input))] t3 transition-colors"
+        >
+          <X className="w-5 h-5" />
+        </button>
+      </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+      {/* ── Scrollable form body ────────────────────────── */}
+      <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
+        <div className="flex-1 overflow-y-auto px-5 py-5 space-y-5">
+
           {/* Name */}
           <div className="space-y-1.5">
             <label className="text-xs font-medium t2">{t("contacts.name")}</label>
@@ -129,7 +155,8 @@ function ContactFormModal({
               onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
               placeholder={t("contacts.name_placeholder")}
               required
-              className="w-full px-3 py-2.5 rounded-xl bg-[hsl(var(--bg-input))] border border-[hsl(var(--border))] text-sm t1 placeholder:t3 focus:outline-none focus:ring-1 focus:ring-blue-500/50"
+              autoFocus
+              className="w-full px-3 py-3 rounded-xl bg-[hsl(var(--bg-input))] border border-[hsl(var(--border))] text-sm t1 placeholder:t3 focus:outline-none focus:ring-1 focus:ring-blue-500/50"
             />
           </div>
 
@@ -146,7 +173,7 @@ function ContactFormModal({
                     key={ct}
                     type="button"
                     onClick={() => setForm((f) => ({ ...f, type: ct }))}
-                    className={`flex flex-col items-center gap-1 py-2.5 rounded-xl border text-xs font-medium transition-all ${
+                    className={`flex flex-col items-center gap-1 py-3 rounded-xl border text-xs font-medium transition-all ${
                       active
                         ? `${clr.bg} ${clr.icon} border-current/30`
                         : "bg-[hsl(var(--bg-input))] border-[hsl(var(--border))] t3 hover:t2"
@@ -169,7 +196,7 @@ function ContactFormModal({
                 onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
                 placeholder={t("contacts.phone_placeholder")}
                 type="tel"
-                className="w-full px-3 py-2.5 rounded-xl bg-[hsl(var(--bg-input))] border border-[hsl(var(--border))] text-sm t1 placeholder:t3 focus:outline-none focus:ring-1 focus:ring-blue-500/50"
+                className="w-full px-3 py-3 rounded-xl bg-[hsl(var(--bg-input))] border border-[hsl(var(--border))] text-sm t1 placeholder:t3 focus:outline-none focus:ring-1 focus:ring-blue-500/50"
               />
             </div>
             <div className="space-y-1.5">
@@ -179,7 +206,7 @@ function ContactFormModal({
                 onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
                 placeholder={t("contacts.email_placeholder")}
                 type="email"
-                className="w-full px-3 py-2.5 rounded-xl bg-[hsl(var(--bg-input))] border border-[hsl(var(--border))] text-sm t1 placeholder:t3 focus:outline-none focus:ring-1 focus:ring-blue-500/50"
+                className="w-full px-3 py-3 rounded-xl bg-[hsl(var(--bg-input))] border border-[hsl(var(--border))] text-sm t1 placeholder:t3 focus:outline-none focus:ring-1 focus:ring-blue-500/50"
               />
             </div>
           </div>
@@ -191,8 +218,8 @@ function ContactFormModal({
               value={form.notes ?? ""}
               onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
               placeholder={t("contacts.notes_placeholder")}
-              rows={2}
-              className="w-full px-3 py-2.5 rounded-xl bg-[hsl(var(--bg-input))] border border-[hsl(var(--border))] text-sm t1 placeholder:t3 focus:outline-none focus:ring-1 focus:ring-blue-500/50 resize-none"
+              rows={3}
+              className="w-full px-3 py-3 rounded-xl bg-[hsl(var(--bg-input))] border border-[hsl(var(--border))] text-sm t1 placeholder:t3 focus:outline-none focus:ring-1 focus:ring-blue-500/50 resize-none"
             />
           </div>
 
@@ -201,26 +228,32 @@ function ContactFormModal({
               <AlertCircle className="w-3.5 h-3.5 shrink-0" /> {error}
             </p>
           )}
+        </div>
 
-          <div className="flex gap-3 pt-1">
+        {/* ── Sticky footer — Save always visible ─────────── */}
+        <div
+          className="flex-shrink-0 px-5 pt-4 border-t border-[hsl(var(--border-2))]"
+          style={{ paddingBottom: "max(20px, env(safe-area-inset-bottom, 20px))" }}
+        >
+          <div className="flex gap-3">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-2.5 rounded-xl border border-[hsl(var(--border))] text-sm font-medium t2 hover:t1 transition-colors"
+              className="flex-1 py-3 rounded-xl border border-[hsl(var(--border))] text-sm font-medium t2 hover:t1 transition-colors"
             >
               {t("common.cancel")}
             </button>
             <button
               type="submit"
               disabled={busy || !form.name.trim()}
-              className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold transition-colors disabled:opacity-50"
+              className="flex-1 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold transition-colors disabled:opacity-50"
             >
               {busy ? "…" : t("common.save")}
             </button>
           </div>
-        </form>
-      </motion.div>
-    </div>
+        </div>
+      </form>
+    </motion.div>
   );
 }
 
@@ -281,7 +314,7 @@ function ContactCard({
       </div>
 
       {/* Balance */}
-      <div className="text-right shrink-0 mr-1">
+      <div className="text-end shrink-0 me-1">
         {isSettled && contact.activeDebts === 0 ? (
           <span className="text-xs t3">{t("contacts.settled")}</span>
         ) : isPositive ? (
@@ -335,6 +368,7 @@ export default function ContactsPage() {
   const { t }    = useTranslation();
   const { format } = useCurrency();
   const { toasts, addToast, dismiss } = useToast();
+  const { isGuest } = useGuest();
 
   const [search,     setSearch]     = useState("");
   const [filter,     setFilter]     = useState<ContactFilter>("all");
@@ -343,10 +377,14 @@ export default function ContactsPage() {
   const [showForm,   setShowForm]   = useState(false);
   const [deleteId,   setDeleteId]   = useState<string | null>(null);
 
-  const { data: contacts = [],  isLoading: loadC } = useContacts();
-  const { data: debtsData }                         = useDebts();
+  const { data: contacts = [], isLoading: loadC, isError: contactsError, error: contactsFetchError } = useContacts();
+  const { data: debtsData }                         = useDebts(!isGuest);
   const debts = debtsData?.debts ?? [];
-  const deleteMut = useDeleteContact();
+  const deleteMut    = useDeleteContact();
+  const createMutImp = useCreateContact();
+
+  const { isSupported: phoneSupported, pick: pickPhone } = usePhoneContactPicker();
+  const [importing, setImporting] = useState(false);
 
   // Per-contact debt stats from the shared debts query
   const statsMap = useMemo(() => {
@@ -404,12 +442,47 @@ export default function ContactsPage() {
   async function handleDelete() {
     if (!deleteId) return;
     const id = deleteId;
-    setDeleteId(null);
     try {
       await deleteMut.mutateAsync(id);
+      setDeleteId(null);
       addToast(t("contacts.deleted"), "success");
     } catch {
+      setDeleteId(null);
       addToast(t("contacts.delete_error"), "error");
+    }
+  }
+
+  async function handleImportFromPhone() {
+    setImporting(true);
+    try {
+      const picked = await pickPhone(true);
+      if (!picked.length) return;
+
+      let added = 0;
+      for (const pc of picked) {
+        // Skip if a contact with same name already exists
+        const exists = contacts.some(
+          (c) => c.name.toLowerCase() === pc.name.toLowerCase()
+        );
+        if (exists) continue;
+        try {
+          await createMutImp.mutateAsync({
+            name:  pc.name,
+            type:  "person",
+            phone: pc.phone ?? null,
+            email: pc.email ?? null,
+            notes: null,
+          });
+          added++;
+        } catch { /* skip individual failures */ }
+      }
+
+      if (added > 0) addToast(`${t("contacts.imported")} (${added})`, "success");
+      else addToast(t("contacts.import_no_new"), "info");
+    } catch {
+      // user cancelled picker — do nothing
+    } finally {
+      setImporting(false);
     }
   }
 
@@ -426,17 +499,36 @@ export default function ContactsPage() {
 
       {/* Header */}
       <div className="flex items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold t1">{t("contacts.title")}</h1>
-          <p className="text-sm t3 mt-0.5">{t("contacts.subtitle")}</p>
+        <div className="flex min-w-0 items-center gap-2.5">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-rose-400/10">
+            <UserRound className="h-4 w-4 text-rose-400" />
+          </div>
+          <div className="min-w-0">
+            <h1 className="truncate text-xl font-black t1">{t("contacts.title")}</h1>
+            <p className="mt-0.5 text-xs font-medium t3">{t("contacts.subtitle")}</p>
+          </div>
         </div>
-        <button
-          onClick={() => { setEditContact(undefined); setShowForm(true); }}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold transition-colors shrink-0"
-        >
-          <Plus className="w-4 h-4" />
-          {t("contacts.add")}
-        </button>
+        <div className="flex items-center gap-2 shrink-0">
+          {phoneSupported && (
+            <button
+              onClick={handleImportFromPhone}
+              disabled={importing}
+              className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--bg-input))] text-sm font-semibold t2 hover:t1 transition-colors disabled:opacity-50"
+            >
+              {importing
+                ? <Loader2 className="w-4 h-4 animate-spin" />
+                : <Smartphone className="w-4 h-4" />}
+              {t("contacts.import_phone")}
+            </button>
+          )}
+          <button
+            onClick={() => { setEditContact(undefined); setShowForm(true); }}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            {t("contacts.add")}
+          </button>
+        </div>
       </div>
 
       {/* Summary cards */}
@@ -510,7 +602,24 @@ export default function ContactsPage() {
       )}
 
       {/* Empty state */}
-      {!loadC && filtered.length === 0 && (
+      {!loadC && contactsError && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="card py-16 text-center"
+        >
+          <div className="w-14 h-14 rounded-2xl bg-red-500/10 mx-auto mb-4 flex items-center justify-center">
+            <AlertCircle className="w-6 h-6 text-red-400" />
+          </div>
+          <p className="text-sm font-semibold t1 mb-1">
+            {contactsFetchError instanceof Error && contactsFetchError.message === "contacts.setup_required"
+              ? t("contacts.setup_required")
+              : t("contacts.fetch_error")}
+          </p>
+        </motion.div>
+      )}
+
+      {!loadC && !contactsError && filtered.length === 0 && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -584,6 +693,7 @@ export default function ContactsPage() {
         <ConfirmModal
           title={t("contacts.delete")}
           message={t("contacts.delete_confirm")}
+          loading={deleteMut.isPending}
           onConfirm={handleDelete}
           onCancel={() => setDeleteId(null)}
         />

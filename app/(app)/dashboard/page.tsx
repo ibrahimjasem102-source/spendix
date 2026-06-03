@@ -1,560 +1,604 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Component, type ErrorInfo, type ReactNode, useEffect, useMemo, useState } from "react";
 import {
-  ArrowDownRight,
-  ArrowUpRight,
-  AlertTriangle,
-  BarChart3,
-  Briefcase,
-  CheckCircle2,
-  ChevronRight,
-  Lightbulb,
-  Plus,
-  TrendingDown,
-  TrendingUp,
-  Wallet,
+  AlertTriangle, ArrowDownRight, ArrowUpRight,
+  ChevronRight, Landmark,
+  TrendingUp, TrendingDown, Zap,
+  Wallet, Target, BrainCircuit,
 } from "lucide-react";
 import Link from "next/link";
-import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
-import { Line, LineChart, ResponsiveContainer } from "recharts";
+import {
+  AreaChart, Area, XAxis, YAxis, Tooltip,
+  ResponsiveContainer, CartesianGrid,
+} from "recharts";
 import { useGuest } from "@/contexts/GuestContext";
 import { useCurrency } from "@/lib/currency";
-import { getGuestTransactions } from "@/lib/guest/storage";
 import { useTranslation } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/client";
-import { useDashboardSummary, useTransactions } from "@/lib/query/hooks";
+import { useGoals } from "@/lib/query/hooks";
 import { useFinancialEngine } from "@/lib/finance/engine";
-import { fadeBlur, spring, staggerContainer, staggerItem } from "@/lib/motion";
-import AICopilot from "@/components/dashboard/AICopilot";
-import CollapsibleSection from "@/components/ui/CollapsibleSection";
-import type { Transaction, TransactionSource } from "@/types";
+import { useLocalInsights } from "@/lib/ai/localInsights";
+import { fadeBlur, spring, tapTransition } from "@/lib/motion";
+import GoalMilestonesProgress from "@/components/goals/GoalMilestonesProgress";
+import type { Transaction } from "@/types";
 
-const SpendingLineChart = dynamic(() => import("@/components/dashboard/SpendingLineChart"), {
-  loading: () => <div className="card h-[260px] animate-pulse" />,
-});
-const CategoryDonut = dynamic(() => import("@/components/dashboard/CategoryDonut"), {
-  loading: () => <div className="card h-[260px] animate-pulse" />,
-});
-const IncomeExpenseBar = dynamic(() => import("@/components/dashboard/IncomeExpenseBar"), {
-  loading: () => <div className="card h-[260px] animate-pulse" />,
-});
+// ── Error boundary ────────────────────────────────────────────
 
-interface CategorySpend {
-  name: string;
-  value: number;
-  color: string;
-}
+class WidgetBoundary extends Component<
+  { name: string; children: ReactNode },
+  { hasError: boolean }
+> {
+  state = { hasError: false };
 
-interface IncomeExpensePoint {
-  month: string;
-  income: number;
-  expenses: number;
-  savings: number;
-}
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
 
-interface CashflowPoint {
-  day: number;
-  date: string;
-  amount: number;
-}
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    if (process.env.NODE_ENV === "development") {
+      console.error(`[Dashboard:${this.props.name}] crashed:`, error.message, info.componentStack);
+    }
+  }
 
-interface DashboardAnalytics {
-  totalBalance: number;
-  monthlyIncome: number;
-  monthlyExpenses: number;
-  savingsRate: number;
-  dailyBurn: number;
-  workIncome: number;
-  transactionCount: number;
-  recentTransactions: Transaction[];
-  spendingByCategory: CategorySpend[];
-  incomeVsExpenses: IncomeExpensePoint[];
-  monthlyCashflow: CashflowPoint[];
-  sourceBreakdown: Array<{
-    source: TransactionSource;
-    label: string;
-    income: number;
-    expenses: number;
-    total: number;
-    count: number;
-    color: string;
-  }>;
-  debtTruth: {
-    total_payable_remaining: number;
-    total_receivable_remaining: number;
-    net_debt_exposure: number;
-    debt_recovery_rate: number;
-    overdue_ratio: number;
-    active_debts: number;
-    overdue_debts: number;
-  };
-  hasTransactions: boolean;
-}
-
-const EMPTY_DASHBOARD: DashboardAnalytics = {
-  totalBalance: 0,
-  monthlyIncome: 0,
-  monthlyExpenses: 0,
-  savingsRate: 0,
-  dailyBurn: 0,
-  workIncome: 0,
-  transactionCount: 0,
-  recentTransactions: [],
-  spendingByCategory: [],
-  incomeVsExpenses: [],
-  monthlyCashflow: [],
-  sourceBreakdown: [],
-  debtTruth: {
-    total_payable_remaining: 0,
-    total_receivable_remaining: 0,
-    net_debt_exposure: 0,
-    debt_recovery_rate: 0,
-    overdue_ratio: 0,
-    active_debts: 0,
-    overdue_debts: 0,
-  },
-  hasTransactions: false,
-};
-
-const CATEGORY_COLORS = ["#06B6D4", "#10B981", "#F43F5E", "#8B5CF6", "#F59E0B", "#EC4899"];
-
-// ── Smart Insight Card ────────────────────────────────────────
-function SmartInsightCard({
-  savingsRate, dailyBurn, monthlyIncome, overdueDebts, workIncome, format, t,
-}: {
-  savingsRate: number; dailyBurn: number; monthlyIncome: number;
-  overdueDebts: number; workIncome: number; format: (n: number) => string;
-  t: (key: string, params?: Record<string, string | number>) => string;
-}) {
-  const insight = (() => {
-    if (overdueDebts > 0)
-      return { msg: t("dashboard.insight_overdue", { count: overdueDebts }), Icon: AlertTriangle, color: "text-rose-300", bg: "bg-rose-400/10", border: "border-rose-400/20" };
-    if (monthlyIncome > 0 && dailyBurn > monthlyIncome / 25)
-      return { msg: t("dashboard.insight_daily_burn", { amount: format(dailyBurn) }), Icon: BarChart3, color: "text-amber-300", bg: "bg-amber-400/10", border: "border-amber-400/20" };
-    if (savingsRate >= 25)
-      return { msg: t("dashboard.insight_strong_savings", { rate: savingsRate }), Icon: CheckCircle2, color: "text-emerald-300", bg: "bg-emerald-400/10", border: "border-emerald-400/20" };
-    if (savingsRate >= 10)
-      return { msg: t("dashboard.insight_ok_savings", { rate: savingsRate }), Icon: Lightbulb, color: "text-cyan-300", bg: "bg-cyan-400/10", border: "border-cyan-400/20" };
-    if (savingsRate < 10 && monthlyIncome > 0)
-      return { msg: t("dashboard.insight_low_savings", { rate: savingsRate }), Icon: TrendingDown, color: "text-amber-300", bg: "bg-amber-400/10", border: "border-amber-400/20" };
-    if (workIncome > 0)
-      return { msg: t("dashboard.insight_work_income", { amount: format(workIncome) }), Icon: Briefcase, color: "text-purple-300", bg: "bg-purple-400/10", border: "border-purple-400/20" };
-    return { msg: t("dashboard.insight_empty"), Icon: Lightbulb, color: "text-cyan-300", bg: "bg-cyan-400/10", border: "border-cyan-400/20" };
-  })();
-  const Icon = insight.Icon;
-
-  return (
-    <div className={`modern-card border ${insight.border} ${insight.bg} p-4`}>
-      <div className="flex items-center gap-3">
-        <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-black/15 ${insight.color}`}>
-          <Icon className="h-5 w-5" />
-        </div>
-        <div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[hsl(var(--text-3))]">
-            {t("dashboard.financial_health")}
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="card p-3 border-rose-400/20 bg-rose-400/5">
+          <p className="text-[11px] text-rose-400 font-semibold">
+            ⚠ {this.props.name} — temporarily unavailable
           </p>
-          <p className="mt-1 text-sm font-semibold leading-relaxed text-[hsl(var(--text-1))]">{insight.msg}</p>
         </div>
-      </div>
-    </div>
-  );
+      );
+    }
+    return this.props.children;
+  }
 }
 
-function useGreeting(t: (key: string) => string, userName?: string) {
-  const hour = new Date().getHours();
-  const base =
-    hour < 12 ? t("dashboard.good_morning") :
-    hour < 17 ? t("dashboard.good_afternoon") :
-                t("dashboard.good_evening");
-  return userName ? `${base}, ${userName}` : base;
+// ── Helpers ───────────────────────────────────────────────────
+
+function daysUntil(dateStr: string): number {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return Math.round((new Date(`${dateStr}T00:00:00`).getTime() - today.getTime()) / 86_400_000);
 }
 
-function Spark({ data, color = "#06B6D4" }: { data: number[]; color?: string }) {
-  const safe = data.length > 0 ? data : [0, 0, 0, 0, 0, 0];
-  const points = safe.map((v, i) => ({ i, v }));
-  return (
-    <ResponsiveContainer width="100%" height={28}>
-      <LineChart data={points}>
-        <Line type="monotone" dataKey="v" stroke={color} strokeWidth={1.5} dot={false} activeDot={false} strokeOpacity={0.9} />
-      </LineChart>
-    </ResponsiveContainer>
-  );
+function useGreeting(t: (k: string) => string, name?: string) {
+  const h    = new Date().getHours();
+  const base = h < 12 ? t("dashboard.good_morning") : h < 17 ? t("dashboard.good_afternoon") : t("dashboard.good_evening");
+  return name ? `${base}، ${name}` : base;
+}
+
+function buildChartData(transactions: Transaction[]) {
+  const now   = new Date();
+  const year  = now.getFullYear();
+  const month = now.getMonth();
+  const today = now.getDate();
+  const data: { day: string; income: number; expenses: number }[] = [];
+  for (let d = 1; d <= today; d++) {
+    const key = `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+    const slot = { day: String(d), income: 0, expenses: 0 };
+    for (const tx of transactions) {
+      if (tx.transaction_date === key) {
+        if (tx.type === "income")  slot.income   += Number(tx.amount);
+        if (tx.type === "expense") slot.expenses += Number(tx.amount);
+      }
+    }
+    data.push(slot);
+  }
+  return data;
+}
+
+// ── Sub-components ────────────────────────────────────────────
+
+function DueBadge({ days }: { days: number }) {
+  const { t } = useTranslation();
+  if (days < 0)   return <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-rose-400/15 text-rose-400">{t("dashboard.overdue")}</span>;
+  if (days === 0) return <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-400/15 text-amber-400">{t("dashboard.due_today")}</span>;
+  return <span className="text-[10px] t3">{t("dashboard.due_in_days", { days })}</span>;
 }
 
 function DashSkeleton() {
   return (
-    <div className="space-y-5 animate-pulse">
-      <div className="skeleton h-8 w-48 mb-1" />
-      <div className="skeleton h-44 w-full rounded-2xl" />
-      <div className="grid grid-cols-2 gap-3">
-        {[...Array(4)].map((_, i) => <div key={i} className="skeleton h-24 rounded-2xl" />)}
+    <div className="space-y-4 animate-pulse pb-24">
+      <div className="skeleton h-8 w-48" />
+      <div className="skeleton h-52 w-full rounded-2xl" />
+      <div className="grid grid-cols-2 gap-2">
+        {[0, 1, 2, 3].map((i) => <div key={i} className="skeleton h-20 rounded-2xl" />)}
       </div>
-      <div className="skeleton h-56 rounded-2xl" />
+      <div className="skeleton h-40 w-full rounded-2xl" />
     </div>
   );
 }
 
-function dateOnly(date: Date) {
-  return date.toISOString().slice(0, 10);
+function ChartTooltip({ active, payload, label, format }: {
+  active?: boolean; payload?: { value: number }[]; label?: string; format: (n: number) => string;
+}) {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="card p-2.5 text-xs shadow-xl border border-[hsl(var(--border-2))]">
+      <p className="t3 mb-1.5 font-semibold">{label}</p>
+      {payload[0]?.value > 0 && <p className="text-emerald-400 font-bold">+{format(payload[0].value)}</p>}
+      {payload[1]?.value > 0 && <p className="text-rose-400 font-bold">-{format(payload[1].value)}</p>}
+    </div>
+  );
 }
 
-function buildGuestDashboard(transactions: Transaction[]): DashboardAnalytics {
-  if (transactions.length === 0) return EMPTY_DASHBOARD;
-
-  const now = new Date();
-  const monthStart = dateOnly(new Date(now.getFullYear(), now.getMonth(), 1));
-  const nextMonth = dateOnly(new Date(now.getFullYear(), now.getMonth() + 1, 1));
-  const inCurrentMonth = (tx: Transaction) => tx.transaction_date >= monthStart && tx.transaction_date < nextMonth;
-  const sum = (items: Transaction[]) => items.reduce((total, tx) => total + Number(tx.amount || 0), 0);
-
-  const allIncome = sum(transactions.filter((tx) => tx.type === "income"));
-  const allExpenses = sum(transactions.filter((tx) => tx.type === "expense"));
-  const monthlyIncome = sum(transactions.filter((tx) => tx.type === "income" && inCurrentMonth(tx)));
-  const monthlyExpenses = sum(transactions.filter((tx) => tx.type === "expense" && inCurrentMonth(tx)));
-
-  const categoryMap = new Map<string, CategorySpend>();
-  transactions.filter((tx) => tx.type === "expense" && inCurrentMonth(tx)).forEach((tx) => {
-    const name = tx.category?.name || "Uncategorized";
-    const existing = categoryMap.get(name);
-    categoryMap.set(name, {
-      name,
-      value: (existing?.value ?? 0) + Number(tx.amount || 0),
-      color: tx.category?.color || existing?.color || CATEGORY_COLORS[categoryMap.size % CATEGORY_COLORS.length],
-    });
-  });
-
-  const monthlyCashflow = Array.from({ length: 30 }, (_, index) => {
-    const date = new Date(now);
-    date.setDate(now.getDate() - (29 - index));
-    const key = dateOnly(date);
-    return {
-      day: date.getDate(),
-      date: key,
-      amount: sum(transactions.filter((tx) => tx.type === "expense" && tx.transaction_date === key)),
-    };
-  });
-
-  const incomeVsExpenses = Array.from({ length: 6 }, (_, index) => {
-    const date = new Date(now.getFullYear(), now.getMonth() - (5 - index), 1);
-    const start = dateOnly(date);
-    const end = dateOnly(new Date(date.getFullYear(), date.getMonth() + 1, 1));
-    const income = sum(transactions.filter((tx) => tx.type === "income" && tx.transaction_date >= start && tx.transaction_date < end));
-    const expenses = sum(transactions.filter((tx) => tx.type === "expense" && tx.transaction_date >= start && tx.transaction_date < end));
-    return { month: `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`, income, expenses, savings: income - expenses };
-  });
-
-  return {
-    ...EMPTY_DASHBOARD,
-    totalBalance: allIncome - allExpenses,
-    monthlyIncome,
-    monthlyExpenses,
-    savingsRate: monthlyIncome > 0 ? Math.round(((monthlyIncome - monthlyExpenses) / monthlyIncome) * 100) : 0,
-    dailyBurn: monthlyCashflow.reduce((total, point) => total + point.amount, 0) / monthlyCashflow.length,
-    workIncome: sum(transactions.filter((tx) => tx.source === "work_payment")),
-    transactionCount: transactions.length,
-    recentTransactions: [...transactions].sort((a, b) => (b.created_at || b.transaction_date).localeCompare(a.created_at || a.transaction_date)).slice(0, 10),
-    spendingByCategory: [...categoryMap.values()].sort((a, b) => b.value - a.value),
-    incomeVsExpenses,
-    monthlyCashflow,
-    hasTransactions: true,
-  };
-}
+// ── Main ──────────────────────────────────────────────────────
 
 export default function DashboardPage() {
   const { isGuest, isLoading } = useGuest();
-  const { t, locale } = useTranslation();
-  const { format } = useCurrency();
+  const { t, locale }  = useTranslation();
+  const { format }     = useCurrency();
+  const [userName, setUserName] = useState("");
 
-  const [dashboard, setDashboard] = useState<DashboardAnalytics>(EMPTY_DASHBOARD);
-  const [userName, setUserName]   = useState<string>("");
-  const dashboardQuery = useDashboardSummary(!isGuest && !isLoading);
-  const engine = useFinancialEngine();
+  const engine        = useFinancialEngine();
+  const { data: goals = [] } = useGoals(!isLoading);
+  const { insights: aiInsights } = useLocalInsights();
 
-  // Live transactions from React Query cache — updates immediately via optimistic updates
-  const { data: liveTransactions = [] } = useTransactions(isGuest, !isLoading);
+  // All financial data comes from the engine — single source of truth
+  const transactions = engine.transactions;
+  const debts        = engine.debts;
 
-  const loadGuestDashboard = useCallback(() => {
-    if (isGuest) setDashboard(buildGuestDashboard(getGuestTransactions()));
-  }, [isGuest]);
-
-  useEffect(() => { if (!isLoading) loadGuestDashboard(); }, [isLoading, loadGuestDashboard]);
-
-  // Fetch user's display name from profile_settings or auth metadata
   useEffect(() => {
     if (isGuest) return;
     const supabase = createClient();
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) return;
-      // Try profile_settings first, fall back to auth metadata
-      supabase
-        .from("profile_settings")
-        .select("full_name")
-        .eq("user_id", user.id)
-        .maybeSingle()
+      supabase.from("profile_settings").select("full_name").eq("user_id", user.id).maybeSingle()
         .then(({ data }) => {
-          const name =
-            data?.full_name?.trim() ||
-            (user.user_metadata?.full_name as string | undefined)?.trim() ||
-            "";
+          const name = data?.full_name?.trim() || (user.user_metadata?.full_name as string | undefined)?.trim() || "";
           if (name) setUserName(name);
         });
     });
   }, [isGuest]);
 
-  const activeDashboard = (isGuest ? dashboard : dashboardQuery.data) as DashboardAnalytics | undefined;
-
-  // Merge live transactions into dashboard — ensures newly added transactions appear instantly
-  const currentDashboard = useMemo((): DashboardAnalytics => {
-    const base = activeDashboard ?? EMPTY_DASHBOARD;
-    if (!liveTransactions.length) return base;
-    // Use live transactions for recent list (shows optimistic updates immediately)
-    const recent = [...liveTransactions]
-      .sort((a, b) => (b.created_at ?? b.transaction_date).localeCompare(a.created_at ?? a.transaction_date))
-      .slice(0, 10);
-    return { ...base, recentTransactions: recent, hasTransactions: liveTransactions.length > 0 };
-  }, [activeDashboard, liveTransactions]);
-
-  const greeting = useGreeting(t, userName || undefined);
+  const greeting   = useGreeting(t, userName || undefined);
   const dateLocale = locale === "ar" ? "ar" : locale === "de" ? "de-DE" : "en-US";
-  const sparkFromCashflow = useMemo(() => currentDashboard.monthlyCashflow.slice(-7).map((point) => point.amount), [currentDashboard.monthlyCashflow]);
-  const investmentSpend = useMemo(
-    () => currentDashboard.sourceBreakdown.find((item) => item.source === "investment")?.expenses ?? 0,
-    [currentDashboard.sourceBreakdown]
+  const isRtl      = locale === "ar";
+  const netWorth   = engine.balance + engine.portfolioValue + engine.debtReceivable - engine.debtPayable;
+  const nwPositive = netWorth >= 0;
+  const monthNet   = engine.monthlyIncome - engine.monthlyExpenses;
+
+  const chartData = useMemo(() => buildChartData(transactions), [transactions]);
+  const hasChart  = chartData.some((d) => d.income > 0 || d.expenses > 0);
+
+
+  const nextDebt = useMemo(() => {
+    const today = new Date().toISOString().slice(0, 10);
+    return debts
+      .filter((d) => d.debt_type === "payable" && d.status !== "paid" && !!d.due_date && d.due_date >= today)
+      .sort((a, b) => (a.due_date ?? "").localeCompare(b.due_date ?? ""))[0] ?? null;
+  }, [debts]);
+
+  const topGoals = useMemo(() =>
+    goals.filter((g) => g.status !== "completed")
+      .sort((a, b) => (b.progress ?? 0) - (a.progress ?? 0))
+      .slice(0, 3),
+    [goals],
   );
 
-  if (isLoading || (!isGuest && dashboardQuery.isLoading)) return <DashSkeleton />;
+  // Goals overall progress
+  const goalsOverall = useMemo(() => {
+    if (!goals.length) return 0;
+    const active = goals.filter((g) => g.status !== "completed");
+    if (!active.length) return 100;
+    const total = active.reduce((s, g) => s + (g.target_amount ?? 0), 0);
+    const saved = active.reduce((s, g) => s + (g.computed_saved ?? 0), 0);
+    return total > 0 ? Math.min(100, Math.round((saved / total) * 100)) : 0;
+  }, [goals]);
+
+  const recent = useMemo(() =>
+    [...transactions]
+      .sort((a, b) => (b.created_at ?? b.transaction_date).localeCompare(a.created_at ?? a.transaction_date))
+      .slice(0, 5),
+    [transactions]);
+
+  if (engine.isLoading) return <DashSkeleton />;
+
+  // ── Wealth tiles ─────────────────────────────────────────
+  const wealthTiles = [
+    {
+      label: t("dashboard.cash"),
+      value: format(engine.balance),
+      icon:  Wallet,
+      color: "text-cyan-400",
+      bg:    "bg-cyan-400/10",
+      sub:   engine.monthlySavingsRate > 0 ? `${engine.monthlySavingsRate}% ${t("dashboard.savings_rate").toLowerCase()}` : undefined,
+    },
+    {
+      label: t("dashboard.portfolio"),
+      value: format(engine.portfolioValue),
+      icon:  engine.portfolioGain >= 0 ? TrendingUp : TrendingDown,
+      color: engine.portfolioGain >= 0 ? "text-emerald-400" : "text-rose-400",
+      bg:    engine.portfolioGain >= 0 ? "bg-emerald-400/10" : "bg-rose-400/10",
+      sub:   engine.investedTotal > 0
+        ? `${engine.portfolioGain >= 0 ? "+" : ""}${engine.portfolioGainPct.toFixed(1)}%`
+        : undefined,
+    },
+    {
+      label: t("dashboard.debt"),
+      value: format(engine.debtPayable),
+      icon:  Landmark,
+      color: engine.debtPayable > 0 ? "text-rose-400" : "text-gray-400",
+      bg:    engine.debtPayable > 0 ? "bg-rose-400/10" : "bg-gray-400/10",
+      sub:   engine.overdueDebtsCount > 0
+        ? `${engine.overdueDebtsCount} ${t("dashboard.overdue").toLowerCase()}`
+        : undefined,
+    },
+    {
+      label: t("dashboard.receivable"),
+      value: format(engine.debtReceivable),
+      icon:  ArrowUpRight,
+      color: "text-amber-400",
+      bg:    "bg-amber-400/10",
+      sub:   undefined as string | undefined,
+    },
+  ];
 
   return (
-    <div className="space-y-3 sm:space-y-5 lg:space-y-6 pb-2">
-      <div className="flex items-center gap-3">
-        <div className="flex-1 min-w-0">
-          <p className="text-[10px] sm:text-xs font-semibold t3 uppercase tracking-[0.12em] mb-0.5">
-            {new Date().toLocaleDateString(dateLocale, { weekday: "long", month: "long", day: "numeric" })}
-          </p>
-          <h1 className="text-lg sm:text-2xl font-bold t1 truncate">{greeting}</h1>
-        </div>
+    <div className="space-y-3 pb-28">
+
+      {/* ── Greeting ──────────────────────────────────────── */}
+      <div className="pt-1">
+        <p className="text-[10px] font-semibold t3 uppercase tracking-[0.12em] mb-0.5">
+          {new Date().toLocaleDateString(dateLocale, { weekday: "long", month: "long", day: "numeric" })}
+        </p>
+        <h1 className="text-2xl font-bold t1">{greeting}</h1>
       </div>
 
-      {!currentDashboard.hasTransactions && (
-        <div className="card p-5 border-cyan-400/20 bg-cyan-400/5">
-          <p className="text-sm font-semibold t1">{t("common.no_data")}</p>
-          <p className="text-xs t2 mt-1">{t("ai_insights.no_data_body")}</p>
-          <Link href="/transactions" className="inline-flex mt-3 text-xs font-medium text-cyan-400 hover:text-cyan-300">
-            {t("transactions.add")}
-          </Link>
-        </div>
-      )}
-
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-        {[
-          { href: "/transactions", label: t("transactions.add"), Icon: Plus, tone: "text-cyan-300 bg-cyan-400/10" },
-          { href: "/analytics", label: t("nav.analytics"), Icon: BarChart3, tone: "text-blue-300 bg-blue-400/10" },
-          { href: "/budgets", label: t("nav.budgets"), Icon: Wallet, tone: "text-emerald-300 bg-emerald-400/10" },
-          { href: "/ai-insights", label: t("nav.ai_insights"), Icon: Lightbulb, tone: "text-purple-300 bg-purple-400/10" },
-        ].map((item) => (
-          <Link key={item.href} href={item.href} className="quick-card">
-            <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${item.tone}`}>
-              <item.Icon className="h-4 w-4" />
-            </span>
-            <span className="text-xs font-bold t1 leading-tight">{item.label}</span>
-          </Link>
-        ))}
-      </div>
-
+      {/* ── NET WORTH HERO — the BIG number ──────────────── */}
+      <WidgetBoundary name="Net Worth Hero">
       <motion.div
-        variants={fadeBlur}
-        initial="hidden"
-        animate="visible"
-        transition={{ ...spring, delay: 0.05 }}
-        className="modern-card relative overflow-hidden rounded-[24px] p-5 sm:p-7"
+        variants={fadeBlur} initial="hidden" animate="visible"
+        transition={{ ...spring, delay: 0.04 }}
+        className="relative overflow-hidden rounded-[24px] p-5"
         style={{
-          background: engine.balance >= 0
-            ? "linear-gradient(135deg, rgba(6,182,212,0.28) 0%, rgba(16,185,129,0.16) 42%, rgba(124,58,237,0.13) 100%)"
-            : "linear-gradient(135deg, rgba(244,63,94,0.26) 0%, rgba(245,158,11,0.12) 42%, rgba(124,58,237,0.12) 100%)",
+          background: nwPositive
+            ? "linear-gradient(135deg, rgba(16,185,129,0.18) 0%, rgba(6,182,212,0.12) 45%, rgba(124,58,237,0.10) 100%)"
+            : "linear-gradient(135deg, rgba(244,63,94,0.20) 0%, rgba(245,158,11,0.10) 45%, rgba(124,58,237,0.09) 100%)",
+          backdropFilter: "blur(32px) saturate(200%)",
+          WebkitBackdropFilter: "blur(32px) saturate(200%)",
+          border: "1px solid rgba(255,255,255,0.11)",
+          boxShadow: "0 1px 0 rgba(255,255,255,0.10) inset, 0 16px 48px rgba(0,0,0,0.30)",
         }}
       >
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.16),transparent_30%),linear-gradient(180deg,rgba(11,15,20,0.08),rgba(11,15,20,0.35))]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_85%_5%,rgba(255,255,255,0.08),transparent_45%)]" />
         <div className="relative z-10">
-          <p className="text-xs font-semibold text-white/50 uppercase tracking-[0.15em] mb-2">
-            {t("dashboard.total_balance")}
-          </p>
-          <p className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white tracking-tight number-display mb-3 sm:mb-4">
-            {format(engine.balance)}
-          </p>
 
-          <div className="grid grid-cols-1 gap-2 pt-4 sm:grid-cols-3 sm:border-t sm:border-white/10">
-            <Link href="/transactions?filter=monthly_income" className="group flex-1 rounded-2xl bg-white/5 p-3 transition-colors hover:bg-white/10">
-              <p className="text-[10px] text-white/40 uppercase tracking-wider mb-0.5">{t("dashboard.monthly_income")}</p>
-              <p className="text-sm font-bold text-emerald-300 group-hover:text-emerald-200 transition-colors">
-                +{format(engine.monthlyIncome)}
+          {/* Label row */}
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-1.5">
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/50">
+                {t("dashboard.net_worth")}
               </p>
-            </Link>
-            <Link href="/transactions?filter=monthly_expenses" className="group flex-1 rounded-2xl bg-white/5 p-3 transition-colors hover:bg-white/10">
-              <p className="text-[10px] text-white/40 uppercase tracking-wider mb-0.5">{t("dashboard.monthly_expenses")}</p>
-              <p className="text-sm font-bold text-rose-300 group-hover:text-rose-200 transition-colors">
-                -{format(engine.monthlyExpenses)}
-              </p>
-            </Link>
-            <div className="flex-1 rounded-2xl bg-white/5 p-3">
-              <p className="text-[10px] text-white/40 uppercase tracking-wider mb-0.5">{t("dashboard.savings_rate")}</p>
-              <p className="text-sm font-bold text-white">{engine.monthlySavingsRate}%</p>
             </div>
-          </div>
-        </div>
-      </motion.div>
-
-      {(engine.debtPayable > 0 || engine.debtReceivable > 0) && (
-        <div>
-          <div className="section-head">
-            <div className="section-head-bar" />
-            <h2 className="section-head-title">{t("nav.debts")}</h2>
-            <Link href="/debts" className="section-head-action">
+            <Link href="/net-worth"
+              className="text-[10px] text-white/40 hover:text-white/70 transition-colors flex items-center gap-0.5">
               {t("common.view_all")} <ChevronRight className="w-3 h-3" />
             </Link>
           </div>
-          <motion.div
-            variants={staggerContainer}
-            initial="hidden"
-            animate="visible"
-            className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3"
-          >
-            {[
-              {
-                label: t("relationship.total_receivables"),
-                value: format(engine.debtReceivable),
-                color: "text-emerald-400",
-              },
-              {
-                label: t("relationship.total_payables"),
-                value: format(engine.debtPayable),
-                color: "text-rose-400",
-              },
-              {
-                label: t("relationship.net_debt_exposure"),
-                value: format(engine.netDebt),
-                color: engine.netDebt >= 0 ? "text-cyan-400" : "text-amber-400",
-              },
-              {
-                label: t("relationship.debt_recovery_rate"),
-                value: `${Math.round(engine.debtRecoveryRate)}%`,
-                color: engine.overdueDebtsCount > 0 ? "text-amber-400" : "text-purple-400",
-              },
-            ].map((item) => (
-              <motion.div key={item.label} variants={staggerItem} className="metric-tile p-3 sm:p-4">
-                <p className="text-[9px] sm:text-[10px] t3 uppercase tracking-wide font-semibold leading-tight">{item.label}</p>
-                <p className={`text-base sm:text-lg font-bold number-display mt-1 ${item.color}`}>{item.value}</p>
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      )}
 
-      {/* ── Smart Insight Card (replaces 4-widget grid) ──── */}
-      {currentDashboard.hasTransactions && (
-        <SmartInsightCard
-          savingsRate={engine.monthlySavingsRate}
-          dailyBurn={currentDashboard.dailyBurn}
-          monthlyIncome={engine.monthlyIncome}
-          overdueDebts={engine.overdueDebtsCount}
-          workIncome={engine.workIncome}
-          format={format}
-          t={t}
-        />
-      )}
+          {/* Net worth number */}
+          <p className={`text-5xl font-black tracking-tight number-display leading-none mb-1 ${
+            nwPositive ? "text-white" : "text-rose-300"
+          }`}>
+            {nwPositive ? "" : "-"}{format(Math.abs(netWorth))}
+          </p>
 
-      {/* ── Charts (collapsible, only when data exists) ── */}
-      {currentDashboard.hasTransactions && (
-        <div className="card p-4 sm:p-5">
-          <div className="section-head">
-            <div className="section-head-bar" />
-            <h2 className="section-head-title">{t("dashboard.income_vs_expenses")}</h2>
+          {/* Month cashflow delta */}
+          <div className="flex items-center gap-2 mb-5">
+            <div className={`flex items-center gap-1 text-xs font-semibold ${
+              monthNet >= 0 ? "text-emerald-300" : "text-rose-300"
+            }`}>
+              {monthNet >= 0
+                ? <TrendingUp className="w-3 h-3" />
+                : <TrendingDown className="w-3 h-3" />}
+              {monthNet >= 0 ? "+" : ""}{format(monthNet)}
+            </div>
+            <span className="text-[10px] text-white/35">{t("dashboard.this_month_net")}</span>
+            {engine.monthlySavingsRate > 0 && (
+              <>
+                <span className="text-white/20">·</span>
+                <span className={`text-[10px] font-bold ${
+                  engine.monthlySavingsRate >= 20 ? "text-emerald-300"
+                  : engine.monthlySavingsRate >= 10 ? "text-white/60"
+                  : "text-amber-300"
+                }`}>
+                  {engine.monthlySavingsRate}% {t("dashboard.savings_rate").toLowerCase()}
+                </span>
+              </>
+            )}
           </div>
-          <CollapsibleSection title="" storageKey="dash_charts" defaultOpen={true}>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-              <div className="lg:col-span-2"><SpendingLineChart data={currentDashboard.monthlyCashflow} /></div>
-              <CategoryDonut data={currentDashboard.spendingByCategory} />
-            </div>
-            <div className="mt-4">
-              <IncomeExpenseBar data={currentDashboard.incomeVsExpenses} />
-            </div>
-          </CollapsibleSection>
+
+          {/* Three quick pillars */}
+          <div className="grid grid-cols-3 gap-2 pt-4 border-t border-white/10">
+            {[
+              { label: t("dashboard.monthly_income"),   value: `+${format(engine.monthlyIncome)}`,  cls: "text-emerald-300", href: "/transactions" },
+              { label: t("dashboard.monthly_expenses"),  value: `-${format(engine.monthlyExpenses)}`, cls: "text-rose-300",    href: "/transactions" },
+              {
+                label: `${t("dashboard.goals_progress")} ${goals.length > 0 ? `(${goals.filter(g => g.status !== "completed").length})` : ""}`,
+                value: `${goalsOverall}%`,
+                cls:   goalsOverall >= 60 ? "text-emerald-300" : goalsOverall >= 30 ? "text-cyan-200" : "text-amber-300",
+                href:  "/goals",
+              },
+            ].map(({ label, value, cls, href }) => {
+              const inner = (
+                <>
+                  <p className="text-[9px] text-white/40 uppercase tracking-wide leading-tight mb-0.5">{label}</p>
+                  <p className={`text-sm font-bold number-display truncate ${cls}`}>{value}</p>
+                </>
+              );
+              return href
+                ? <Link key={label} href={href} className="rounded-xl bg-white/6 p-2.5 hover:bg-white/10 transition-colors">{inner}</Link>
+                : <div key={label} className="rounded-xl bg-white/6 p-2.5">{inner}</div>;
+            })}
+          </div>
         </div>
-      )}
+      </motion.div>
+      </WidgetBoundary>
 
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-        <div className="lg:col-span-3 card p-4 sm:p-5">
-          <CollapsibleSection
-            title={t("dashboard.recent_transactions")}
-            badge={currentDashboard.recentTransactions.length}
-            storageKey="dash_recent"
-            action={
-              <Link href="/transactions" className="text-xs font-medium text-cyan-400 hover:text-cyan-300 flex items-center gap-0.5">
-                {t("common.view_all")}<ChevronRight className="w-3 h-3" />
+      {/* ── WEALTH BREAKDOWN — 4 tiles ───────────────────── */}
+      <WidgetBoundary name="Wealth Breakdown">
+      <motion.div
+        variants={fadeBlur} initial="hidden" animate="visible"
+        transition={{ ...spring, delay: 0.08 }}
+      >
+        <p className="text-[10px] font-bold uppercase tracking-[0.15em] t3 mb-2 px-1">
+          {t("dashboard.wealth_breakdown")}
+        </p>
+        <div className="grid grid-cols-2 gap-2">
+          {wealthTiles.map(({ label, value, icon: Icon, color, bg, sub }) => (
+            <div key={label} className="card p-3.5">
+              <div className={`p-1.5 rounded-lg w-fit ${bg} mb-2`}>
+                <Icon className={`w-3.5 h-3.5 ${color}`} />
+              </div>
+              <p className="text-[10px] t3 leading-tight mb-0.5">{label}</p>
+              <p className={`text-base font-bold tabular-nums ${color}`}>{value}</p>
+              {sub && <p className={`text-[10px] mt-0.5 ${color} opacity-70`}>{sub}</p>}
+            </div>
+          ))}
+        </div>
+      </motion.div>
+      </WidgetBoundary>
+
+      {/* ── AI INSIGHTS — full list ───────────────────────── */}
+      <WidgetBoundary name="AI Insights">
+      {aiInsights.length > 0 && (
+        <motion.div
+          variants={fadeBlur} initial="hidden" animate="visible"
+          transition={{ ...spring, delay: 0.12 }}
+          className="card p-4"
+        >
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <BrainCircuit className="w-3.5 h-3.5 text-cyan-400" />
+              <h2 className="text-sm font-bold t1">{t("dashboard.ai_insights")}</h2>
+            </div>
+            <Link href="/analytics?tab=overview"
+              className="text-xs text-cyan-400 hover:text-cyan-300 flex items-center gap-0.5 transition-colors">
+              {t("common.view_all")}<ChevronRight className="w-3 h-3" />
+            </Link>
+          </div>
+          <div className="space-y-2">
+            {aiInsights.slice(0, 5).map((ins) => (
+              <Link
+                key={ins.id}
+                href={ins.actionUrl ?? "/analytics"}
+                className={`flex items-start gap-3 p-3 rounded-xl border transition-opacity hover:opacity-80 ${
+                  ins.severity === "critical" ? "border-rose-400/25 bg-rose-400/7"
+                  : ins.severity === "warning"  ? "border-amber-400/25 bg-amber-400/7"
+                  : ins.severity === "positive" ? "border-emerald-400/25 bg-emerald-400/7"
+                  : "border-cyan-400/20 bg-cyan-400/5"
+                }`}
+              >
+                <div className={`p-1.5 rounded-lg shrink-0 mt-0.5 ${
+                  ins.severity === "critical" ? "bg-rose-400/15"
+                  : ins.severity === "warning"  ? "bg-amber-400/15"
+                  : ins.severity === "positive" ? "bg-emerald-400/15"
+                  : "bg-cyan-400/15"
+                }`}>
+                  <Zap className={`w-3.5 h-3.5 ${
+                    ins.severity === "critical" ? "text-rose-400"
+                    : ins.severity === "warning"  ? "text-amber-400"
+                    : ins.severity === "positive" ? "text-emerald-400"
+                    : "text-cyan-400"
+                  }`} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold t1 leading-tight">{ins.title}</p>
+                  <p className="text-[11px] t2 mt-0.5 line-clamp-2">{ins.body}</p>
+                </div>
+                <ChevronRight className="w-3.5 h-3.5 t3 shrink-0 mt-0.5" />
               </Link>
-            }
-          >
+            ))}
+          </div>
+        </motion.div>
+      )}
+      </WidgetBoundary>
 
-          {currentDashboard.recentTransactions.length === 0 ? (
-            <div className="empty-state py-8">
-              <div className="empty-state-icon"><Wallet className="w-5 h-5 t3" /></div>
-              <p className="empty-state-title">{t("common.no_data")}</p>
-              <Link href="/transactions" className="text-xs text-cyan-400 hover:underline mt-1">
-                {t("transactions.add")}
+      {/* ── Goals Progress ─────────────────────────────────── */}
+      <WidgetBoundary name="Goals Progress">
+        <motion.div
+          variants={fadeBlur} initial="hidden" animate="visible"
+          transition={{ ...spring, delay: 0.16 }}
+          className="card p-4"
+        >
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Target className="w-3.5 h-3.5 text-amber-400" />
+              <h2 className="text-sm font-bold t1">{t("dashboard.goals_progress")}</h2>
+            </div>
+            <Link href="/goals"
+              className="text-xs text-cyan-400 hover:text-cyan-300 flex items-center gap-0.5 transition-colors">
+              {t("common.view_all")}<ChevronRight className="w-3 h-3" />
+            </Link>
+          </div>
+
+          {topGoals.length === 0 ? (
+            <div className="flex flex-col items-center gap-2 py-4 text-center">
+              <div className="w-10 h-10 rounded-2xl bg-amber-400/10 flex items-center justify-center">
+                <Target className="w-5 h-5 text-amber-400 opacity-50" />
+              </div>
+              <p className="text-xs t3">{t("goals.empty_body")}</p>
+              <Link href="/goals"
+                className="text-xs text-amber-400 hover:text-amber-300 transition-colors">
+                {t("goals.new_goal")} →
               </Link>
             </div>
           ) : (
-            <div className="space-y-0.5">
-              {currentDashboard.recentTransactions.map((tx) => {
-                const src = tx.source as string;
-                const srcColor =
-                  src === "investment" ? "bg-purple-400/10 text-purple-400" :
-                  src === "debt" ? "bg-orange-400/10 text-orange-400" :
-                  src === "debt_payment" ? "bg-amber-400/10 text-amber-400" :
-                  src === "work_payment" ? "bg-cyan-400/10 text-cyan-400" :
-                  tx.type === "income" ? "bg-emerald-400/10 text-emerald-400" :
-                                         "bg-rose-400/10 text-rose-400";
+            <div className="space-y-3.5">
+              {topGoals.map((goal) => {
+                const pct = Math.min(100, Math.round(goal.progress ?? 0));
                 return (
-                  <div key={tx.id}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[hsl(var(--bg-input))] transition-all pressable">
-                    <div className={`p-1.5 rounded-lg shrink-0 ${srcColor}`}>
-                      {tx.type === "income"
-                        ? <ArrowUpRight className="w-3.5 h-3.5" />
-                        : <ArrowDownRight className="w-3.5 h-3.5" />}
+                  <div key={goal.id}>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <p className="text-sm font-semibold t1 truncate max-w-[65%]">{goal.title}</p>
+                      <span className="text-xs font-bold tabular-nums" style={{ color: goal.color ?? undefined }}>
+                        {pct}%
+                      </span>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium t1 truncate">{tx.title}</p>
-                      <p className="text-[10px] t3">
-                        {tx.category?.name && <span className="me-1.5">{tx.category.name}</span>}
-                        {new Date(`${tx.transaction_date}T00:00:00`).toLocaleDateString(dateLocale)}
-                      </p>
-                    </div>
-                    <span className={`text-sm font-bold tabular-nums ${tx.type === "income" ? "text-emerald-400" : "text-rose-400"}`}>
-                      {tx.type === "income" ? "+" : "-"}{format(Number(tx.amount))}
-                    </span>
+                    <GoalMilestonesProgress
+                      milestones={goal.milestones}
+                      targetAmount={goal.target_amount}
+                      currentAmount={goal.computed_saved ?? 0}
+                      progress={pct}
+                      color={goal.color}
+                      isRtl={isRtl}
+                      format={format}
+                      variant="compact"
+                      showAmounts
+                      className="mt-1"
+                    />
                   </div>
                 );
               })}
             </div>
           )}
-          </CollapsibleSection>
-        </div>
+        </motion.div>
+      </WidgetBoundary>
 
-        <div className="lg:col-span-2">
-          <AICopilot
-            totalBalance={currentDashboard.totalBalance}
-            monthlyIncome={currentDashboard.monthlyIncome}
-            monthlyExpenses={currentDashboard.monthlyExpenses}
-            savingsRate={currentDashboard.savingsRate}
-            dailyBurn={currentDashboard.dailyBurn}
-            workIncome={currentDashboard.workIncome}
-            debtTruth={currentDashboard.debtTruth}
-            hasTransactions={currentDashboard.hasTransactions}
-            currency={format}
-          />
-        </div>
+      {/* ── Monthly Cashflow Chart ────────────────────────── */}
+      <WidgetBoundary name="Cashflow Chart">
+      {hasChart && (
+        <motion.div
+          variants={fadeBlur} initial="hidden" animate="visible"
+          transition={{ ...spring, delay: 0.2 }}
+          className="card p-4"
+        >
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="w-3.5 h-3.5 text-cyan-400" />
+              <h2 className="text-sm font-bold t1">{t("dashboard.monthly_chart")}</h2>
+            </div>
+            <div className="flex items-center gap-3 text-[10px] t3">
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-400 inline-block" />{t("transactions.income")}</span>
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-rose-400 inline-block" />{t("transactions.expense")}</span>
+            </div>
+          </div>
+          <ResponsiveContainer width="100%" height={110}>
+            <AreaChart data={chartData} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
+              <defs>
+                <linearGradient id="incGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%"  stopColor="#10B981" stopOpacity={0.25} />
+                  <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
+                </linearGradient>
+                <linearGradient id="expGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%"  stopColor="#F43F5E" stopOpacity={0.25} />
+                  <stop offset="95%" stopColor="#F43F5E" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+              <XAxis dataKey="day" tick={{ fill: "rgba(255,255,255,0.25)", fontSize: 9 }} axisLine={false} tickLine={false} interval={4} />
+              <YAxis hide />
+              <Tooltip content={<ChartTooltip format={format} />} />
+              <Area type="monotone" dataKey="income"   stroke="#10B981" strokeWidth={1.5} fill="url(#incGrad)" dot={false} />
+              <Area type="monotone" dataKey="expenses" stroke="#F43F5E" strokeWidth={1.5} fill="url(#expGrad)" dot={false} />
+            </AreaChart>
+          </ResponsiveContainer>
+        </motion.div>
+      )}
+      </WidgetBoundary>
+
+      {/* ── Next Debt ─────────────────────────────────────── */}
+      <WidgetBoundary name="Next Debt">
+      <div className="grid grid-cols-1 gap-2">
+        <Link href="/debts" className="card p-3 hover:border-orange-400/30 transition-colors">
+          <div className="flex items-center gap-1.5 mb-2">
+            <div className="p-1.5 rounded-lg bg-orange-400/10 shrink-0">
+              <Landmark className="w-3.5 h-3.5 text-orange-400" />
+            </div>
+            <p className="text-[10px] font-bold uppercase tracking-wide t3">{t("dashboard.next_debt")}</p>
+          </div>
+          {nextDebt ? (
+            <div className="space-y-0.5">
+              <p className="text-sm font-bold t1 truncate">{nextDebt.person_or_entity}</p>
+              <p className="text-sm font-bold text-orange-400 tabular-nums">
+                {format(Number(nextDebt.total_amount) - Number(nextDebt.paid_amount))}
+              </p>
+              {nextDebt.due_date && <DueBadge days={daysUntil(nextDebt.due_date)} />}
+            </div>
+          ) : (
+            <p className="text-xs t3">{t("dashboard.no_upcoming_debt")}</p>
+          )}
+        </Link>
       </div>
+      </WidgetBoundary>
+
+      {/* ── Recent Transactions ───────────────────────────── */}
+      <WidgetBoundary name="Recent Transactions">
+      {recent.length > 0 && (
+        <div className="card overflow-hidden">
+          <div className="flex items-center justify-between px-4 pt-4 pb-2">
+            <h2 className="text-sm font-bold t1">{t("dashboard.recent_transactions")}</h2>
+            <Link href="/transactions"
+              className="text-xs text-cyan-400 hover:text-cyan-300 flex items-center gap-0.5 transition-colors">
+              {t("common.view_all")}<ChevronRight className="w-3 h-3" />
+            </Link>
+          </div>
+          <div>
+            {recent.map((tx) => (
+              <div key={tx.id}
+                className="flex items-center gap-3 px-4 py-2.5 border-t border-[hsl(var(--border-2))] hover:bg-[hsl(var(--bg-input))] transition-colors">
+                <div className={`p-1.5 rounded-lg shrink-0 ${
+                  tx.type === "income" ? "bg-emerald-400/10" : "bg-rose-400/10"
+                }`}>
+                  {tx.type === "income"
+                    ? <ArrowUpRight className="w-3.5 h-3.5 text-emerald-400" />
+                    : <ArrowDownRight className="w-3.5 h-3.5 text-rose-400" />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium t1 truncate">{tx.title}</p>
+                  {tx.notes && <p className="mt-0.5 text-[10px] t3 line-clamp-1">{tx.notes}</p>}
+                  <p className="text-[10px] t3">
+                    {tx.category?.name && <span className="me-1.5">{tx.category.name}</span>}
+                    {tx.transaction_date ? new Date(`${tx.transaction_date}T00:00:00`).toLocaleDateString(dateLocale, {
+                      day: "numeric", month: "short",
+                    }) : ""}
+                  </p>
+                </div>
+                <span className={`text-sm font-bold tabular-nums shrink-0 ${
+                  tx.type === "income" ? "text-emerald-400" : "text-rose-400"
+                }`}>
+                  {tx.type === "income" ? "+" : "-"}{format(Number(tx.amount))}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      </WidgetBoundary>
+
+      {/* Empty state */}
+      {transactions.length === 0 && !isLoading && (
+        <div className="card p-5 border-cyan-400/20 bg-cyan-400/5 text-center">
+          <p className="text-sm font-semibold t1 mb-1">{t("common.no_data")}</p>
+          <p className="text-xs t2">{t("ai_insights.no_data_body")}</p>
+        </div>
+      )}
+
     </div>
   );
 }

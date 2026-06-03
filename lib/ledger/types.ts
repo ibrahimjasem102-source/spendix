@@ -5,6 +5,9 @@ export type LedgerEntryType =
   | "investment"    // capital deployed
   | "debt"          // liability recorded
   | "repayment"     // debt repaid
+  | "subscription"  // recurring subscription charge
+  | "salary"        // work / salary payment
+  | "transfer"      // between-account transfer
   | "budget_alert"  // budget limit event
   | "ai_insight";   // AI-generated event
 
@@ -21,6 +24,7 @@ export interface UnifiedLedgerEntry {
   category_color?: string;
   related_module_id?: string;
   date: string;             // ISO date  YYYY-MM-DD
+  tags?: string[];          // tag names for cross-section grouping
   metadata?: Record<string, unknown>;
   created_at: string;       // ISO datetime
 }
@@ -51,6 +55,9 @@ export const ENTRY_CONFIG: Record<
   investment:   { label: "Investment",   color: "text-purple-400",  bg: "bg-purple-400/10",  border: "border-purple-400/20"  },
   debt:         { label: "Debt",         color: "text-orange-400",  bg: "bg-orange-400/10",  border: "border-orange-400/20"  },
   repayment:    { label: "Repayment",    color: "text-amber-400",   bg: "bg-amber-400/10",   border: "border-amber-400/20"   },
+  subscription: { label: "Subscription", color: "text-violet-400",  bg: "bg-violet-400/10",  border: "border-violet-400/20"  },
+  salary:       { label: "Salary",       color: "text-emerald-400", bg: "bg-emerald-400/10", border: "border-emerald-400/20" },
+  transfer:     { label: "Transfer",     color: "text-sky-400",     bg: "bg-sky-400/10",     border: "border-sky-400/20"     },
   budget_alert: { label: "Budget Alert", color: "text-yellow-400",  bg: "bg-yellow-400/10",  border: "border-yellow-400/20"  },
   ai_insight:   { label: "AI Insight",   color: "text-cyan-400",    bg: "bg-cyan-400/10",    border: "border-cyan-400/20"    },
 };

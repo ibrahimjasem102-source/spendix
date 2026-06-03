@@ -134,7 +134,7 @@ export default function ProfilePage() {
   const engine      = useFinancialEngine();
 
   const { data: goals = [] }     = useGoals(!isGuest);
-  const { data: debtsData }      = useDebts(isGuest, !isGuest);
+  const { data: debtsData }      = useDebts(!isGuest);
   const debts                    = debtsData?.debts ?? [];
 
   const [userEmail, setUserEmail] = useState<string | null>(null);

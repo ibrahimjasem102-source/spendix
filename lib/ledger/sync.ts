@@ -4,8 +4,13 @@ import { Transaction, TransactionFormData } from "@/types";
 import { Investment, Debt } from "@/lib/mock-data";
 import { UnifiedLedgerEntry } from "./types";
 
+function isCalendarLinked(relatedId?: string | null) {
+  return typeof relatedId === "string" && relatedId.startsWith("calendar:");
+}
+
 // ── Transaction ───────────────────────────────────────────────
 export function transactionToLedgerEntry(tx: Transaction): UnifiedLedgerEntry {
+  const fromCalendar = isCalendarLinked(tx.related_source_id);
   return {
     id: `ledger-tx-${tx.id}`,
     user_id: tx.user_id,
@@ -16,14 +21,22 @@ export function transactionToLedgerEntry(tx: Transaction): UnifiedLedgerEntry {
     category: tx.category?.name,
     category_color: tx.category?.color,
     related_module_id: tx.id,
-    date: tx.transaction_date,
-    metadata: { notes: tx.notes ?? undefined, category_id: tx.category_id ?? undefined },
+    date: tx.transaction_date ?? new Date().toISOString().slice(0, 10),
+    tags: fromCalendar ? ["calendar"] : undefined,
+    metadata: {
+      notes: tx.notes ?? undefined,
+      category_id: tx.category_id ?? undefined,
+      source: tx.source ?? "manual",
+      related_source_id: tx.related_source_id ?? undefined,
+      source_module: fromCalendar ? "calendar" : undefined,
+    },
     created_at: tx.created_at || new Date().toISOString(),
   };
 }
 
 // Used when adding from the form (no full Transaction object yet)
 export function formDataToLedgerEntry(data: TransactionFormData, id: string): UnifiedLedgerEntry {
+  const fromCalendar = isCalendarLinked(data.related_source_id);
   return {
     id: `ledger-tx-${id}`,
     user_id: "current",
@@ -34,7 +47,14 @@ export function formDataToLedgerEntry(data: TransactionFormData, id: string): Un
     category_color: data.type === "income" ? "#10B981" : "#ef4444",
     related_module_id: id,
     date: data.transaction_date,
-    metadata: { notes: data.notes, category_id: data.category_id ?? undefined },
+    tags: fromCalendar ? ["calendar"] : undefined,
+    metadata: {
+      notes: data.notes,
+      category_id: data.category_id ?? undefined,
+      source: data.source ?? "manual",
+      related_source_id: data.related_source_id ?? undefined,
+      source_module: fromCalendar ? "calendar" : undefined,
+    },
     created_at: new Date().toISOString(),
   };
 }

@@ -6,7 +6,7 @@
     "ai_insights": "KI-Einblicke", "settings": "Einstellungen",
     "ai_assistant": "KI-Assistent",
     "sign_in": "Anmelden", "sign_out": "Abmelden", "collapse": "Einklappen",
-    "profile": "Profil", "hub": "Hub", "accounts": "Konten", "subscriptions": "Abonnements", "bills": "Rechnungen", "calendar": "Kalender"
+    "profile": "Profil", "accounts": "Konten", "subscriptions": "Abonnements", "bills": "Rechnungen", "calendar": "Kalender"
   },
   "common": {
     "save": "Änderungen speichern", "saved": "Gespeichert", "cancel": "Abbrechen", "add": "Hinzufügen",

@@ -1,7 +1,17 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { TransactionFormData } from "@/types";
 import { isOptionalTransactionColumnError } from "@/lib/finance/serverTransactions";
+
+async function syncTags(supabase: SupabaseClient, transactionId: string, tagIds: string[]): Promise<void> {
+  await supabase.from("transaction_tags").delete().eq("transaction_id", transactionId);
+  if (tagIds.length > 0) {
+    await supabase.from("transaction_tags").insert(
+      tagIds.map((tag_id) => ({ transaction_id: transactionId, tag_id }))
+    );
+  }
+}
 
 type Params = { params: Promise<{ id: string }> };
 const LEGACY_TRANSACTION_SELECT_NO_CATEGORY =
@@ -52,6 +62,10 @@ export async function PUT(request: Request, { params }: Params) {
   }
 
   if (error) return NextResponse.json({ error: error.message, code: error.code }, { status: 500 });
+
+  if (Array.isArray(body.tag_ids)) {
+    await syncTags(supabase, id, body.tag_ids).catch(() => null);
+  }
 
   return NextResponse.json({ transaction: data });
 }

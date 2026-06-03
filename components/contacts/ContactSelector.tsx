@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Search, User, Building2, Landmark, HelpCircle, Plus, X, ChevronDown } from "lucide-react";
+import { Search, User, Building2, Landmark, HelpCircle, Plus, X, ChevronDown, Smartphone } from "lucide-react";
 import { FinancialContact, ContactType, ContactFormData } from "@/types";
 import { safeFetch } from "@/lib/fetch-safe";
 import { useTranslation } from "@/lib/i18n";
+import { usePhoneContactPicker } from "@/lib/hooks/usePhoneContactPicker";
 
 const TYPE_ICONS: Record<ContactType, React.ElementType> = {
   person:  User,
@@ -29,13 +30,16 @@ interface Props {
 
 export default function ContactSelector({ value, onChange, contacts, onContactCreated }: Props) {
   const { t } = useTranslation();
-  const [open, setOpen]       = useState(false);
-  const [query, setQuery]     = useState("");
+  const { isSupported, pick } = usePhoneContactPicker();
+
+  const [open, setOpen]         = useState(false);
+  const [query, setQuery]       = useState("");
   const [creating, setCreating] = useState(false);
-  const [newName, setNewName] = useState("");
-  const [newType, setNewType] = useState<ContactType>("person");
-  const [saving, setSaving]   = useState(false);
-  const [error, setError]     = useState("");
+  const [newName, setNewName]   = useState("");
+  const [newPhone, setNewPhone] = useState("");
+  const [newType, setNewType]   = useState<ContactType>("person");
+  const [saving, setSaving]     = useState(false);
+  const [error, setError]       = useState("");
   const ref = useRef<HTMLDivElement>(null);
 
   const selected = contacts.find((c) => c.id === value) ?? null;
@@ -63,7 +67,11 @@ export default function ContactSelector({ value, onChange, contacts, onContactCr
       const res = await safeFetch("/api/contacts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newName.trim(), type: newType } as ContactFormData),
+        body: JSON.stringify({
+          name: newName.trim(),
+          type: newType,
+          phone: newPhone.trim() || null,
+        } as ContactFormData),
       });
       const payload = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(payload.error || payload.errorKey || t("contacts.fetch_error"));
@@ -73,6 +81,7 @@ export default function ContactSelector({ value, onChange, contacts, onContactCr
       onChange(contact.id, contact.name);
       setCreating(false);
       setNewName("");
+      setNewPhone("");
       setOpen(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : t("contacts.fetch_error"));
@@ -81,13 +90,47 @@ export default function ContactSelector({ value, onChange, contacts, onContactCr
     }
   }
 
+  async function handlePhonePick() {
+    const picked = await pick(false);
+    if (!picked.length) return;
+    const pc = picked[0];
+
+    // Try to match an existing app contact by name
+    const existing = contacts.find(
+      (c) => c.name.toLowerCase() === pc.name.toLowerCase()
+    );
+    if (existing) {
+      onChange(existing.id, existing.name);
+      return;
+    }
+
+    // Pre-fill create form
+    setNewName(pc.name);
+    setNewPhone(pc.phone ?? "");
+    setNewType("person");
+    setCreating(true);
+    setOpen(true);
+  }
+
   const CONTACT_TYPES: ContactType[] = ["person", "company", "bank", "other"];
 
   return (
     <div ref={ref} className="relative">
-      <label className="block text-xs font-medium t2 mb-1.5">
-        {t("contacts.select")} <span className="t3 font-normal">({t("debts.notes_optional")})</span>
-      </label>
+      <div className="flex items-center justify-between mb-1.5">
+        <label className="text-xs font-medium t2">
+          {t("contacts.select")} <span className="t3 font-normal">({t("debts.notes_optional")})</span>
+        </label>
+        {isSupported && (
+          <button
+            type="button"
+            onClick={handlePhonePick}
+            className="flex items-center gap-1 text-[10px] font-semibold text-cyan-400 hover:text-cyan-300 transition-colors"
+          >
+            <Smartphone className="w-3 h-3" />
+            {t("contacts.from_phone")}
+          </button>
+        )}
+      </div>
 
       {/* Trigger */}
       <button type="button" onClick={() => setOpen(!open)}
@@ -145,14 +188,14 @@ export default function ContactSelector({ value, onChange, contacts, onContactCr
                     </div>
                     <div className="min-w-0">
                       <p className="text-sm font-medium t1 truncate">{c.name}</p>
-                      <p className="text-[10px] t3">{t(`contacts.types.${c.type}`)}</p>
+                      {c.phone && <p className="text-[10px] t3">{c.phone}</p>}
                     </div>
                   </button>
                 );
               })}
 
               {/* Create new */}
-              <button type="button" onClick={() => { setCreating(true); setNewName(query); setQuery(""); }}
+              <button type="button" onClick={() => { setCreating(true); setNewName(query); setNewPhone(""); setQuery(""); }}
                 className="flex items-center gap-2 w-full px-3 py-2.5 text-cyan-400 hover:bg-cyan-400/5 transition-colors border-t border-[hsl(var(--border-2))]">
                 <Plus className="w-3.5 h-3.5" />
                 <span className="text-xs font-medium">{t("contacts.create_new")}</span>
@@ -167,13 +210,12 @@ export default function ContactSelector({ value, onChange, contacts, onContactCr
               <input value={newName} onChange={(e) => setNewName(e.target.value)}
                 placeholder={t("contacts.name_placeholder")}
                 className="field text-sm"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    void handleCreate();
-                  }
-                }}
+                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); void handleCreate(); } }}
                 autoFocus />
+              <input value={newPhone} onChange={(e) => setNewPhone(e.target.value)}
+                placeholder={t("contacts.phone_placeholder")}
+                className="field text-sm"
+                type="tel" />
               <div className="grid grid-cols-4 gap-1">
                 {CONTACT_TYPES.map((tp) => {
                   const Icon = TYPE_ICONS[tp];

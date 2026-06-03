@@ -77,13 +77,20 @@ function summarize(budgets: Budget[]): BudgetSummary {
 export async function GET(request: Request) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ errorKey: "errors.unauthorized" }, { status: 401 });
+
+  if (!user) {
+    console.warn("[Budgets API] GET — no authenticated user");
+    return NextResponse.json({ errorKey: "errors.unauthorized" }, { status: 401 });
+  }
 
   const { searchParams } = new URL(request.url);
   const month = clampMonth(searchParams.get("month"));
   const year = clampYear(searchParams.get("year"));
   const { start, end } = monthRange(year, month);
 
+  console.log("[Budgets API] GET", { userId: user.id, month, year, start, end });
+
+  // ── Budgets query ────────────────────────────────────────────
   const budgetResult = await supabase
     .from("budgets")
     .select(BUDGET_SELECT)
@@ -94,7 +101,13 @@ export async function GET(request: Request) {
   let budgetRows: unknown[] = budgetResult.data ?? [];
   let budgetError = budgetResult.error;
 
+  console.log("[Budgets API] budgets query →", {
+    rows: budgetRows.length,
+    error: budgetError ? { message: budgetError.message, code: budgetError.code, details: budgetError.details, hint: budgetError.hint } : null,
+  });
+
   if (budgetError && isOptionalCategoryError(budgetError.message)) {
+    console.log("[Budgets API] retrying budgets without icon column (legacy fallback)");
     const legacy = await supabase
       .from("budgets")
       .select(BUDGET_SELECT_LEGACY)
@@ -104,12 +117,25 @@ export async function GET(request: Request) {
       .order("created_at", { ascending: false });
     budgetRows = legacy.data ?? [];
     budgetError = legacy.error;
+    console.log("[Budgets API] legacy budgets →", { rows: budgetRows.length, error: budgetError?.message ?? null });
   }
 
   if (budgetError) {
-    return NextResponse.json({ error: budgetError.message }, { status: 500 });
+    console.error("[Budgets API] fatal budgets error:", {
+      message: budgetError.message,
+      code:    budgetError.code,
+      details: budgetError.details,
+      hint:    budgetError.hint,
+    });
+    return NextResponse.json({
+      error:   budgetError.message,
+      code:    budgetError.code,
+      details: budgetError.details,
+      hint:    budgetError.hint,
+    }, { status: 500 });
   }
 
+  // ── Transactions (spending per category) ─────────────────────
   const txResult = await supabase
     .from("transactions")
     .select("category_id,amount")
@@ -118,7 +144,20 @@ export async function GET(request: Request) {
     .gte("transaction_date", start)
     .lt("transaction_date", end);
 
-  if (txResult.error) return NextResponse.json({ error: txResult.error.message }, { status: 500 });
+  console.log("[Budgets API] transactions query →", {
+    rows: txResult.data?.length ?? 0,
+    error: txResult.error ? { message: txResult.error.message, code: txResult.error.code } : null,
+  });
+
+  if (txResult.error) {
+    console.error("[Budgets API] transactions error:", txResult.error);
+    return NextResponse.json({
+      error:   txResult.error.message,
+      code:    txResult.error.code,
+      details: txResult.error.details,
+      hint:    txResult.error.hint,
+    }, { status: 500 });
+  }
 
   const spendingByCategory = new Map<string, number>();
   (txResult.data ?? []).forEach((transaction) => {
@@ -129,6 +168,7 @@ export async function GET(request: Request) {
     );
   });
 
+  // ── Categories query ─────────────────────────────────────────
   const categoryResult = await supabase
     .from("categories")
     .select(CATEGORY_SELECT)
@@ -138,7 +178,13 @@ export async function GET(request: Request) {
   let categories: unknown[] = categoryResult.data ?? [];
   let categoryError = categoryResult.error;
 
+  console.log("[Budgets API] categories query →", {
+    rows: categories.length,
+    error: categoryError ? { message: categoryError.message, code: categoryError.code } : null,
+  });
+
   if (categoryError && isOptionalCategoryError(categoryError.message)) {
+    console.log("[Budgets API] retrying categories without icon column (legacy fallback)");
     const legacy = await supabase
       .from("categories")
       .select(CATEGORY_SELECT_LEGACY)
@@ -147,9 +193,23 @@ export async function GET(request: Request) {
       .order("name");
     categories = legacy.data ?? [];
     categoryError = legacy.error;
+    console.log("[Budgets API] legacy categories →", { rows: categories.length, error: categoryError?.message ?? null });
   }
 
-  if (categoryError) return NextResponse.json({ error: categoryError.message }, { status: 500 });
+  if (categoryError) {
+    console.error("[Budgets API] fatal categories error:", {
+      message: categoryError.message,
+      code:    categoryError.code,
+      details: categoryError.details,
+      hint:    categoryError.hint,
+    });
+    return NextResponse.json({
+      error:   categoryError.message,
+      code:    categoryError.code,
+      details: categoryError.details,
+      hint:    categoryError.hint,
+    }, { status: 500 });
+  }
 
   const budgets = withRuntimeStats(budgetRows, spendingByCategory);
 

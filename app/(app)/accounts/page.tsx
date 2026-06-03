@@ -11,6 +11,8 @@ import { useAccounts, useCreateAccount, useUpdateAccount, useDeleteAccount } fro
 import { useTranslation } from "@/lib/i18n";
 import { useCurrency } from "@/lib/currency";
 import { spring, tapTransition } from "@/lib/motion";
+import SheetDragHandle from "@/components/ui/SheetDragHandle";
+import ConfirmModal from "@/components/ui/ConfirmModal";
 import type { Account, AccountFormData, AccountType } from "@/types";
 
 // ── Account type meta ────────────────────────────────────────
@@ -85,7 +87,9 @@ function AccountFormModal({ initial, onSubmit, onClose }: AccountFormProps) {
       >
         {/* Header */}
         <div className="shrink-0 px-5 pt-4 pb-3" style={{ background: `${accent}10` }}>
-          <div className="w-10 h-1 rounded-full bg-white/12 mx-auto mb-3 sm:hidden" />
+          <div className="mb-1 sm:hidden">
+            <SheetDragHandle onClose={onClose} />
+          </div>
           <div className="flex items-center justify-between">
             <p className="text-xs font-bold t3 uppercase tracking-widest">
               {isEdit ? t("accounts.edit") : t("accounts.new")}
@@ -241,50 +245,6 @@ function AccountFormModal({ initial, onSubmit, onClose }: AccountFormProps) {
 
 // ── Delete Confirm ───────────────────────────────────────────
 
-function DeleteConfirm({ account, onConfirm, onCancel }: { account: Account; onConfirm: () => void; onCancel: () => void }) {
-  const { t } = useTranslation();
-  const meta = ACCOUNT_META[account.type];
-  const Icon = meta.icon;
-
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ backgroundColor: "rgba(11,15,20,0.80)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)" }}
-      onClick={(e) => e.target === e.currentTarget && onCancel()}
-    >
-      <motion.div
-        initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
-        transition={spring}
-        className="w-full max-w-sm rounded-[1.75rem] p-6 space-y-4"
-        style={{ backgroundColor: "hsl(var(--bg-card))", border: "1px solid hsl(var(--border))" }}
-      >
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl flex items-center justify-center"
-            style={{ backgroundColor: `${meta.color}14` }}>
-            <Icon className="w-6 h-6" style={{ color: meta.color }} />
-          </div>
-          <div>
-            <p className="font-bold t1">{account.name}</p>
-            <p className="text-xs t3">{t(meta.labelKey)}</p>
-          </div>
-        </div>
-        <p className="text-sm t2">{t("accounts.delete_confirm")}</p>
-        <p className="text-xs t3">{t("accounts.delete_hint")}</p>
-        <div className="flex gap-3 pt-1">
-          <button onClick={onCancel}
-            className="flex-1 py-3 rounded-2xl text-sm font-semibold t2 bg-[hsl(var(--bg-input))] hover:t1 transition-all">
-            {t("common.cancel")}
-          </button>
-          <button onClick={onConfirm}
-            className="flex-1 py-3 rounded-2xl text-sm font-bold text-white bg-rose-500 hover:bg-rose-600 transition-all">
-            {t("common.delete")}
-          </button>
-        </div>
-      </motion.div>
-    </div>
-  );
-}
-
 // ── Account Card ─────────────────────────────────────────────
 
 interface AccountCardProps {
@@ -408,31 +368,38 @@ export default function AccountsPage() {
 
   async function handleCreate(data: AccountFormData) {
     await createAccount.mutateAsync(data);
+    setShowForm(false);
   }
 
   async function handleEdit(data: AccountFormData) {
     if (!editingAccount) return;
     await updateAccount.mutateAsync({ id: editingAccount.id, data });
+    setEditingAccount(null);
   }
 
   async function handleDelete() {
     if (!deletingAccount) return;
-    await deleteAccount.mutateAsync(deletingAccount.id);
-    setDeletingAccount(null);
+    const id = deletingAccount.id; setDeletingAccount(null);
+    await deleteAccount.mutateAsync(id);
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Page header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold t1">{t("accounts.title")}</h1>
-          <p className="text-sm t3 mt-0.5">{t("accounts.subtitle")}</p>
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-blue-400/10">
+            <CreditCard className="h-4 w-4 text-blue-400" />
+          </div>
+          <div className="min-w-0">
+            <h1 className="truncate text-xl font-black t1">{t("accounts.title")}</h1>
+            <p className="mt-0.5 text-xs font-medium t3">{t("accounts.subtitle")}</p>
+          </div>
         </div>
         <motion.button
           onClick={() => setShowForm(true)}
           whileTap={{ scale: 0.93 }} transition={tapTransition}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-2xl text-sm font-bold text-white"
+          className="flex shrink-0 items-center gap-2 px-4 py-2.5 rounded-2xl text-sm font-bold text-white"
           style={{ background: "linear-gradient(135deg, #3B82F6, #2563EB)", boxShadow: "0 4px 16px #3B82F640" }}
         >
           <Plus className="w-4 h-4" />
@@ -455,7 +422,7 @@ export default function AccountsPage() {
               <p className="text-xs font-semibold text-blue-300/70 uppercase tracking-[0.12em]">{t("accounts.total_balance")}</p>
               <p className="text-3xl font-bold text-white mt-1">{format(totalBalance)}</p>
             </div>
-            <div className="text-right">
+            <div className="text-end">
               <p className="text-xs text-blue-300/60">{accounts.length} {t("accounts.accounts")}</p>
               <p className="text-xs text-blue-300/60 mt-0.5">{totalTransactions} {t("accounts.transactions")}</p>
             </div>
@@ -557,9 +524,10 @@ export default function AccountsPage() {
           />
         )}
         {deletingAccount && (
-          <DeleteConfirm
+          <ConfirmModal
             key="delete"
-            account={deletingAccount}
+            message={t("accounts.delete_confirm")}
+            loading={deleteAccount.isPending}
             onConfirm={handleDelete}
             onCancel={() => setDeletingAccount(null)}
           />

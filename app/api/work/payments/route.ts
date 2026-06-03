@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { WorkPaymentFormData } from "@/types";
 import { notify } from "@/lib/notifications/service";
-import { insertLinkedTransaction, updateTransactionSourceLink } from "@/lib/finance/serverTransactions";
+import { insertLinkedTransaction } from "@/lib/finance/serverTransactions";
 
 const WORK_PAYMENT_SELECT =
   "id,user_id,work_session_id,employer_or_client,amount,payment_date,notes,transaction_id,created_at";
@@ -29,12 +29,14 @@ export async function POST(request: Request) {
 
   const body: WorkPaymentFormData = await request.json();
 
+  // Create income transaction.
+  // source = "work", related_source_id = work_session_id (the work entry id).
   const { data: tx, error: txErr } = await insertLinkedTransaction(supabase, {
     user_id: user.id,
     title: `Work payment: ${body.employer_or_client}`,
     amount: body.amount,
     type: "income",
-    source: "work_payment",
+    source: "work",
     related_source_id: body.work_session_id ?? null,
     transaction_date: body.payment_date,
     notes: body.notes ?? null,
@@ -57,8 +59,6 @@ export async function POST(request: Request) {
     .single();
 
   if (payErr) return NextResponse.json({ error: payErr.message }, { status: 500 });
-
-  await updateTransactionSourceLink(supabase, tx.id, payment.id);
 
   void notify.workPaymentReceived(
     supabase,

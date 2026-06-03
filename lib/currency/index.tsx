@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { useTranslation } from "@/lib/i18n";
+import { createClient } from "@/lib/supabase/client";
 
 export type Currency = "EUR" | "USD" | "GBP" | "CHF" | "JPY";
 
@@ -44,9 +45,43 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
     if (stored && RATES[stored]) setCurrencyState(stored);
   }, []);
 
+  useEffect(() => {
+    const supabase = createClient();
+
+    async function loadProfileCurrency() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase
+        .from("profile_settings").select("currency").eq("user_id", user.id).maybeSingle();
+      const c = data?.currency as Currency | undefined;
+      if (c && RATES[c]) {
+        setCurrencyState(c);
+        localStorage.setItem("spendix_currency", c);
+      }
+    }
+
+    void loadProfileCurrency();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+        void loadProfileCurrency();
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
   const setCurrency = useCallback((nextCurrency: Currency) => {
     setCurrencyState(nextCurrency);
     localStorage.setItem("spendix_currency", nextCurrency);
+    const supabase = createClient();
+    void supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return;
+      void supabase.from("profile_settings").upsert(
+        { user_id: user.id, currency: nextCurrency, updated_at: new Date().toISOString() },
+        { onConflict: "user_id" }
+      );
+    });
   }, []);
 
   const format = useCallback(

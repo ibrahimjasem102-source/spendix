@@ -4,17 +4,14 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import {
-  Banknote, Building2, TrendingUp, AlertCircle,
-  CreditCard, ChevronDown, ArrowRight, Scale,
-  Minus, Plus,
+  Banknote, TrendingUp, AlertCircle, ArrowUpRight,
+  ChevronDown, ArrowRight, Scale, Minus, Plus,
 } from "lucide-react";
 import { useTranslation } from "@/lib/i18n";
 import { useCurrency } from "@/lib/currency";
-import { useAccounts } from "@/lib/query/hooks";
-import { useInvestments } from "@/lib/query/hooks";
-import { useDebts } from "@/lib/query/hooks";
+import { useFinancialEngine } from "@/lib/finance/engine";
 import { ROUTES } from "@/lib/routes";
-import type { Account, Investment, Debt } from "@/types";
+import type { Investment, Debt } from "@/types";
 
 // ── types ─────────────────────────────────────────────────────────────────────
 
@@ -36,16 +33,12 @@ interface Group {
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
-function accountBalance(a: Account): number {
-  return a.balance ?? a.initial_balance ?? 0;
-}
-
 function investmentValue(i: Investment): number {
-  return i.current_value ?? i.amount_invested;
+  return Number(i.current_value ?? i.amount_invested);
 }
 
 function debtRemaining(d: Debt): number {
-  return Math.max(0, d.total_amount - d.paid_amount);
+  return Math.max(0, Number(d.total_amount) - Number(d.paid_amount));
 }
 
 // ── GroupCard ─────────────────────────────────────────────────────────────────
@@ -65,7 +58,7 @@ function GroupCard({ group, label, sub }: { group: Group; label: string; sub: st
     <div className={`rounded-2xl border ${accent.border} ${accent.bg} overflow-hidden`}>
       <button
         onClick={() => setOpen((o) => !o)}
-        className="w-full flex items-center gap-3 p-4 text-left hover:bg-white/5 transition-colors"
+        className="w-full flex items-center gap-3 p-4 text-start hover:bg-white/5 transition-colors"
       >
         <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${accent.iconBg} ${accent.iconText}`}>
           {group.icon}
@@ -74,7 +67,7 @@ function GroupCard({ group, label, sub }: { group: Group; label: string; sub: st
           <div className="font-semibold text-sm text-white">{label}</div>
           <div className="text-xs text-white/40 mt-0.5 truncate">{sub}</div>
         </div>
-        <div className="text-right shrink-0 mr-1">
+        <div className="text-end shrink-0 me-1">
           <div className={`font-bold text-base ${accent.amtText}`}>{format(group.amount)}</div>
           <div className="text-xs text-white/40 mt-0.5">
             {group.items.length} {t("net_worth.items")}
@@ -106,7 +99,7 @@ function GroupCard({ group, label, sub }: { group: Group; label: string; sub: st
                         <div className="text-sm text-white/80 truncate">{item.name}</div>
                         {item.sub && <div className="text-xs text-white/40 mt-0.5">{item.sub}</div>}
                       </div>
-                      <div className={`font-semibold text-sm shrink-0 ml-3 ${accent.amtText}`}>
+                      <div className={`font-semibold text-sm shrink-0 ms-3 ${accent.amtText}`}>
                         {format(item.amount)}
                       </div>
                     </div>
@@ -135,38 +128,32 @@ function GroupCard({ group, label, sub }: { group: Group; label: string; sub: st
 export default function NetWorthPage() {
   const { t, formatDate } = useTranslation();
   const { format } = useCurrency();
+  // Single source of truth — same engine used by Dashboard
+  const engine = useFinancialEngine();
 
-  const { data: accounts = [],    isLoading: loadingAccounts }     = useAccounts();
-  const { data: investments = [],  isLoading: loadingInvestments }  = useInvestments();
-  const { data: debtsData,         isLoading: loadingDebts }        = useDebts();
-  const debts = debtsData?.debts ?? [];
+  const investments = engine.investments;
+  const debts       = engine.debts;
+  const isLoading   = engine.isLoading;
 
-  const isLoading = loadingAccounts || loadingInvestments || loadingDebts;
+  // ── Amounts — all from engine (identical to Dashboard) ───────────────────
+  const cashTotal       = engine.balance;
+  const investTotal     = engine.portfolioValue;
+  const receivableTotal = engine.debtReceivable;
+  const debtTotal       = engine.debtPayable;
 
-  // ── Assets ───────────────────────────────────────────────────────────────
-  const cashAccounts   = accounts.filter((a) => a.type === "cash"   || a.type === "wallet");
-  const bankAccounts   = accounts.filter((a) => a.type === "bank"   || a.type === "savings");
-  const creditCards    = accounts.filter((a) => a.type === "credit_card");
-
-  const cashTotal  = cashAccounts.reduce((s, a)  => s + Math.max(0, accountBalance(a)),   0);
-  const bankTotal  = bankAccounts.reduce((s, a)  => s + Math.max(0, accountBalance(a)),   0);
-  const investTotal = investments.reduce((s, i)  => s + investmentValue(i),                0);
-  const totalAssets = cashTotal + bankTotal + investTotal;
-
-  // ── Liabilities ───────────────────────────────────────────────────────────
-  const payableDebts = debts.filter((d) => d.debt_type === "payable" && d.status !== "paid");
-  const debtTotal    = payableDebts.reduce((s, d) => s + debtRemaining(d),                 0);
-  const ccTotal      = creditCards.reduce((s, a)  => s + Math.max(0, accountBalance(a)),   0);
-  const totalLiabilities = debtTotal + ccTotal;
-
-  // ── Net Worth ─────────────────────────────────────────────────────────────
-  const netWorth   = totalAssets - totalLiabilities;
-  const isPositive = netWorth >= 0;
+  const totalAssets      = cashTotal + investTotal + receivableTotal;
+  const totalLiabilities = debtTotal;
+  const netWorth         = totalAssets - totalLiabilities;
+  const isPositive       = netWorth >= 0;
 
   // Stacked-bar widths
-  const barTotal   = Math.max(totalAssets + totalLiabilities, 0.01);
-  const assetPct   = Math.round((totalAssets    / barTotal) * 100);
-  const liabPct    = 100 - assetPct;
+  const barTotal = Math.max(totalAssets + totalLiabilities, 0.01);
+  const assetPct = Math.round((totalAssets    / barTotal) * 100);
+  const liabPct  = 100 - assetPct;
+
+  // ── Item lists ────────────────────────────────────────────────────────────
+  const payableDebts    = debts.filter((d) => d.debt_type === "payable"    && d.status !== "paid");
+  const receivableDebts = debts.filter((d) => d.debt_type === "receivable" && d.status !== "paid");
 
   // ── Group data ────────────────────────────────────────────────────────────
   const assetGroups: (Group & { label: string; sub: string })[] = [
@@ -175,16 +162,8 @@ export default function NetWorthPage() {
       label: t("net_worth.cash"), sub: t("net_worth.cash_sub"),
       icon: <Banknote className="w-5 h-5" />,
       amount: cashTotal,
-      href: ROUTES.accounts,
-      items: cashAccounts.map((a) => ({ id: a.id, name: a.name, amount: Math.max(0, accountBalance(a)) })),
-    },
-    {
-      key: "banks", isAsset: true,
-      label: t("net_worth.banks"), sub: t("net_worth.banks_sub"),
-      icon: <Building2 className="w-5 h-5" />,
-      amount: bankTotal,
-      href: ROUTES.accounts,
-      items: bankAccounts.map((a) => ({ id: a.id, name: a.name, amount: Math.max(0, accountBalance(a)) })),
+      href: ROUTES.transactions,
+      items: [{ id: "cash-position", name: t("net_worth.cash_position"), amount: cashTotal }],
     },
     {
       key: "investments", isAsset: true,
@@ -193,14 +172,29 @@ export default function NetWorthPage() {
       amount: investTotal,
       href: ROUTES.investments,
       items: investments.map((i) => {
-        const val    = investmentValue(i);
-        const gain   = i.current_value !== null ? i.current_value - i.amount_invested : 0;
-        const gainPct = i.amount_invested > 0 ? Math.abs(Math.round((gain / i.amount_invested) * 100)) : 0;
+        const val     = investmentValue(i);
+        const gain    = i.current_value !== null ? Number(i.current_value) - Number(i.amount_invested) : 0;
+        const gainPct = Number(i.amount_invested) > 0
+          ? Math.abs(Math.round((gain / Number(i.amount_invested)) * 100))
+          : 0;
         const sub = i.current_value !== null && gainPct > 0
           ? t(gain >= 0 ? "net_worth.gain" : "net_worth.loss", { pct: gainPct })
           : undefined;
         return { id: i.id, name: i.asset_name, amount: val, sub };
       }),
+    },
+    {
+      key: "receivables", isAsset: true,
+      label: t("net_worth.receivables"), sub: t("net_worth.receivables_sub"),
+      icon: <ArrowUpRight className="w-5 h-5" />,
+      amount: receivableTotal,
+      href: ROUTES.debts,
+      items: receivableDebts.map((d) => ({
+        id:     d.id,
+        name:   d.person_or_entity,
+        amount: debtRemaining(d),
+        sub:    d.due_date ? t("net_worth.due", { date: formatDate(d.due_date) }) : undefined,
+      })),
     },
   ];
 
@@ -212,30 +206,27 @@ export default function NetWorthPage() {
       amount: debtTotal,
       href: ROUTES.debts,
       items: payableDebts.map((d) => ({
-        id:  d.id,
-        name: d.person_or_entity,
+        id:     d.id,
+        name:   d.person_or_entity,
         amount: debtRemaining(d),
-        sub: d.due_date ? t("net_worth.due", { date: formatDate(d.due_date) }) : undefined,
+        sub:    d.due_date ? t("net_worth.due", { date: formatDate(d.due_date) }) : undefined,
       })),
-    },
-    {
-      key: "credit_cards", isAsset: false,
-      label: t("net_worth.credit_cards"), sub: t("net_worth.credit_cards_sub"),
-      icon: <CreditCard className="w-5 h-5" />,
-      amount: ccTotal,
-      href: ROUTES.accounts,
-      items: creditCards.map((a) => ({ id: a.id, name: a.name, amount: Math.max(0, accountBalance(a)) })),
     },
   ];
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="max-w-2xl mx-auto px-4 py-8 space-y-6">
+    <div className="max-w-2xl mx-auto px-4 py-8 space-y-5">
 
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-white">{t("net_worth.title")}</h1>
-        <p className="text-white/50 text-sm mt-1">{t("net_worth.subtitle")}</p>
+      <div className="flex min-w-0 items-center gap-2.5">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-emerald-400/10">
+          <Scale className="h-4 w-4 text-emerald-400" />
+        </div>
+        <div className="min-w-0">
+          <h1 className="truncate text-xl font-black t1">{t("net_worth.title")}</h1>
+          <p className="mt-0.5 text-xs font-medium t3">{t("net_worth.subtitle")}</p>
+        </div>
       </div>
 
       {/* Hero card */}
@@ -329,7 +320,7 @@ export default function NetWorthPage() {
         </div>
 
         {isLoading
-          ? Array.from({ length: 2 }).map((_, i) => (
+          ? Array.from({ length: 1 }).map((_, i) => (
               <div key={i} className="h-16 rounded-2xl bg-white/5 animate-pulse" />
             ))
           : liabGroups.map((g, i) => (

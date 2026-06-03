@@ -1,15 +1,19 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { NAV_ITEMS, ROUTES, type AppRoute, type NavItem } from "@/lib/routes";
 
-const STORAGE_KEY = "spendix_nav_slots";
+const STORAGE_KEY = "spendix_nav_slots_v2"; // v2 because slot count changed
 
-// Default 4 slots: [left1, left2, right1, right2]
-const DEFAULTS: [AppRoute, AppRoute, AppRoute, AppRoute] = [
+// Default 5 slots: [fixed, changeable, center placeholder, changeable, fixed]
+// slot[0] = dashboard (always locked)
+// slot[2] = center FAB placeholder (not displayed as a route)
+// slot[4] = more      (always locked)
+const DEFAULTS: [AppRoute, AppRoute, AppRoute, AppRoute, AppRoute] = [
   ROUTES.dashboard,
   ROUTES.transactions,
-  ROUTES.investments,  // investments more useful than debts as default
+  ROUTES.more,
+  ROUTES.aiAssistant,
   ROUTES.more,
 ];
 
@@ -17,25 +21,35 @@ function isAppRoute(value: unknown): value is AppRoute {
   return typeof value === "string" && Object.values(ROUTES).includes(value as AppRoute);
 }
 
-function normalize(slots: AppRoute[]): [AppRoute, AppRoute, AppRoute, AppRoute] {
-  const next: [AppRoute, AppRoute, AppRoute, AppRoute] = [
+function isNavRoute(value: unknown): value is AppRoute {
+  return isAppRoute(value) && NAV_ITEMS.some((item) => item.href === value);
+}
+
+function normalize(slots: AppRoute[]): [AppRoute, AppRoute, AppRoute, AppRoute, AppRoute] {
+  const next: [AppRoute, AppRoute, AppRoute, AppRoute, AppRoute] = [
     ROUTES.dashboard,
-    isAppRoute(slots[1]) && slots[1] !== ROUTES.dashboard && slots[1] !== ROUTES.more ? slots[1] : ROUTES.transactions,
-    isAppRoute(slots[2]) && slots[2] !== ROUTES.dashboard && slots[2] !== ROUTES.more ? slots[2] : ROUTES.investments,
+    isNavRoute(slots[1]) && slots[1] !== ROUTES.dashboard && slots[1] !== ROUTES.more ? slots[1] : ROUTES.transactions,
+    ROUTES.more,
+    isNavRoute(slots[3]) && slots[3] !== ROUTES.dashboard && slots[3] !== ROUTES.more ? slots[3] : ROUTES.aiAssistant,
     ROUTES.more,
   ];
 
-  if (next[1] === next[2]) next[2] = next[1] === ROUTES.investments ? ROUTES.debts : ROUTES.investments;
+  // Deduplicate only the visible custom slots. Slot 2 is the center FAB placeholder.
+  const FALLBACKS: AppRoute[] = [ROUTES.transactions, ROUTES.goals, ROUTES.aiAssistant, ROUTES.analytics, ROUTES.budgets];
+  if (next[3] === next[1]) {
+    next[3] = FALLBACKS.find((route) => route !== next[1] && route !== ROUTES.dashboard && route !== ROUTES.more) ?? ROUTES.analytics;
+  }
+
   return next;
 }
 
-function load(): [AppRoute, AppRoute, AppRoute, AppRoute] {
+function load(): [AppRoute, AppRoute, AppRoute, AppRoute, AppRoute] {
   if (typeof window === "undefined") return DEFAULTS;
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return DEFAULTS;
     const parsed = JSON.parse(raw) as AppRoute[];
-    if (Array.isArray(parsed) && parsed.length === 4) {
+    if (Array.isArray(parsed) && parsed.length === 5) {
       const next = normalize(parsed);
       save(next);
       return next;
@@ -44,25 +58,20 @@ function load(): [AppRoute, AppRoute, AppRoute, AppRoute] {
   return DEFAULTS;
 }
 
-function save(slots: [AppRoute, AppRoute, AppRoute, AppRoute]) {
+function save(slots: [AppRoute, AppRoute, AppRoute, AppRoute, AppRoute]) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(slots));
 }
 
-/** All pages that can appear in the bottom nav */
-export const ALL_NAV_OPTIONS: NavItem[] = NAV_ITEMS.filter(
-  (i) => i.href !== ROUTES.more   // More is always available via the drawer
-    || true                        // allow all (remove filter if you want)
-);
-
 export function useNavConfig() {
-  const [slots, setSlots] = useState<[AppRoute, AppRoute, AppRoute, AppRoute]>(DEFAULTS);
+  const [slots, setSlots] = useState<[AppRoute, AppRoute, AppRoute, AppRoute, AppRoute]>(DEFAULTS);
 
   useEffect(() => { setSlots(load()); }, []);
 
-  const updateSlot = useCallback((index: 0 | 1 | 2 | 3, route: AppRoute) => {
-    if (index === 0 || index === 3 || route === ROUTES.dashboard || route === ROUTES.more) return;
+  // Only the visible side slots (1 and 3) are user-customisable. Slot 2 is the center FAB placeholder.
+  const updateSlot = useCallback((index: 1 | 2 | 3, route: AppRoute) => {
+    if (!isNavRoute(route) || route === ROUTES.dashboard || route === ROUTES.more) return;
     setSlots((prev) => {
-      const next = normalize(prev);
+      const next = [...prev] as [AppRoute, AppRoute, AppRoute, AppRoute, AppRoute];
       next[index] = route;
       const normalized = normalize(next);
       save(normalized);
@@ -75,8 +84,10 @@ export function useNavConfig() {
     setSlots(DEFAULTS);
   }, []);
 
-  const leftItems  = [slots[0], slots[1]].map((href) => NAV_ITEMS.find((i) => i.href === href) ?? NAV_ITEMS[0]);
-  const rightItems = [slots[2], slots[3]].map((href) => NAV_ITEMS.find((i) => i.href === href) ?? NAV_ITEMS[0]);
+  const items = useMemo(
+    () => slots.map((href) => NAV_ITEMS.find((i) => i.href === href) ?? NAV_ITEMS[0]),
+    [slots]
+  );
 
-  return { slots, leftItems, rightItems, updateSlot, resetSlots };
+  return { slots, items, updateSlot, resetSlots };
 }

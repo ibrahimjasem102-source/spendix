@@ -7,8 +7,17 @@ export async function POST(request: Request) {
   const { supabase, user, response } = await requireUser(requestId);
   if (response || !user) return response;
 
+  // Accept optional locale from client so categories are seeded in the right language
+  let locale: "ar" | "en" | "de" | undefined;
   try {
-    const result = await bootstrapAuthenticatedUser(supabase, user);
+    const body = await request.json().catch(() => ({}));
+    if (body?.locale === "en" || body?.locale === "de" || body?.locale === "ar") {
+      locale = body.locale;
+    }
+  } catch { /* ignore parse errors */ }
+
+  try {
+    const result = await bootstrapAuthenticatedUser(supabase, user, locale);
     return apiJson({ ok: true, ...result }, { requestId });
   } catch (err) {
     console.error("[auth/bootstrap]", { requestId, err });

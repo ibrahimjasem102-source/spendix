@@ -5,14 +5,14 @@ import { normalizeSearchQuery } from "@/lib/api/request";
 
 export interface SearchResult {
   id:          string;
-  type:        "transaction" | "debt" | "investment" | "work_session" | "work_payment" | "goal" | "contact" | "savings";
+  type:        "transaction" | "debt" | "investment" | "work_session" | "work_payment" | "goal" | "contact" | "subscription" | "account" | "budget" | "recurring";
   title:       string;
   subtitle:    string;
   amount?:     number;
   amountType?: "income" | "expense" | "neutral";
   url:         string;
   date?:       string;
-  noteSnippet?: string;    // set when match was in notes field
+  noteSnippet?: string;
 }
 
 function snippet(text: string | null | undefined, maxLen = 70): string {
@@ -40,74 +40,99 @@ export async function GET(request: Request) {
   const uid = user.id;
   const results: SearchResult[] = [];
 
-  // Run all queries in parallel for speed
-  const [txsRes, debtsRes, invsRes, sessionsRes, paymentsRes, goalsRes, contactsRes, savingsRes] =
-    await Promise.all([
-      // ── Transactions ─────────────────────────────────────────────
-      supabase
-        .from("transactions")
-        .select("id, title, notes, amount, type, transaction_date, source, category:categories(name)")
-        .eq("user_id", uid)
-        .or(`title.ilike.${pattern},notes.ilike.${pattern}`)
-        .order("transaction_date", { ascending: false })
-        .limit(6),
+  const [
+    txsRes, debtsRes, invsRes, sessionsRes, paymentsRes,
+    goalsRes, contactsRes, subsRes, accsRes, budgetsRes, recurringRes,
+  ] = await Promise.all([
+    // ── Transactions ──────────────────────────────────────────────
+    supabase
+      .from("transactions")
+      .select("id, title, notes, amount, type, transaction_date, source, category:categories(name)")
+      .eq("user_id", uid)
+      .or(`title.ilike.${pattern},notes.ilike.${pattern}`)
+      .order("transaction_date", { ascending: false })
+      .limit(6),
 
-      // ── Debts ─────────────────────────────────────────────────────
-      supabase
-        .from("debts")
-        .select("id, person_or_entity, notes, total_amount, paid_amount, status, debt_type, due_date")
-        .eq("user_id", uid)
-        .or(`person_or_entity.ilike.${pattern},notes.ilike.${pattern}`)
-        .limit(4),
+    // ── Debts ─────────────────────────────────────────────────────
+    supabase
+      .from("debts")
+      .select("id, person_or_entity, notes, total_amount, paid_amount, status, debt_type, due_date")
+      .eq("user_id", uid)
+      .or(`person_or_entity.ilike.${pattern},notes.ilike.${pattern}`)
+      .limit(4),
 
-      // ── Investments ───────────────────────────────────────────────
-      supabase
-        .from("investments")
-        .select("id, asset_name, notes, asset_type, amount_invested, current_value, investment_date")
-        .eq("user_id", uid)
-        .or(`asset_name.ilike.${pattern},notes.ilike.${pattern}`)
-        .limit(4),
+    // ── Investments ───────────────────────────────────────────────
+    supabase
+      .from("investments")
+      .select("id, asset_name, notes, asset_type, amount_invested, current_value, investment_date")
+      .eq("user_id", uid)
+      .or(`asset_name.ilike.${pattern},notes.ilike.${pattern}`)
+      .limit(4),
 
-      // ── Work sessions ─────────────────────────────────────────────
-      supabase
-        .from("work_sessions")
-        .select("id, title, employer_or_client, expected_amount, work_date")
-        .eq("user_id", uid)
-        .or(`title.ilike.${pattern},employer_or_client.ilike.${pattern}`)
-        .limit(3),
+    // ── Work sessions ─────────────────────────────────────────────
+    supabase
+      .from("work_sessions")
+      .select("id, title, employer_or_client, expected_amount, work_date")
+      .eq("user_id", uid)
+      .or(`title.ilike.${pattern},employer_or_client.ilike.${pattern}`)
+      .limit(3),
 
-      // ── Work payments ─────────────────────────────────────────────
-      supabase
-        .from("work_payments")
-        .select("id, employer_or_client, amount, payment_date")
-        .eq("user_id", uid)
-        .ilike("employer_or_client", pattern)
-        .limit(3),
+    // ── Work payments ─────────────────────────────────────────────
+    supabase
+      .from("work_payments")
+      .select("id, employer_or_client, amount, payment_date")
+      .eq("user_id", uid)
+      .ilike("employer_or_client", pattern)
+      .limit(3),
 
-      // ── Goals ─────────────────────────────────────────────────────
-      supabase
-        .from("goals")
-        .select("id, title, notes, target_amount, saved_amount, category, due_date, tracking_type")
-        .eq("user_id", uid)
-        .or(`title.ilike.${pattern},notes.ilike.${pattern}`)
-        .limit(4),
+    // ── Goals ─────────────────────────────────────────────────────
+    supabase
+      .from("goals")
+      .select("id, title, notes, target_amount, saved_amount, category, due_date")
+      .eq("user_id", uid)
+      .or(`title.ilike.${pattern},notes.ilike.${pattern}`)
+      .limit(4),
 
-      // ── Contacts (People) ─────────────────────────────────────────
-      supabase
-        .from("financial_contacts")
-        .select("id, name, type, notes, email, phone")
-        .eq("user_id", uid)
-        .or(`name.ilike.${pattern},notes.ilike.${pattern}`)
-        .limit(4),
+    // ── Contacts ──────────────────────────────────────────────────
+    supabase
+      .from("financial_contacts")
+      .select("id, name, type, notes, email, phone")
+      .eq("user_id", uid)
+      .or(`name.ilike.${pattern},notes.ilike.${pattern}`)
+      .limit(4),
 
-      // ── Savings Pots ──────────────────────────────────────────────
-      supabase
-        .from("savings_pots")
-        .select("id, name, notes, category, target_amount")
-        .eq("user_id", uid)
-        .or(`name.ilike.${pattern},notes.ilike.${pattern}`)
-        .limit(3),
-    ]);
+    // ── Subscriptions ─────────────────────────────────────────────
+    supabase
+      .from("subscriptions")
+      .select("id, name, amount, billing_cycle, next_billing_date, status, notes")
+      .eq("user_id", uid)
+      .or(`name.ilike.${pattern},notes.ilike.${pattern}`)
+      .limit(4),
+
+    // ── Accounts ──────────────────────────────────────────────────
+    supabase
+      .from("accounts")
+      .select("id, name, type, balance")
+      .eq("user_id", uid)
+      .ilike("name", pattern)
+      .limit(3),
+
+    // ── Budgets ───────────────────────────────────────────────────
+    supabase
+      .from("budgets")
+      .select("id, monthly_limit, month, year, category:categories(id,name,color)")
+      .eq("user_id", uid)
+      .limit(4),
+
+    // ── Recurring transactions ────────────────────────────────────
+    supabase
+      .from("recurring_transactions")
+      .select("id, title, amount, type, frequency, next_run_date, notes")
+      .eq("user_id", uid)
+      .or(`title.ilike.${pattern},notes.ilike.${pattern}`)
+      .eq("active", true)
+      .limit(4),
+  ]);
 
   // ── Map transactions ──────────────────────────────────────────
   for (const tx of txsRes.data ?? []) {
@@ -192,10 +217,10 @@ export async function GET(request: Request) {
 
   // ── Map goals ─────────────────────────────────────────────────
   for (const g of goalsRes.data ?? []) {
-    const target    = Number(g.target_amount) || 0;
-    const saved     = Number(g.saved_amount)  || 0;
-    const progress  = target > 0 ? Math.round((saved / target) * 100) : 0;
-    const onNotes   = matchedOnNotes(g.title, q);
+    const target   = Number(g.target_amount) || 0;
+    const saved    = Number(g.saved_amount)  || 0;
+    const progress = target > 0 ? Math.round((saved / target) * 100) : 0;
+    const onNotes  = matchedOnNotes(g.title, q);
     results.push({
       id:          g.id,
       type:        "goal",
@@ -217,28 +242,76 @@ export async function GET(request: Request) {
       type:        "contact",
       title:       c.name,
       subtitle:    `${c.type}${c.phone ? ` · ${c.phone}` : ""}${c.email ? ` · ${c.email}` : ""}`,
-      url:         `/debts`,
+      url:         `/contacts`,
       amountType:  "neutral",
       noteSnippet: onNotes ? snippet(c.notes) : undefined,
     });
   }
 
-  // ── Map savings pots ──────────────────────────────────────────
-  for (const p of savingsRes.data ?? []) {
-    const onNotes = matchedOnNotes(p.name, q);
+  // ── Map budgets ───────────────────────────────────────────────
+  for (const b of budgetsRes.data ?? []) {
+    const cat = (b.category as unknown as { id: string; name: string; color: string } | null);
+    if (!cat) continue;
+    // Filter client-side: search in category name
+    if (!cat.name.toLowerCase().includes(q.toLowerCase())) continue;
+    const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
     results.push({
-      id:          p.id,
-      type:        "savings",
-      title:       p.name,
-      subtitle:    `${p.category}${p.target_amount ? ` · target: ${p.target_amount}` : ""}`,
-      url:         `/savings`,
-      amountType:  "neutral",
-      amount:      p.target_amount ? Number(p.target_amount) : undefined,
-      noteSnippet: onNotes ? snippet(p.notes) : undefined,
+      id:         b.id,
+      type:       "budget",
+      title:      cat.name,
+      subtitle:   `${monthNames[(b.month as number) - 1] ?? b.month} ${b.year}`,
+      amount:     Number(b.monthly_limit),
+      amountType: "neutral",
+      url:        `/budgets`,
+    });
+  }
+
+  // ── Map recurring transactions ────────────────────────────────
+  for (const r of recurringRes.data ?? []) {
+    const onNotes = matchedOnNotes(r.title, q);
+    results.push({
+      id:          r.id,
+      type:        "recurring",
+      title:       r.title,
+      subtitle:    `${r.frequency}${r.next_run_date ? ` · ${r.next_run_date}` : ""}`,
+      amount:      Number(r.amount),
+      amountType:  r.type === "income" ? "income" : "expense",
+      url:         `/recurring`,
+      date:        r.next_run_date ?? undefined,
+      noteSnippet: onNotes ? snippet(r.notes) : undefined,
+    });
+  }
+
+  // ── Map subscriptions ─────────────────────────────────────────
+  for (const s of subsRes.data ?? []) {
+    const onNotes = matchedOnNotes(s.name, q);
+    results.push({
+      id:          s.id,
+      type:        "subscription",
+      title:       s.name,
+      subtitle:    `${s.billing_cycle}${s.status ? ` · ${s.status}` : ""}${s.next_billing_date ? ` · ${s.next_billing_date}` : ""}`,
+      amount:      Number(s.amount),
+      amountType:  "expense",
+      url:         `/subscriptions`,
+      date:        s.next_billing_date ?? undefined,
+      noteSnippet: onNotes ? snippet(s.notes) : undefined,
+    });
+  }
+
+  // ── Map accounts ──────────────────────────────────────────────
+  for (const a of accsRes.data ?? []) {
+    results.push({
+      id:         a.id,
+      type:       "account",
+      title:      a.name,
+      subtitle:   a.type,
+      amount:     a.balance ? Number(a.balance) : undefined,
+      amountType: "neutral",
+      url:        `/accounts`,
     });
   }
 
   results.sort((a, b) => (b.date ?? "").localeCompare(a.date ?? ""));
 
-  return apiJson({ results: results.slice(0, 20) }, { requestId });
+  return apiJson({ results: results.slice(0, 30) }, { requestId });
 }

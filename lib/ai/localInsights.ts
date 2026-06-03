@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { useTranslation } from "@/lib/i18n";
 import { useCurrency } from "@/lib/currency";
+import { useGuest } from "@/contexts/GuestContext";
 import {
   useTransactions, useBudgets, useDebts, useInvestments,
 } from "@/lib/query/hooks";
@@ -39,15 +40,18 @@ const SEV_ORDER: Record<InsightSeverity, number> = {
 export function useLocalInsights(): { insights: LocalInsight[]; isLoading: boolean } {
   const { t }    = useTranslation();
   const { format } = useCurrency();
+  const { isGuest, isLoading: guestLoading } = useGuest();
 
   const now   = useMemo(() => new Date(), []);
   const month = now.getMonth() + 1;
   const year  = now.getFullYear();
+  const ready = !guestLoading;
+  const authenticated = !isGuest && ready;
 
-  const { data: transactions = [], isLoading: l1 } = useTransactions();
-  const { data: budgetsData,        isLoading: l2 } = useBudgets(month, year);
-  const { data: debtsData,          isLoading: l3 } = useDebts();
-  const { data: investments = [],   isLoading: l4 } = useInvestments();
+  const { data: transactions = [], isLoading: l1 } = useTransactions(ready);
+  const { data: budgetsData,        isLoading: l2 } = useBudgets(month, year, isGuest, ready);
+  const { data: debtsData,          isLoading: l3 } = useDebts(authenticated);
+  const { data: investments = [],   isLoading: l4 } = useInvestments(authenticated);
 
   const budgets = budgetsData?.budgets ?? [];
   const debts   = debtsData?.debts    ?? [];
@@ -55,6 +59,7 @@ export function useLocalInsights(): { insights: LocalInsight[]; isLoading: boole
 
   const insights = useMemo((): LocalInsight[] => {
     if (isLoading) return [];
+    try {
 
     const currentMonthStr = `${year}-${String(month).padStart(2, "0")}`;
     const monthlyIncome   = transactions
@@ -71,7 +76,7 @@ export function useLocalInsights(): { insights: LocalInsight[]; isLoading: boole
     // ── 1. Budget forecasts ───────────────────────────────────────────────
     const forecasts = runForecastEngine(budgets, now);
     for (const f of forecasts.slice(0, 3)) {
-      if (f.daysToDepletion === 0) {
+      if (f.kind === "over") {
         out.push({
           id: id(), source: "forecast", category: "spending", severity: "critical",
           title: t("ai_local.forecast_over_title", { budget: f.budgetName }),
@@ -79,7 +84,7 @@ export function useLocalInsights(): { insights: LocalInsight[]; isLoading: boole
           action: t("ai_local.cta_budgets"), actionUrl: "/budgets",
           confidence: 1,
         });
-      } else {
+      } else if (f.kind === "depleting") {
         out.push({
           id: id(), source: "forecast", category: "spending",
           severity:  f.severity as InsightSeverity,
@@ -88,6 +93,15 @@ export function useLocalInsights(): { insights: LocalInsight[]; isLoading: boole
           action: t("ai_local.cta_budgets"), actionUrl: "/budgets",
           metric: f.daysToDepletion, metricLabel: t("ai_local.unit_days"),
           confidence: 0.92,
+        });
+      } else {
+        out.push({
+          id: id(), source: "forecast", category: "spending", severity: "warning",
+          title: t("ai_local.forecast_near_limit_title", { budget: f.budgetName, percent: f.percent }),
+          body:  t("ai_local.forecast_near_limit_body", { budget: f.budgetName, remaining: format(f.remainingBudget), percent: f.percent }),
+          action: t("ai_local.cta_budgets"), actionUrl: "/budgets",
+          metric: f.percent, metricLabel: "%",
+          confidence: 1,
         });
       }
     }
@@ -211,6 +225,13 @@ export function useLocalInsights(): { insights: LocalInsight[]; isLoading: boole
     }
 
     return out.sort((a, b) => SEV_ORDER[a.severity] - SEV_ORDER[b.severity]);
+
+    } catch (err) {
+      if (process.env.NODE_ENV === "development") {
+        console.error("[Spendix:localInsights] AI engine failed:", err);
+      }
+      return [];
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [transactions, budgets, debts, investments, isLoading, month, year]);
 

@@ -58,7 +58,10 @@ export async function POST(request: Request) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  await updateTransactionSourceLink(supabase, tx.id, investment.id);
+  // Best-effort: link the transaction to the investment (non-blocking)
+  await updateTransactionSourceLink(supabase, tx.id, investment.id).catch((err) => {
+    console.warn("[investments/post] updateTransactionSourceLink failed:", err);
+  });
 
   void notify.investmentAdded(
     supabase,

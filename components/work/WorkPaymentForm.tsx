@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Banknote, Loader2 } from "lucide-react";
 import { WorkPayment, WorkPaymentFormData, WorkSession } from "@/types";
 import { useTranslation } from "@/lib/i18n";
 import { useCurrency } from "@/lib/currency";
 import { spring, tapTransition } from "@/lib/motion";
+import SheetDragHandle from "@/components/ui/SheetDragHandle";
 
 interface Props {
   initial?: WorkPayment;
@@ -23,6 +24,11 @@ export default function WorkPaymentForm({ initial, sessions = [], defaultSession
   const { t } = useTranslation();
   const { symbol, format } = useCurrency();
   const defaultSession = sessions.find((s) => s.id === defaultSessionId);
+
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent("spendix:nav-hide"));
+    return () => { window.dispatchEvent(new CustomEvent("spendix:nav-show")); };
+  }, []);
 
   const [form, setForm] = useState<WorkPaymentFormData>({
     employer_or_client: initial?.employer_or_client ?? defaultSession?.employer_or_client ?? "",
@@ -71,7 +77,7 @@ export default function WorkPaymentForm({ initial, sessions = [], defaultSession
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
-      style={{ backgroundColor: "rgba(19,26,34,0.68)", backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)" }}
+      style={{ backgroundColor: "rgba(11,15,20,0.75)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)" }}
       onClick={(e) => e.target === e.currentTarget && onClose()}>
 
       <motion.div
@@ -82,7 +88,9 @@ export default function WorkPaymentForm({ initial, sessions = [], defaultSession
 
         {/* Header */}
         <div className="shrink-0 relative px-5 pt-5 pb-4" style={{ background: `${RING}12` }}>
-          <div className="w-10 h-1 rounded-full bg-white/10 mx-auto mb-4 sm:hidden" />
+          <div className="mb-2 sm:hidden">
+            <SheetDragHandle onClose={onClose} />
+          </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="p-2.5 rounded-2xl bg-emerald-400/10">
@@ -186,7 +194,7 @@ export default function WorkPaymentForm({ initial, sessions = [], defaultSession
           <div className="shrink-0 px-5 pt-2" style={{ paddingBottom: "max(20px, calc(env(safe-area-inset-bottom, 0px) + 8px))" }}>
             <motion.button type="submit" disabled={loading || form.amount <= 0}
               whileTap={{ scale: 0.97 }} transition={tapTransition}
-              className="w-full py-3.5 rounded-2xl text-sm font-bold text-[#0B0F14] transition-all disabled:opacity-40"
+              className="w-full py-3.5 rounded-2xl text-sm font-bold text-white transition-all disabled:opacity-40"
               style={{ background: `linear-gradient(135deg, ${RING}, ${RING}bb)` }}>
               <AnimatePresence mode="wait">
                 {loading ? (

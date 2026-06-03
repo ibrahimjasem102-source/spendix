@@ -7,8 +7,16 @@ export async function POST() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ ok: false }, { status: 401 });
 
-  // Run scheduler in background, don't await full completion
-  void runScheduler(supabase, user.id);
+  // Read user's preferred locale so scheduler can produce localized notifications
+  const { data: settings } = await supabase
+    .from("profile_settings")
+    .select("language")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  const locale = (settings?.language ?? "ar") as "ar" | "en" | "de";
+
+  void runScheduler(supabase, user.id, locale);
 
   return NextResponse.json({ ok: true });
 }

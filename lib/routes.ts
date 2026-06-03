@@ -18,14 +18,15 @@ export const ROUTES = {
   settings:      "/settings",
   more:          "/more",
   profile:       "/profile",
-  hub:           "/hub",
   accounts:      "/accounts",
   subscriptions: "/subscriptions",
-  bills:         "/bills",
   calendar:      "/calendar",
-  savings:       "/savings",
   netWorth:      "/net-worth",
   contacts:      "/contacts",
+  categories:    "/categories",
+  tags:          "/tags",
+  household:     "/household",
+  export:        "/export",
 } as const;
 
 export type AppRoute = (typeof ROUTES)[keyof typeof ROUTES];

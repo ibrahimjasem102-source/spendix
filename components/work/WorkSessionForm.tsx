@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Briefcase, Check, Loader2, RefreshCw } from "lucide-react";
+import { X, Briefcase, Loader2, RefreshCw } from "lucide-react";
 import { WorkSession, WorkSessionFormData, WorkRecurrence } from "@/types";
 import { useTranslation } from "@/lib/i18n";
 import { useCurrency } from "@/lib/currency";
 import { spring, tapTransition } from "@/lib/motion";
+import SheetDragHandle from "@/components/ui/SheetDragHandle";
 
 interface Props {
   initial?: WorkSession;
@@ -24,6 +25,11 @@ export default function WorkSessionForm({ initial, onSubmit, onClose }: Props) {
   const { symbol } = useCurrency();
   const isEdit = !!initial;
 
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent("spendix:nav-hide"));
+    return () => { window.dispatchEvent(new CustomEvent("spendix:nav-show")); };
+  }, []);
+
   const [form, setForm] = useState<WorkSessionFormData>({
     title:               initial?.title               ?? "",
     employer_or_client:  initial?.employer_or_client  ?? "",
@@ -33,7 +39,6 @@ export default function WorkSessionForm({ initial, onSubmit, onClose }: Props) {
     notes:               initial?.notes               ?? null,
     recurrence:          initial?.recurrence          ?? "none",
     recurrence_end_date: initial?.recurrence_end_date ?? null,
-    paid_immediately:    false,
   });
   const [rawRate,  setRawRate]  = useState(initial?.hourly_rate  ? String(initial.hourly_rate)  : "");
   const [rawHours, setRawHours] = useState(initial?.hours_worked ? String(initial.hours_worked) : "");
@@ -48,7 +53,7 @@ export default function WorkSessionForm({ initial, onSubmit, onClose }: Props) {
 
   async function handleSubmit(e: { preventDefault(): void }) {
     e.preventDefault();
-    if (form.hours_worked <= 0) { setError(t("work.hours_positive") || "Hours must be greater than zero"); return; }
+    if (form.hours_worked <= 0) { setError(t("work.hours_positive")); return; }
     if (!form.title.trim())     { setError(t("work.session_title") + " " + t("transactions.title_required")); return; }
     setLoading(true); setError("");
     try { await onSubmit(form); onClose(); }
@@ -57,7 +62,7 @@ export default function WorkSessionForm({ initial, onSubmit, onClose }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
-      style={{ backgroundColor: "rgba(19,26,34,0.68)", backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)" }}
+      style={{ backgroundColor: "rgba(11,15,20,0.75)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)" }}
       onClick={(e) => e.target === e.currentTarget && onClose()}>
 
       <motion.div
@@ -68,7 +73,9 @@ export default function WorkSessionForm({ initial, onSubmit, onClose }: Props) {
 
         {/* Header */}
         <div className="shrink-0 relative px-5 pt-5 pb-4" style={{ background: `${RING}12` }}>
-          <div className="w-10 h-1 rounded-full bg-white/10 mx-auto mb-4 sm:hidden" />
+          <div className="mb-2 sm:hidden">
+            <SheetDragHandle onClose={onClose} />
+          </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="p-2.5 rounded-2xl bg-cyan-400/10">
@@ -207,28 +214,6 @@ export default function WorkSessionForm({ initial, onSubmit, onClose }: Props) {
                 className="field" placeholder={t("transactions.notes_placeholder")} />
             </div>
 
-            {/* Paid immediately toggle */}
-            {!isEdit && (
-              <motion.button type="button"
-                onClick={() => set("paid_immediately", !form.paid_immediately)}
-                whileTap={{ scale: 0.98 }} transition={tapTransition}
-                className={`flex items-center gap-3 w-full px-4 py-3 rounded-2xl border transition-all text-start ${
-                  form.paid_immediately
-                    ? "bg-emerald-400/10 border-emerald-400/30"
-                    : "border-[hsl(var(--border))] bg-[hsl(var(--bg-input))]"
-                }`}>
-                <div className={`w-5 h-5 rounded-lg border-2 flex items-center justify-center shrink-0 transition-all ${
-                  form.paid_immediately ? "bg-emerald-400 border-emerald-400" : "border-[hsl(var(--border))]"
-                }`}>
-                  {form.paid_immediately && <Check className="w-3 h-3 text-[#0B0F17]" strokeWidth={3} />}
-                </div>
-                <div>
-                  <p className="text-sm font-medium t1">{t("work.paid_immediately")}</p>
-                  <p className="text-xs t3 mt-0.5">{t("work.paid_immediately_hint")}</p>
-                </div>
-              </motion.button>
-            )}
-
             <AnimatePresence>
               {error && (
                 <motion.p initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
@@ -243,7 +228,7 @@ export default function WorkSessionForm({ initial, onSubmit, onClose }: Props) {
           <div className="shrink-0 px-5 pt-2" style={{ paddingBottom: "max(20px, calc(env(safe-area-inset-bottom, 0px) + 8px))" }}>
             <motion.button type="submit" disabled={loading || form.hours_worked <= 0}
               whileTap={{ scale: 0.97 }} transition={tapTransition}
-              className="w-full py-3.5 rounded-2xl text-sm font-bold text-[#0B0F14] transition-all disabled:opacity-40"
+              className="w-full py-3.5 rounded-2xl text-sm font-bold text-white transition-all disabled:opacity-40"
               style={{ background: `linear-gradient(135deg, ${RING}, ${RING}bb)` }}>
               <AnimatePresence mode="wait">
                 {loading ? (

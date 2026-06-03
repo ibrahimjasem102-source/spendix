@@ -13,14 +13,14 @@ export default function QueryProvider({ children }: { children: React.ReactNode 
         queries: {
           staleTime: 30_000,
           gcTime: 10 * 60_000,
-          refetchOnWindowFocus: false,
+          refetchOnWindowFocus: true,
           refetchOnReconnect: true,
           refetchOnMount: true,
           retry: (failureCount, error) => {
             const status = (error as { status?: number })?.status;
             // Allow one retry on 401 — token may have been stale during initial load
             // and Supabase fires TOKEN_REFRESHED shortly after
-            if (status === 401 && failureCount === 0) return true;
+            if (status === 401) return false;
             if (status && status >= 400 && status < 500) return false;
             return failureCount < 2;
           },
@@ -30,7 +30,7 @@ export default function QueryProvider({ children }: { children: React.ReactNode 
           retry: (failureCount, error) => {
             const status = (error as { status?: number })?.status;
             // Allow one retry on 401 — token may have been stale (race with TOKEN_REFRESHED)
-            if (status === 401 && failureCount === 0) return true;
+            if (status === 401) return false;
             if (status && status >= 400 && status < 500) return false;
             return failureCount < 1;
           },

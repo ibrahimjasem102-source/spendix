@@ -15,10 +15,8 @@ type FinancialDomain =
   | "contacts"
   | "accounts"
   | "subscriptions"
-  | "bills"
   | "goals"
-  | "calendar"
-  | "savings";
+  | "calendar";
 
 export function invalidateDomains(queryClient: QueryClient, domains: FinancialDomain[]) {
   domains.forEach((domain) => {
@@ -58,17 +56,11 @@ export function invalidateDomains(queryClient: QueryClient, domains: FinancialDo
       case "subscriptions":
         void queryClient.invalidateQueries({ queryKey: queryKeys.subscriptions.all, refetchType: "all" });
         break;
-      case "bills":
-        void queryClient.invalidateQueries({ queryKey: queryKeys.bills.all, refetchType: "all" });
-        break;
       case "goals":
         void queryClient.invalidateQueries({ queryKey: queryKeys.goals.all, refetchType: "all" });
         break;
       case "calendar":
         void queryClient.invalidateQueries({ queryKey: queryKeys.calendar.all, refetchType: "all" });
-        break;
-      case "savings":
-        void queryClient.invalidateQueries({ queryKey: queryKeys.savings.all, refetchType: "all" });
         break;
     }
   });
@@ -113,6 +105,26 @@ export function invalidateForRealtimeTable(queryClient: QueryClient, table: stri
 
   if (table === "financial_contacts") {
     invalidateDomains(queryClient, ["contacts", "debts", "dashboard", "analytics"]);
+    return;
+  }
+
+  if (table === "goals") {
+    invalidateDomains(queryClient, ["goals", "dashboard", "analytics"]);
+    return;
+  }
+
+  if (table === "subscriptions") {
+    invalidateDomains(queryClient, ["subscriptions", "dashboard", "analytics", "calendar"]);
+    return;
+  }
+
+  if (table === "accounts") {
+    invalidateDomains(queryClient, ["accounts", "dashboard"]);
+    return;
+  }
+
+  if (table === "tags") {
+    invalidateDomains(queryClient, ["transactions"]);
     return;
   }
 

@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS goals (
   start_date           DATE NOT NULL DEFAULT CURRENT_DATE,
   notes                TEXT,
   color                TEXT,
+  completed_at         TIMESTAMPTZ,
   created_at           TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at           TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   CONSTRAINT goals_category_check
@@ -22,6 +23,9 @@ CREATE TABLE IF NOT EXISTS goals (
   CONSTRAINT goals_tracking_check
     CHECK (tracking_type IN ('manual','savings','income','investment','debt_payoff'))
 );
+
+ALTER TABLE goals
+  ADD COLUMN IF NOT EXISTS completed_at TIMESTAMPTZ;
 
 ALTER TABLE goals ENABLE ROW LEVEL SECURITY;
 

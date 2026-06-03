@@ -5,8 +5,9 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Wallet, Eye, EyeOff, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { setAuthToken } from "@/lib/auth/token-store";
 import { migrateGuestData } from "@/lib/guest/migrate";
-import { isLocale, useTranslation, type Locale } from "@/lib/i18n";
+import { useTranslation } from "@/lib/i18n";
 import OAuthButtons from "@/components/auth/OAuthButtons";
 
 export default function LoginPage() {
@@ -27,15 +28,12 @@ export default function LoginPage() {
     }
   }, [t]);
 
-  async function applyUserLocale(userId: string) {
-    try {
-      const supabase = createClient();
-      const { data } = await supabase.from("profile_settings").select("language").eq("user_id", userId).maybeSingle();
-      if (isLocale(data?.language)) await setLocale(data.language as Locale);
-    } catch {
-      // Locale loading should never block login.
-    }
-  }
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) router.replace("/dashboard");
+    });
+  }, [router]);
 
   async function handleSubmit(e: { preventDefault(): void }) {
     e.preventDefault();
@@ -59,11 +57,33 @@ export default function LoginPage() {
       return;
     }
 
-    if (data.user) await applyUserLocale(data.user.id);
-    await fetch("/api/auth/bootstrap", { method: "POST" }).catch(() => undefined);
-    await migrateGuestData().catch(() => undefined);
-    router.replace("/dashboard");
-    router.refresh();
+    if (data.session) {
+      setAuthToken(data.session.access_token);
+      await fetch("/api/auth/set-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token,
+        }),
+      }).catch(() => undefined);
+    }
+
+    // Pass current locale so categories are seeded in the right language
+    const currentLocale = typeof window !== "undefined"
+      ? (window.localStorage.getItem("spendix_locale") ?? "ar")
+      : "ar";
+
+    await fetch("/api/auth/bootstrap", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ locale: currentLocale }),
+    }).catch((err) => { console.warn("[login] bootstrap failed:", err); });
+
+    await migrateGuestData({ saveSettings: true }).catch((err) => {
+      console.warn("[login] migration failed:", err);
+    });
+    window.location.replace("/dashboard");
   }
 
   async function handleResendConfirmation() {
@@ -228,6 +248,12 @@ export default function LoginPage() {
             {t("auth.dont_have_account")}{" "}
             <Link href="/signup" className="font-semibold text-cyan-400 hover:text-cyan-300 transition-colors">
               {t("auth.sign_up")}
+            </Link>
+          </p>
+
+          <p className="text-center text-xs" style={{ color: "hsl(215 18% 38%)" }}>
+            <Link href="/dashboard" className="hover:underline transition-colors" style={{ color: "hsl(215 18% 50%)" }}>
+              {t("auth.continue_as_guest")}
             </Link>
           </p>
         </div>

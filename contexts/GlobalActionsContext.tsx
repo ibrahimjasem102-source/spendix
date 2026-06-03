@@ -11,6 +11,7 @@ export type ModalType =
   | "debt_receivable"  // debt pre-set to receivable (money owed to me)
   | "debt_payable"     // debt pre-set to payable (money I owe)
   | "debt_payment"     // requires debt selector step
+  | "subscription"     // quick subscription form
   | "work_payment"     // work payment flow
   | "work_session"     // work session entry
   | "goal"             // new financial goal

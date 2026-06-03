@@ -29,33 +29,33 @@ import { settings }      from "./settings/config";
 import { ledger }        from "./ledger/config";
 import { more }          from "./more/config";
 import { goals }         from "./goals/config";
-import { hub }           from "./hub/config";
 import { profile }       from "./profile/config";
 import { accounts }      from "./accounts/config";
 import { subscriptions } from "./subscriptions/config";
-import { bills }         from "./bills/config";
 import { calendar }      from "./calendar/config";
-import { savings }      from "./savings/config";
 import { netWorth }    from "./net-worth/config";
 import { contacts }   from "./contacts/config";
+import { tags }       from "./tags/config";
+import { household }           from "./household/config";
+import { recurringTransactions } from "./recurring/config";
+import { exportData }            from "./export/config";
 
 export const FEATURE_REGISTRY: FeatureModule[] = [
   // ── Primary ──────────────────────────────────────────────
   dashboard,
   transactions,
   analytics,
-  hub,
 
   // ── Finance ──────────────────────────────────────────────
   accounts,
   subscriptions,
-  bills,
   calendar,
   investments,
   debts,
-  savings,
   netWorth,
   contacts,
+  tags,
+  household,
   work,
   budgets,
   goals,
@@ -72,6 +72,8 @@ export const FEATURE_REGISTRY: FeatureModule[] = [
   // ── Legacy / not in nav ───────────────────────────────────
   ledger,
   profile,
+  recurringTransactions,
+  exportData,
 ];
 
 // Active (not disabled)

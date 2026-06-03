@@ -9,6 +9,8 @@ import {
 import { FinancialContact, ContactSummary, Debt, DebtStatus, ContactType } from "@/types";
 import { useTranslation } from "@/lib/i18n";
 import { useCurrency } from "@/lib/currency";
+import { useGuest } from "@/contexts/GuestContext";
+import { useContacts } from "@/lib/query/hooks";
 
 interface Props {
   contactId: string;
@@ -37,17 +39,55 @@ const HEALTH_CONFIG = {
 export default function ContactDetailModal({ contactId, onClose }: Props) {
   const { t, formatDate } = useTranslation();
   const { format }        = useCurrency();
+  const { isGuest, isLoading: guestLoading } = useGuest();
+  const { data: contacts = [] } = useContacts(!guestLoading);
 
   const [loading, setLoading]     = useState(true);
   const [summary, setSummary]     = useState<ContactSummary | null>(null);
   const [error, setError]         = useState("");
 
   useEffect(() => {
+    if (guestLoading) return;
+    if (isGuest) {
+      const contact = contacts.find((item) => item.id === contactId);
+      if (!contact) {
+        setError(t("contacts.fetch_error"));
+        setLoading(false);
+        return;
+      }
+      setSummary({
+        contact,
+        debts: [],
+        totalPayable: 0,
+        totalReceivable: 0,
+        totalPaid: 0,
+        totalRemaining: 0,
+        netBalance: 0,
+        direction: "settled",
+        health: "settled",
+        activeDebts: 0,
+        paidDebts: 0,
+        overdueDebts: 0,
+        totalDebts: 0,
+        recoveryRate: 0,
+        repaymentRate: 0,
+        paymentVelocity: 0,
+        averagePaymentDays: 0,
+        largestDebt: 0,
+        mostRecentDebtDate: null,
+        insights: [],
+        timeline: [],
+        lastPaymentDate: null,
+      });
+      setLoading(false);
+      return;
+    }
+
     fetch(`/api/contacts/${contactId}/summary`)
       .then((r) => r.json())
       .then((data) => { setSummary(data); setLoading(false); })
       .catch(() => { setError(t("contacts.fetch_error")); setLoading(false); });
-  }, [contactId, t]);
+  }, [contactId, contacts, guestLoading, isGuest, t]);
 
   if (loading) {
     return (
@@ -332,7 +372,7 @@ export default function ContactDetailModal({ contactId, onClose }: Props) {
                       </div>
                       <div className="h-1 bg-[hsl(var(--bg-input))] rounded-full overflow-hidden">
                         <div className="h-full rounded-full transition-all"
-                          style={{ width: `${Math.min(pct, 100)}%`, backgroundColor: cfg.color.replace("text-", "#").length > 7 ? "#F59E0B" : "#F59E0B",
+                          style={{ width: `${Math.min(pct, 100)}%`,
                             background: debt.status === "paid" ? "#10B981" : debt.status === "overdue" ? "#F43F5E" : "#F59E0B" }} />
                       </div>
                       {debt.due_date && (

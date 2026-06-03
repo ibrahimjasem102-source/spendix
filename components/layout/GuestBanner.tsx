@@ -1,14 +1,18 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Zap } from "lucide-react";
 import { useGuest } from "@/contexts/GuestContext";
 import { useTranslation } from "@/lib/i18n";
+import { ROUTES } from "@/lib/routes";
 
 export default function GuestBanner() {
   const { isGuest, isLoading } = useGuest();
   const { t } = useTranslation();
-  if (isLoading || !isGuest) return null;
+  const pathname = usePathname();
+
+  if (isLoading || !isGuest || pathname === ROUTES.dashboard) return null;
 
   return (
     <div className="flex items-center justify-between gap-4 px-6 py-2.5 bg-gradient-to-r from-amber-500/10 to-orange-500/10 border-b border-amber-400/15">

@@ -1,112 +1,404 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { safeFetch } from "@/lib/fetch-safe";
+import { useState, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus, Pencil, Trash2, CreditCard, CheckCircle, AlertTriangle,
   Clock, Loader2, DollarSign, Search, User, TrendingUp, TrendingDown,
-  Shield, Activity, Wrench, ChevronDown,
+  Wrench, ChevronDown, Calendar, Brain, Receipt,
 } from "lucide-react";
-import { type Debt, type DebtStatus, type DebtFormData, type DebtPaymentFormData, type FinancialContact } from "@/types";
+import {
+  AreaChart, Area, XAxis, YAxis, ResponsiveContainer, Tooltip, CartesianGrid,
+} from "recharts";
+import {
+  type Debt, type DebtStatus, type DebtFormData, type DebtPaymentFormData,
+} from "@/types";
 import { useGuest } from "@/contexts/GuestContext";
 import { useTranslation } from "@/lib/i18n";
 import { useCurrency } from "@/lib/currency";
 import { useToast } from "@/hooks/useToast";
+import { useQueryClient } from "@tanstack/react-query";
+import { invalidateDebtQueries } from "@/lib/query/invalidation";
+import { safeFetch } from "@/lib/fetch-safe";
+import {
+  useDebts, useCreateDebt, useUpdateDebt, useDeleteDebt, useCreateDebtPayment,
+  useDashboardSummary,
+} from "@/lib/query/hooks";
 import ToastList from "@/components/ui/Toast";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 import DebtForm from "@/components/debts/DebtForm";
 import DebtPaymentForm from "@/components/debts/DebtPaymentForm";
 import ContactDetailModal from "@/components/contacts/ContactDetailModal";
-import { useQueryClient } from "@tanstack/react-query";
-import { invalidateDebtQueries } from "@/lib/query/invalidation";
-import {
-  useDebts, useCreateDebt, useUpdateDebt, useDeleteDebt, useCreateDebtPayment,
-} from "@/lib/query/hooks";
 
-type TabValue = "all" | "active" | "partially_paid" | "overdue" | "paid";
+type DebtTab = "all" | "payable" | "receivable" | "paid";
+type TFn = (key: string, params?: Record<string, string | number>) => string;
 
-const STATUS_CONFIG: Record<DebtStatus, {
-  icon: React.ElementType; color: string; bg: string; border: string; bar: string;
-}> = {
-  active:         { icon: Clock,         color: "text-cyan-400",    bg: "bg-cyan-400/10",    border: "border-cyan-400/20",    bar: "#06B6D4" },
-  partially_paid: { icon: DollarSign,    color: "text-amber-400",   bg: "bg-amber-400/10",   border: "border-amber-400/20",   bar: "#F59E0B" },
-  paid:           { icon: CheckCircle,   color: "text-emerald-400", bg: "bg-emerald-400/10", border: "border-emerald-400/20", bar: "#10B981" },
-  overdue:        { icon: AlertTriangle, color: "text-rose-400",    bg: "bg-rose-400/10",    border: "border-rose-400/20",    bar: "#F43F5E" },
+const STATUS_CFG: Record<DebtStatus, { icon: React.ElementType; color: string; bar: string; bg: string }> = {
+  active:         { icon: Clock,         color: "text-cyan-400",    bar: "#06B6D4", bg: "bg-cyan-400/10"    },
+  partially_paid: { icon: DollarSign,    color: "text-amber-400",   bar: "#F59E0B", bg: "bg-amber-400/10"   },
+  paid:           { icon: CheckCircle,   color: "text-emerald-400", bar: "#10B981", bg: "bg-emerald-400/10" },
+  overdue:        { icon: AlertTriangle, color: "text-rose-400",    bar: "#F43F5E", bg: "bg-rose-400/10"    },
 };
 
-const HEALTH_CONFIG: Record<string, { color: string; bg: string; label: string }> = {
-  healthy:          { color: "text-emerald-400", bg: "bg-emerald-400/10", label: "✓" },
-  attention_needed: { color: "text-amber-400",   bg: "bg-amber-400/10",  label: "!" },
-  high_risk:        { color: "text-orange-400",  bg: "bg-orange-400/10", label: "!!" },
-  overdue:          { color: "text-rose-400",    bg: "bg-rose-400/10",   label: "⚠" },
-  settled:          { color: "text-gray-400",    bg: "bg-gray-400/10",   label: "✓" },
-};
+// ── DTI Health Ring ────────────────────────────────────────────
+function DTICard({ ratio, t }: { ratio: number; t: TFn }) {
+  const pct = Math.min(ratio * 100, 100);
+  const color = pct >= 40 ? "#F43F5E" : pct >= 20 ? "#F59E0B" : "#10B981";
+  const statusKey = pct >= 40 ? "debts.dti_poor" : pct >= 20 ? "debts.dti_fair" : "debts.dti_good";
+  const circ = 2 * Math.PI * 22;
 
-const TABS: { value: TabValue; labelKey: string }[] = [
-  { value: "all",            labelKey: "debt_tabs.all"            },
-  { value: "active",         labelKey: "debt_tabs.active"         },
-  { value: "partially_paid", labelKey: "debt_tabs.partially_paid" },
-  { value: "overdue",        labelKey: "debt_tabs.overdue"        },
-  { value: "paid",           labelKey: "debt_tabs.paid"           },
-];
+  return (
+    <div className="card-elevated p-4 flex flex-col">
+      <p className="text-[10px] t3 uppercase tracking-wide font-semibold mb-2">{t("debts.dti_label")}</p>
+      <div className="flex items-center gap-3 flex-1">
+        <div className="relative w-14 h-14 shrink-0">
+          <svg viewBox="0 0 56 56" fill="none" className="w-full h-full -rotate-90">
+            <circle cx="28" cy="28" r="22" stroke="hsl(var(--bg-input))" strokeWidth="4.5" />
+            <circle cx="28" cy="28" r="22"
+              stroke={color} strokeWidth="4.5"
+              strokeDasharray={circ}
+              strokeDashoffset={circ * (1 - pct / 100)}
+              strokeLinecap="round"
+              style={{ transition: "stroke-dashoffset 0.6s ease" }}
+            />
+          </svg>
+          <span className="absolute inset-0 flex items-center justify-center text-[11px] font-bold" style={{ color }}>
+            {pct.toFixed(0)}%
+          </span>
+        </div>
+        <div>
+          <p className="text-sm font-bold t1">{t(statusKey)}</p>
+          <p className="text-[10px] t3 mt-0.5">{t("debts.health_label")}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
 
-export default function DebtsPage() {
-  const { isGuest } = useGuest();
-  const { t, formatDate } = useTranslation();
-  const { format }        = useCurrency();
-  const { toasts, addToast, dismiss } = useToast();
-  const queryClient = useQueryClient();
+// ── Monthly rate card ──────────────────────────────────────────
+function MonthlyCard({
+  avgPayment, activeDebts, dtiRatio, t, format,
+}: { avgPayment: number; activeDebts: number; dtiRatio: number; t: TFn; format: (n: number) => string }) {
+  return (
+    <div className="card-elevated p-4 flex flex-col">
+      <p className="text-[10px] t3 uppercase tracking-wide font-semibold mb-2">{t("debts.monthly_rate")}</p>
+      <p className="text-xl font-bold t1 number-display">{format(avgPayment)}</p>
+      <p className="text-[10px] t3 mt-1">{activeDebts} {t("debts.active")}</p>
+      <div className="mt-auto pt-2">
+        <div className="h-1.5 bg-[hsl(var(--bg-input))] rounded-full overflow-hidden">
+          <div
+            className="h-full rounded-full"
+            style={{
+              width: `${Math.min(dtiRatio * 250, 100)}%`,
+              background: "linear-gradient(90deg, #10B981, #F59E0B, #F43F5E)",
+            }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
 
-  const [cleaning, setCleaning]       = useState(false);
+// ── Upcoming timeline item ─────────────────────────────────────
+function TimelineRow({
+  name, amount, daysLeft, format, t,
+}: { name: string; amount: number; daysLeft: number; format: (n: number) => string; t: TFn }) {
+  const isOverdue = daysLeft < 0;
+  const isToday   = daysLeft === 0;
+  const color = isOverdue ? "#F43F5E" : isToday ? "#F59E0B" : "#06B6D4";
+  const badge = isOverdue
+    ? t("debts.days_late_short", { count: Math.abs(daysLeft) })
+    : isToday ? t("debts.today")
+    : t("debts.days_short", { count: daysLeft });
 
-  async function cleanupLegacyTransactions() {
-    setCleaning(true);
-    try {
-      const res = await safeFetch("/api/debts/cleanup", { method: "POST" });
-      const data = await res.json() as { cleaned?: number };
-      addToast(t("debts.cleanup_success", { count: data.cleaned ?? 0 }), "success");
-      invalidateDebtQueries(queryClient);
-    } catch {
-      addToast(t("debts.cleanup_failed"), "error");
-    } finally {
-      setCleaning(false);
+  return (
+    <div className="flex items-center gap-3 py-2.5 border-b border-[hsl(var(--border-2))] last:border-0">
+      <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: color }} />
+      <p className="text-sm t1 flex-1 truncate font-medium">{name}</p>
+      <p className="text-sm font-bold t1 shrink-0">{format(amount)}</p>
+      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0"
+        style={{ backgroundColor: `${color}22`, color }}>
+        {badge}
+      </span>
+    </div>
+  );
+}
+
+// ── Debt trend chart ───────────────────────────────────────────
+function TrendChart({
+  totalRemaining, avgMonthly, t, locale,
+}: { totalRemaining: number; avgMonthly: number; t: TFn; locale: string }) {
+  const data = useMemo(() => {
+    const now = new Date();
+    const dateLocale = locale === "ar" ? "ar" : locale === "de" ? "de-DE" : "en-US";
+    return Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+      const label = d.toLocaleDateString(dateLocale, { month: "short" });
+      const debt = Math.max(0, Math.round(totalRemaining - avgMonthly * i));
+      return { month: label, debt };
+    });
+  }, [totalRemaining, avgMonthly, locale]);
+
+  const monthsLeft = avgMonthly > 0 ? Math.ceil(totalRemaining / avgMonthly) : null;
+
+  return (
+    <div className="card p-4">
+      <div className="flex items-center justify-between mb-1">
+        <p className="text-sm font-bold t1">{t("debts.reduction_trend")}</p>
+        {monthsLeft != null && monthsLeft > 0 && monthsLeft < 120 && (
+          <span className="text-[10px] px-2 py-0.5 rounded-full bg-rose-400/10 text-rose-400 font-semibold">
+            {t("debts.months_short", { count: monthsLeft })}
+          </span>
+        )}
+      </div>
+      <div className="h-36 mt-3">
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart data={data} margin={{ top: 4, right: 4, bottom: 0, left: -28 }}>
+            <defs>
+              <linearGradient id="dg" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%"  stopColor="#F43F5E" stopOpacity={0.3} />
+                <stop offset="95%" stopColor="#F43F5E" stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border-2))" vertical={false} />
+            <XAxis dataKey="month" tick={{ fontSize: 9, fill: "hsl(var(--foreground) / 0.4)" }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fontSize: 9, fill: "hsl(var(--foreground) / 0.4)" }} axisLine={false} tickLine={false} />
+            <Tooltip
+              contentStyle={{
+                backgroundColor: "hsl(var(--bg-card))",
+                border: "1px solid hsl(var(--border))",
+                borderRadius: 10, fontSize: 11,
+              }}
+              labelStyle={{ color: "hsl(var(--foreground))", fontWeight: 600 }}
+              itemStyle={{ color: "#F43F5E" }}
+            />
+            <Area type="monotone" dataKey="debt" name={t("debts.chart_debt")} stroke="#F43F5E" strokeWidth={2} fill="url(#dg)" dot={false} />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
+}
+
+// ── AI Insights ────────────────────────────────────────────────
+function AIPanel({
+  debts, totalPaid, totalOriginal, overdueCount, dtiRatio, avgMonthly, t, format,
+}: {
+  debts: Debt[];
+  totalPaid: number;
+  totalOriginal: number;
+  overdueCount: number;
+  dtiRatio: number;
+  avgMonthly: number;
+  t: TFn;
+  format: (n: number) => string;
+}) {
+  const insights = useMemo(() => {
+    const list: { icon: string; text: string; positive: boolean }[] = [];
+    const activeDebts = debts.filter((d) => d.status !== "paid");
+
+    if (activeDebts.length === 0) {
+      return [{ icon: "🎉", text: t("debts.ai_debt_free"), positive: true }];
     }
-  }
 
-  const [showForm, setShowForm]       = useState(false);
-  const [showPayment, setShowPayment] = useState<Debt | null>(null);
-  const [editing, setEditing]         = useState<Debt | undefined>();
-  const [confirmId, setConfirmId]     = useState<string | null>(null);
-  const [tab, setTab]                 = useState<TabValue>("all");
-  const [search, setSearch]           = useState("");
-  const [contactFilter, setContactFilter] = useState<string | null>(null);
+    if (overdueCount > 0) {
+      list.push({ icon: "⚠️", text: t("debts.ai_overdue", { count: overdueCount }), positive: false });
+    }
+
+    const totalRemaining = activeDebts.reduce(
+      (s, d) => s + Number(d.remaining_amount ?? (Number(d.total_amount) - Number(d.paid_amount))), 0,
+    );
+    const paidPct = totalOriginal > 0 ? Math.round((totalPaid / totalOriginal) * 100) : 0;
+    if (paidPct > 0) {
+      list.push({ icon: "📊", text: t("debts.ai_progress", { pct: paidPct }), positive: paidPct >= 40 });
+    }
+
+    if (dtiRatio >= 0.3) {
+      list.push({ icon: "📉", text: t("debts.ai_dti_warning", { pct: Math.round(dtiRatio * 100) }), positive: false });
+    }
+
+    if (avgMonthly > 0 && totalRemaining > 0) {
+      const extra = Math.round(totalRemaining / 12);
+      const monthsNow   = Math.ceil(totalRemaining / avgMonthly);
+      const monthsExtra = Math.ceil(totalRemaining / (avgMonthly + extra));
+      const saved = monthsNow - monthsExtra;
+      if (saved > 0) {
+        list.push({ icon: "💡", text: t("debts.ai_payoff_tip", { amount: format(extra), n: saved }), positive: true });
+      }
+    }
+
+    // Fastest payoff insight
+    const sortedByRemaining = [...activeDebts]
+      .filter((d) => (d.remaining_amount ?? 0) > 0)
+      .sort((a, b) => (a.remaining_amount ?? 0) - (b.remaining_amount ?? 0));
+    const smallest = sortedByRemaining[0];
+    if (smallest && avgMonthly > 0 && activeDebts.length > 0) {
+      const share = avgMonthly / activeDebts.length;
+      const months = share > 0 ? Math.ceil((smallest.remaining_amount ?? 0) / share) : 0;
+      if (months > 0 && months <= 6) {
+        list.push({
+          icon: "🏆",
+          text: t("debts.ai_fastest_payoff", { name: smallest.person_or_entity, months }),
+          positive: true,
+        });
+      }
+    }
+
+    return list.slice(0, 4);
+  }, [debts, totalPaid, totalOriginal, overdueCount, dtiRatio, avgMonthly, t, format]);
+
+  return (
+    <div className="card p-4">
+      <div className="flex items-center gap-2 mb-3">
+        <Brain className="w-4 h-4 text-purple-400" />
+        <p className="text-sm font-bold t1">{t("debts.ai_insights")}</p>
+      </div>
+      <div className="space-y-2">
+        {insights.map((ins, i) => (
+          <div key={i} className={`flex items-start gap-2.5 px-3 py-2.5 rounded-xl text-xs leading-relaxed ${
+            ins.positive
+              ? "bg-emerald-400/8 text-emerald-300 border border-emerald-400/15"
+              : "bg-rose-400/8 text-rose-300 border border-rose-400/15"
+          }`}>
+            <span className="text-sm shrink-0 mt-0.5">{ins.icon}</span>
+            <p>{ins.text}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// Main Page
+// ══════════════════════════════════════════════════════════════
+export default function DebtsPage() {
+  const { isGuest }                       = useGuest();
+  const { t, formatDate, locale }         = useTranslation();
+  const { format }                        = useCurrency();
+  const { toasts, addToast, dismiss }     = useToast();
+  const queryClient                       = useQueryClient();
+
+  const [showForm, setShowForm]           = useState(false);
+  const [showPayment, setShowPayment]     = useState<Debt | null>(null);
+  const [editing, setEditing]             = useState<Debt | undefined>();
+  const [newDebtType, setNewDebtType]     = useState<Debt["debt_type"]>("payable");
+  const [confirmId, setConfirmId]         = useState<string | null>(null);
+  const [tab, setTab]                     = useState<DebtTab>("all");
+  const [search, setSearch]               = useState("");
   const [contactModal, setContactModal]   = useState<string | null>(null);
   const [expandedIds, setExpandedIds]     = useState<Set<string>>(new Set());
+  const [cleaning, setCleaning]           = useState(false);
 
-  function toggleExpand(id: string) {
+  const toggleExpand = useCallback((id: string) => {
     setExpandedIds((prev) => {
       const next = new Set(prev);
       next.has(id) ? next.delete(id) : next.add(id);
       return next;
     });
-  }
+  }, []);
 
-  // ── Data ──────────────────────────────────────────────────────
-  const { data: result, isLoading } = useDebts(isGuest);
-  const debts: Debt[]   = result?.debts   ?? [];
-  const summary         = result?.summary ?? { totalPayable: 0, totalReceivable: 0, overdueCount: 0, totalDebts: 0, activeDebts: 0 };
+  // ── Data ──────────────────────────────────────────────────
+  const { data: result, isLoading } = useDebts();
+  const debts   = result?.debts   ?? [];
+  const summary = result?.summary ?? {
+    totalPayable: 0, totalReceivable: 0, overdueCount: 0, totalDebts: 0, activeDebts: 0,
+  };
+
+  const { data: dashRaw } = useDashboardSummary(!isGuest);
+  const monthlyIncome = (dashRaw as { monthlyIncome?: number } | null)?.monthlyIncome ?? 0;
 
   const createMut  = useCreateDebt();
   const updateMut  = useUpdateDebt();
   const deleteMut  = useDeleteDebt();
   const paymentMut = useCreateDebtPayment();
-
   const deletingId = deleteMut.isPending ? (deleteMut.variables as string) : null;
 
-  // ── Handlers ──────────────────────────────────────────────────
+  function openNewDebt(type: Debt["debt_type"] = "payable") {
+    setEditing(undefined);
+    setNewDebtType(type);
+    setShowForm(true);
+  }
+
+  // ── Computed ───────────────────────────────────────────────
+  const totalOriginal = useMemo(() => debts.reduce((s, d) => s + Number(d.total_amount), 0), [debts]);
+  const totalPaid     = useMemo(() => debts.reduce((s, d) => s + Number(d.paid_amount), 0),  [debts]);
+  const netPosition   = summary.totalReceivable - summary.totalPayable;
+
+  const avgMonthly = useMemo(() => {
+    if (totalPaid > 0 && debts.length > 0) {
+      const dates   = debts.map((d) => new Date(d.created_at).getTime()).filter(Number.isFinite);
+      if (dates.length === 0) return totalPaid;
+      const earliest = Math.min(...dates);
+      const months   = Math.max(1, (Date.now() - earliest) / (30 * 24 * 3600 * 1000));
+      return totalPaid / months;
+    }
+    const total = summary.totalPayable + summary.totalReceivable;
+    return total > 0 ? Math.max(total * 0.05, 50) : 0;
+  }, [debts, totalPaid, summary.totalPayable, summary.totalReceivable]);
+
+  const avgMonthlyPayable = useMemo(() => {
+    const payableDebts = debts.filter((debt) => debt.debt_type === "payable");
+    const paidPayable = payableDebts.reduce((sum, debt) => sum + Number(debt.paid_amount), 0);
+    if (paidPayable > 0 && payableDebts.length > 0) {
+      const dates = payableDebts.map((debt) => new Date(debt.created_at).getTime()).filter(Number.isFinite);
+      if (dates.length === 0) return paidPayable;
+      const earliest = Math.min(...dates);
+      const months = Math.max(1, (Date.now() - earliest) / (30 * 24 * 3600 * 1000));
+      return paidPayable / months;
+    }
+    return summary.totalPayable > 0 ? Math.max(summary.totalPayable * 0.05, 50) : 0;
+  }, [debts, summary.totalPayable]);
+
+  const dtiRatio = monthlyIncome > 0 ? avgMonthlyPayable / monthlyIncome : 0;
+
+  const filtered = useMemo(() => {
+    let list = [...debts];
+    if (tab === "payable")    list = list.filter((d) => d.debt_type === "payable"    && d.status !== "paid");
+    if (tab === "receivable") list = list.filter((d) => d.debt_type === "receivable" && d.status !== "paid");
+    if (tab === "paid")       list = list.filter((d) => d.status === "paid");
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      list = list.filter((d) =>
+        d.person_or_entity.toLowerCase().includes(q) ||
+        (d.notes?.toLowerCase().includes(q) ?? false),
+      );
+    }
+    const order: Record<DebtStatus, number> = { overdue: 0, active: 1, partially_paid: 2, paid: 3 };
+    return list.sort((a, b) => order[a.status] - order[b.status]);
+  }, [debts, tab, search]);
+
+  const upcoming = useMemo(() => {
+    const now = Date.now();
+    return debts
+      .filter((d) => d.due_date && d.status !== "paid")
+      .map((d) => ({
+        ...d,
+        daysLeft: Math.round((new Date(d.due_date!).getTime() - now) / 86_400_000),
+      }))
+      .filter((d) => d.daysLeft <= 30)
+      .sort((a, b) => a.daysLeft - b.daysLeft);
+  }, [debts]);
+
+  const TABS = useMemo(() => [
+    { value: "all"        as DebtTab, label: t("debt_tabs.all"),         count: debts.length },
+    { value: "payable"    as DebtTab, label: t("debts.payable_tab"),     count: debts.filter((d) => d.debt_type === "payable"    && d.status !== "paid").length },
+    { value: "receivable" as DebtTab, label: t("debts.receivable_tab"),  count: debts.filter((d) => d.debt_type === "receivable" && d.status !== "paid").length },
+    { value: "paid"       as DebtTab, label: t("debt_tabs.paid"),        count: debts.filter((d) => d.status === "paid").length },
+  ], [debts, t]);
+
+  function errorMessage(error: unknown, fallbackKey: string) {
+    const fallback = t(fallbackKey);
+    if (!(error instanceof Error) || !error.message) return fallback;
+    if (error.message === "Unauthorized") return t("errors.unauthorized");
+    if (error.message.startsWith("HTTP ")) return fallback;
+    const translated = t(error.message);
+    if (translated !== error.message) return translated;
+    return error.message.includes(" ") ? error.message : fallback;
+  }
+
+  // ── Handlers ──────────────────────────────────────────────
   async function handleSubmit(data: DebtFormData) {
-    if (isGuest) { addToast(t("debts.guest_auth"), "info"); setShowForm(false); return; }
     try {
       if (editing) {
         await updateMut.mutateAsync({ id: editing.id, data });
@@ -117,21 +409,22 @@ export default function DebtsPage() {
       }
       setEditing(undefined);
       setShowForm(false);
-    } catch {
-      addToast(t("debts.save_failed"), "error");
-      throw new Error("submit failed");
+    } catch (error) {
+      const message = errorMessage(error, "debts.save_failed");
+      addToast(message, "error");
+      throw new Error(message);
     }
   }
 
   async function handlePayment(debt: Debt, data: DebtPaymentFormData) {
-    if (isGuest) { addToast(t("debts.guest_payment"), "info"); setShowPayment(null); return; }
     try {
       await paymentMut.mutateAsync({ debtId: debt.id, data });
       addToast(t("debts.payment_added"), "success");
       setShowPayment(null);
-    } catch {
-      addToast(t("debts.payment_failed"), "error");
-      throw new Error("payment failed");
+    } catch (error) {
+      const message = errorMessage(error, "debts.payment_failed");
+      addToast(message, "error");
+      throw new Error(message);
     }
   }
 
@@ -147,212 +440,153 @@ export default function DebtsPage() {
     }
   }
 
-  // ── Derived ───────────────────────────────────────────────────
-  const filtered = useMemo(() => {
-    let list = [...debts];
-    if (tab !== "all") list = list.filter((d) => d.status === tab);
-    if (contactFilter) list = list.filter((d) => d.contact_id === contactFilter);
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      list = list.filter((d) =>
-        d.person_or_entity.toLowerCase().includes(q) ||
-        (d.notes?.toLowerCase().includes(q) ?? false) ||
-        (d.contact?.name?.toLowerCase().includes(q) ?? false)
-      );
+  async function cleanupLegacyTransactions() {
+    setCleaning(true);
+    try {
+      const res = await safeFetch("/api/debts/cleanup", { method: "POST" });
+      const data = await res.json() as { cleaned?: number };
+      addToast(t("debts.cleanup_success", { count: data.cleaned ?? 0 }), "success");
+      invalidateDebtQueries(queryClient);
+    } catch {
+      addToast(t("debts.cleanup_failed"), "error");
+    } finally {
+      setCleaning(false);
     }
-    const order: Record<DebtStatus, number> = { overdue: 0, active: 1, partially_paid: 2, paid: 3 };
-    return list.sort((a, b) => order[a.status] - order[b.status]);
-  }, [debts, tab, contactFilter, search]);
+  }
 
-  const uniqueContacts = useMemo(() => {
-    const seen = new Map<string, Pick<FinancialContact, "id" | "name" | "type">>();
-    debts.forEach((d) => {
-      if (d.contact_id && d.contact && !seen.has(d.contact_id)) {
-        seen.set(d.contact_id, d.contact as Pick<FinancialContact, "id" | "name" | "type">);
-      }
-    });
-    return Array.from(seen.values());
-  }, [debts]);
-
-  // Tab counts
-  const tabCounts = useMemo(() => {
-    const counts: Record<string, number> = { all: debts.length, active: 0, partially_paid: 0, overdue: 0, paid: 0 };
-    debts.forEach((d) => { counts[d.status] = (counts[d.status] ?? 0) + 1; });
-    return counts as Record<TabValue, number>;
-  }, [debts]);
-
-  const netBalance = summary.totalReceivable - summary.totalPayable;
-  const isNetPositive = netBalance >= 0;
-
+  // ── Render ─────────────────────────────────────────────────
   return (
     <div className="space-y-5">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold t1">{t("debts.title")}</h1>
-          <p className="text-sm t2 mt-0.5">{t("debts.subtitle")}</p>
+
+      {/* ── Header ──────────────────────────────────────── */}
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-orange-400/10">
+            <CreditCard className="h-4 w-4 text-orange-400" />
+          </div>
+          <div className="min-w-0">
+            <h1 className="truncate text-xl font-black t1">{t("debts.title")}</h1>
+            <p className="mt-0.5 text-xs font-medium t3">{t("debts.dmc_subtitle")}</p>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          {!isGuest && (
-            <button onClick={cleanupLegacyTransactions} disabled={cleaning}
-              title="إصلاح الرصيد — حذف المعاملات المكررة القديمة"
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium border border-amber-400/25 text-amber-400 bg-amber-400/8 hover:bg-amber-400/15 transition-all disabled:opacity-50">
-              {cleaning ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Wrench className="w-3.5 h-3.5" />}
-              {cleaning ? "..." : t("debts.fix_balance")}
-            </button>
-          )}
-          <button onClick={() => { setEditing(undefined); setShowForm(true); }}
-            className="flex items-center gap-2 px-4 py-2.5 text-white rounded-xl text-sm font-semibold transition-all pressable"
-            style={{ background: "linear-gradient(135deg, #F43F5E, #E11D48)" }}>
-            <Plus className="w-3.5 h-3.5" />{t("debts.add")}
+        {!isGuest && (
+          <button
+            onClick={cleanupLegacyTransactions}
+            disabled={cleaning}
+            title={t("debts.fix_balance")}
+            className="p-2.5 rounded-xl t3 hover:t1 bg-[hsl(var(--bg-input))] hover:bg-[hsl(var(--bg-card-2))] transition-all shrink-0"
+          >
+            {cleaning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wrench className="w-4 h-4" />}
           </button>
-        </div>
+        )}
       </div>
 
-      {/* ── Financial Truth Hero ────────────────────────────────── */}
+      <section className="card overflow-hidden">
+        <div className="flex items-start gap-3 px-4 py-4">
+          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-cyan-400/10 text-cyan-300">
+            <CreditCard className="h-[18px] w-[18px]" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-bold t1">{t("debts.guide_title")}</p>
+            <p className="mt-0.5 text-xs leading-relaxed t3">{t("debts.guide_body")}</p>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Summary Hero ─────────────────────────────────── */}
       {!isLoading && debts.length > 0 && (
-        <div className="relative rounded-[1.5rem] overflow-hidden p-6"
+        <div
+          className="relative rounded-[1.5rem] overflow-hidden p-5"
           style={{
-            background: isNetPositive
+            background: netPosition >= 0
               ? "linear-gradient(135deg, #0B3D2A 0%, #0E1F3A 60%, #0B3D4F 100%)"
               : "linear-gradient(135deg, #3D0B1A 0%, #1A0F0B 60%, #1A0F3A 100%)",
-          }}>
-          <div className="absolute top-0 end-0 w-56 h-56 rounded-full opacity-20 blur-3xl pointer-events-none"
-            style={{ background: isNetPositive ? "#10B981" : "#F43F5E", transform: "translate(30%,-30%)" }} />
-
+          }}
+        >
+          <div
+            className="absolute top-0 end-0 w-52 h-52 rounded-full blur-3xl opacity-20 pointer-events-none"
+            style={{ background: netPosition >= 0 ? "#10B981" : "#F43F5E", transform: "translate(35%,-35%)" }}
+          />
           <div className="relative z-10">
-            <p className="text-[10px] font-bold text-white/40 uppercase tracking-[0.15em] mb-1">
-              {t("debts.net_balance")}
+            <p className="text-[10px] font-bold text-white/40 uppercase tracking-[0.15em] mb-0.5">
+              {t("debts.net_position")}
             </p>
             <p className="text-4xl font-bold text-white number-display mb-4">
-              {isNetPositive ? "+" : ""}{format(netBalance)}
+              {netPosition >= 0 ? "+" : ""}{format(netPosition)}
             </p>
-
-            <div className="grid grid-cols-3 gap-4 pt-4 border-t border-white/10">
-              {/* Receivable */}
+            <div className="grid grid-cols-3 gap-3 pt-3 border-t border-white/10">
               <div>
-                <div className="flex items-center gap-1.5 mb-1">
-                  <TrendingUp className="w-3 h-3 text-emerald-400 shrink-0" />
-                  <p className="text-[10px] text-white/40 uppercase tracking-wide">{t("debts.receivable")}</p>
-                </div>
-                <p className="text-sm font-bold text-emerald-300">+{format(summary.totalReceivable)}</p>
-                <p className="text-[10px] text-white/30 mt-0.5">{t("debts.receivable_hint")}</p>
-              </div>
-
-              {/* Payable */}
-              <div>
-                <div className="flex items-center gap-1.5 mb-1">
+                <div className="flex items-center gap-1 mb-1">
                   <TrendingDown className="w-3 h-3 text-rose-400 shrink-0" />
-                  <p className="text-[10px] text-white/40 uppercase tracking-wide">{t("debts.payable")}</p>
+                  <p className="text-[9px] text-white/40 uppercase tracking-wide">{t("debts.payable_tab")}</p>
                 </div>
-                <p className="text-sm font-bold text-rose-300">-{format(summary.totalPayable)}</p>
-                <p className="text-[10px] text-white/30 mt-0.5">{t("debts.payable_hint")}</p>
+                <p className="text-sm font-bold text-rose-300">{format(summary.totalPayable)}</p>
               </div>
-
-              {/* Overdue */}
               <div>
-                <div className="flex items-center gap-1.5 mb-1">
+                <div className="flex items-center gap-1 mb-1">
+                  <TrendingUp className="w-3 h-3 text-emerald-400 shrink-0" />
+                  <p className="text-[9px] text-white/40 uppercase tracking-wide">{t("debts.receivable_tab")}</p>
+                </div>
+                <p className="text-sm font-bold text-emerald-300">{format(summary.totalReceivable)}</p>
+              </div>
+              <div>
+                <div className="flex items-center gap-1 mb-1">
                   <AlertTriangle className="w-3 h-3 text-amber-400 shrink-0" />
-                  <p className="text-[10px] text-white/40 uppercase tracking-wide">{t("debts.overdue")}</p>
+                  <p className="text-[9px] text-white/40 uppercase tracking-wide">{t("debts.overdue")}</p>
                 </div>
                 <p className={`text-sm font-bold ${summary.overdueCount > 0 ? "text-rose-300" : "text-emerald-300"}`}>
-                  {summary.overdueCount}
+                  {summary.overdueCount} {t("debts.debts")}
                 </p>
-                <p className="text-[10px] text-white/30 mt-0.5">{t("debts.debts")}</p>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* ── KPI Cards ──────────────────────────────────────────── */}
+      {/* ── Health + Monthly ──────────────────────────────── */}
       {!isLoading && debts.length > 0 && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          {[
-            {
-              label: t("debts.total_debt"),
-              value: format(debts.reduce((s, d) => s + Number(d.total_amount), 0)),
-              sub:   `${summary.totalDebts} ${t("debts.debts")}`,
-              icon:  CreditCard,
-              color: "text-rose-400",
-              bg:    "bg-rose-400/10",
-            },
-            {
-              label: t("debts.total_paid"),
-              value: format(debts.reduce((s, d) => s + Number(d.paid_amount), 0)),
-              sub:   `${debts.filter(d => d.status === "paid").length} ${t("debts.status.paid")}`,
-              icon:  CheckCircle,
-              color: "text-emerald-400",
-              bg:    "bg-emerald-400/10",
-            },
-            {
-              label: t("debts.remaining"),
-              value: format(summary.totalPayable + summary.totalReceivable),
-              sub:   `${summary.activeDebts} ${t("debts.active")}`,
-              icon:  Activity,
-              color: "text-amber-400",
-              bg:    "bg-amber-400/10",
-            },
-            {
-              label: t("debts.health"),
-              value: summary.overdueCount === 0 ? "✓ " + t("debts.health_good") : `${summary.overdueCount} ${t("debts.overdue")}`,
-              sub:   t(summary.overdueCount === 0 ? "debts.no_overdue" : "debts.has_overdue"),
-              icon:  Shield,
-              color: summary.overdueCount === 0 ? "text-emerald-400" : "text-rose-400",
-              bg:    summary.overdueCount === 0 ? "bg-emerald-400/10" : "bg-rose-400/10",
-            },
-          ].map((k) => (
-            <div key={k.label} className="card-elevated p-4">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-[10px] t3 uppercase tracking-wide font-semibold">{k.label}</p>
-                <div className={`p-1.5 rounded-lg ${k.bg}`}><k.icon className={`w-3 h-3 ${k.color}`} /></div>
-              </div>
-              <p className={`text-base font-bold number-display ${k.color}`}>{k.value}</p>
-              <p className="text-[10px] t3 mt-0.5">{k.sub}</p>
-            </div>
-          ))}
+        <div className="grid grid-cols-2 gap-3">
+          <DTICard ratio={dtiRatio} t={t} />
+          <MonthlyCard avgPayment={avgMonthly} activeDebts={summary.activeDebts} dtiRatio={dtiRatio} t={t} format={format} />
         </div>
       )}
 
-      {/* ── Tabs ───────────────────────────────────────────────── */}
-      <div className="flex gap-1 overflow-x-auto pb-0.5">
+      {/* ── Tabs ─────────────────────────────────────────── */}
+      <div className="flex gap-1 overflow-x-auto pb-0.5 tabs-row">
         {TABS.map((tb) => (
-          <button key={tb.value} onClick={() => setTab(tb.value)}
-            className={`tab-pill shrink-0 flex items-center gap-1.5 ${tab === tb.value ? "active" : ""}`}>
-            {t(tb.labelKey)}
-            {tabCounts[tb.value] > 0 && (
+          <button
+            key={tb.value}
+            onClick={() => setTab(tb.value)}
+            className={`tab-pill shrink-0 flex items-center gap-1.5 ${tab === tb.value ? "active" : ""}`}
+          >
+            {tb.label}
+            {tb.count > 0 && (
               <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
                 tab === tb.value ? "bg-white/20 text-white" : "bg-[hsl(var(--bg-input))] t3"
-              }`}>{tabCounts[tb.value]}</span>
+              }`}>{tb.count}</span>
             )}
           </button>
         ))}
       </div>
 
-      {/* ── Search + Contact filter ─────────────────────────────── */}
-      <div className="flex gap-2">
-        <div className="relative flex-1">
-          <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 t3" />
-          <input type="text" value={search} onChange={(e) => setSearch(e.target.value)}
-            placeholder={`${t("debts.creditor")}...`} className="field ps-9" />
-        </div>
-        {uniqueContacts.length > 0 && (
-          <select value={contactFilter ?? ""} onChange={(e) => setContactFilter(e.target.value || null)}
-            className="field w-auto text-sm" style={{ backgroundColor: "hsl(var(--bg-input))" }}>
-            <option value="">{t("contacts.select")}</option>
-            {uniqueContacts.map((c) => (
-              <option key={c.id} value={c.id}>{c.name}</option>
-            ))}
-          </select>
-        )}
+      {/* ── Search ───────────────────────────────────────── */}
+      <div className="relative">
+        <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 t3 pointer-events-none" />
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder={`${t("debts.creditor")}...`}
+          className="field ps-9 w-full"
+        />
       </div>
 
-      {/* ── Debt Cards ─────────────────────────────────────────── */}
+      {/* ── Debt Cards ───────────────────────────────────── */}
       {isLoading ? (
-        <div className="space-y-3">
+        <div className="space-y-2">
           {[1, 2, 3].map((n) => (
-            <div key={n} className="card p-5 animate-pulse">
-              <div className="flex gap-4">
+            <div key={n} className="card p-4 animate-pulse">
+              <div className="flex gap-3">
                 <div className="w-10 h-10 rounded-xl bg-[hsl(var(--bg-input))]" />
                 <div className="flex-1 space-y-2">
                   <div className="h-4 bg-[hsl(var(--bg-input))] rounded w-2/3" />
@@ -363,11 +597,11 @@ export default function DebtsPage() {
           ))}
         </div>
       ) : filtered.length === 0 ? (
-        <div className="card py-16 text-center">
-          <CreditCard className="w-8 h-8 t3 opacity-25 mx-auto mb-3" />
-          <p className="text-sm font-semibold t1">{t("debts.no_data")}</p>
-          {tab === "all" && !search && !contactFilter && (
-            <button onClick={() => setShowForm(true)} className="text-sm text-rose-400 hover:underline mt-2">
+        <div className="card py-14 text-center">
+          <CreditCard className="w-8 h-8 t3 opacity-20 mx-auto mb-3" />
+          <p className="text-sm font-semibold t2">{t("debts.no_data")}</p>
+          {tab === "all" && !search && (
+            <button onClick={() => openNewDebt("payable")} className="text-sm text-rose-400 hover:underline mt-2">
               {t("debts.add")}
             </button>
           )}
@@ -375,62 +609,70 @@ export default function DebtsPage() {
       ) : (
         <div className="space-y-2">
           {filtered.map((debt) => {
-            const cfg         = STATUS_CONFIG[debt.status as DebtStatus] ?? STATUS_CONFIG.active;
-            const total       = Number(debt.total_amount);
-            const paid        = Number((debt as Debt & { paid_amount: number }).paid_amount ?? 0);
-            const remaining   = Number((debt as Debt & { remaining_amount?: number }).remaining_amount ?? (total - paid));
-            const pct         = total > 0 ? Math.min((paid / total) * 100, 100) : 0;
-            const health      = (debt as Debt & { health?: string }).health;
-            const healthCfg   = health ? HEALTH_CONFIG[health] : null;
-            const overdueDays = (debt as Debt & { overdueDays?: number }).overdueDays ?? 0;
-            const paymentsCount = (debt as Debt & { paymentsCount?: number }).paymentsCount ?? 0;
-            const isDeleting  = deletingId === debt.id;
-            const isOverdue   = !!debt.due_date && new Date(debt.due_date) < new Date() && debt.status !== "paid";
-            const isExpanded  = expandedIds.has(debt.id);
+            const cfg       = STATUS_CFG[debt.status as DebtStatus] ?? STATUS_CFG.active;
+            const total     = Number(debt.total_amount);
+            const paid      = Number(debt.paid_amount ?? 0);
+            const remaining = Number(debt.remaining_amount ?? (total - paid));
+            const pct       = total > 0 ? Math.min((paid / total) * 100, 100) : 0;
+            const isDeleting = deletingId === debt.id;
+            const isExpanded = expandedIds.has(debt.id);
+            const isOverdue  = !!debt.due_date && new Date(debt.due_date) < new Date() && debt.status !== "paid";
 
             return (
-              <div key={debt.id}
+              <div
+                key={debt.id}
                 className={`card overflow-hidden transition-all ${
                   debt.status === "overdue" ? "border-rose-400/25" : ""
-                } ${isDeleting ? "opacity-40 pointer-events-none" : ""}`}>
+                } ${isDeleting ? "opacity-40 pointer-events-none" : ""}`}
+              >
+                {/* Animated progress accent line */}
+                <div
+                  className="h-0.5"
+                  style={{
+                    background: `linear-gradient(90deg, ${cfg.bar} 0%, ${cfg.bar} ${pct}%, hsl(var(--bg-input)) ${pct}%)`,
+                  }}
+                />
 
-                {/* Progress accent line */}
-                <div className="h-0.5 w-full" style={{ backgroundColor: cfg.bar, opacity: 0.5 }} />
-
-                {/* ── Compact row (always visible) ─────────────── */}
+                {/* Compact row */}
                 <button
                   type="button"
                   onClick={() => toggleExpand(debt.id)}
-                  className="flex items-center gap-3 w-full px-4 py-3 text-start hover:bg-[hsl(var(--bg-input))] transition-colors"
+                  className="flex items-center gap-3 w-full px-4 py-3.5 text-start hover:bg-[hsl(var(--bg-input))] transition-colors"
                 >
-                  <div className={`p-2 rounded-xl shrink-0 ${cfg.bg}`}>
-                    <cfg.icon className={`w-4 h-4 ${cfg.color}`} />
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${cfg.bg}`}>
+                    {debt.contact
+                      ? <User className={`w-[18px] h-[18px] ${cfg.color}`} />
+                      : <cfg.icon className={`w-[18px] h-[18px] ${cfg.color}`} />
+                    }
                   </div>
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <p className="text-sm font-semibold t1 truncate">{debt.person_or_entity}</p>
-                      {healthCfg && health !== "settled" && (
-                        <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold shrink-0 ${healthCfg.bg} ${healthCfg.color}`}>
-                          {healthCfg.label}
+                      <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold shrink-0 ${cfg.bg} ${cfg.color}`}>
+                        {t(`debts.status.${debt.status}`)}
+                      </span>
+                      {debt.debt_type === "receivable" && (
+                        <span className="text-[9px] px-1.5 py-0.5 rounded font-bold shrink-0 bg-emerald-400/10 text-emerald-400">
+                          ↑
                         </span>
                       )}
                     </div>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
-                        debt.debt_type === "receivable" ? "bg-emerald-400/10 text-emerald-400" : "bg-rose-400/10 text-rose-400"
-                      }`}>{t(`debts.${debt.debt_type}`)}</span>
-                      <span className={`text-[10px] font-medium ${cfg.color}`}>{t(`debts.status.${debt.status}`)}</span>
-                      {pct > 0 && pct < 100 && (
-                        <span className="text-[10px] t3">{pct.toFixed(0)}%</span>
-                      )}
+                    <div className="flex items-center gap-2 mt-1.5">
+                      <div className="flex-1 h-1.5 bg-[hsl(var(--bg-input))] rounded-full overflow-hidden">
+                        <div
+                          className="h-full rounded-full"
+                          style={{ width: `${pct}%`, backgroundColor: cfg.bar, transition: "width 0.4s ease" }}
+                        />
+                      </div>
+                      <span className={`text-[10px] font-bold shrink-0 ${cfg.color}`}>{pct.toFixed(0)}%</span>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-2 shrink-0">
                     <div className="text-end">
                       <p className="text-sm font-bold t1">{format(remaining)}</p>
-                      {paid > 0 && <p className="text-[10px] t3">{t("debts.paid_amount", { amount: format(paid) })}</p>}
+                      <p className="text-[9px] t3">{t("debts.remaining")}</p>
                     </div>
                     <motion.div animate={{ rotate: isExpanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
                       <ChevronDown className="w-4 h-4 t3" />
@@ -438,73 +680,134 @@ export default function DebtsPage() {
                   </div>
                 </button>
 
-                {/* ── Expanded details ──────────────────────────── */}
+                {/* Expanded details */}
                 <AnimatePresence initial={false}>
                   {isExpanded && (
                     <motion.div
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: "auto", opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
-                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                      transition={{ type: "spring", stiffness: 320, damping: 32 }}
                       style={{ overflow: "hidden" }}
                     >
-                      <div className="px-4 pb-4 pt-1 border-t border-[hsl(var(--border-2))] space-y-3">
+                      <div className="px-4 pb-4 pt-2 border-t border-[hsl(var(--border-2))] space-y-3">
+                        {/* Stats row */}
+                        <div className="grid grid-cols-3 gap-2">
+                          {[
+                            { label: t("debts.amount"), val: format(total), color: "t1" },
+                            { label: t("debts.total_paid"), val: format(paid), color: "text-emerald-400" },
+                            { label: t("debts.remaining"), val: format(remaining), color: "text-rose-400" },
+                          ].map((s) => (
+                            <div key={s.label} className="bg-[hsl(var(--bg-input))] rounded-xl p-2.5 text-center">
+                              <p className="text-[9px] t3 uppercase tracking-wide">{s.label}</p>
+                              <p className={`text-xs font-bold mt-0.5 ${s.color}`}>{s.val}</p>
+                            </div>
+                          ))}
+                        </div>
+
                         {/* Contact */}
                         {debt.contact && debt.contact_id && (
-                          <button type="button" onClick={() => setContactModal(debt.contact_id!)}
-                            className="flex items-center gap-1.5 text-xs text-cyan-400 hover:text-cyan-300 transition-colors">
+                          <button
+                            type="button"
+                            onClick={() => setContactModal(debt.contact_id!)}
+                            className="flex items-center gap-1.5 text-xs text-cyan-400 hover:text-cyan-300 transition-colors"
+                          >
                             <User className="w-3 h-3" />
-                            <span>{debt.contact.name}</span>
+                            {debt.contact.name}
                             <span className="t3">· {t(`contacts.types.${debt.contact.type}`)}</span>
                           </button>
                         )}
 
                         {/* Due date */}
                         {debt.due_date && (
-                          <p className={`text-xs ${isOverdue ? "text-rose-400 font-medium" : "t3"}`}>
+                          <p className={`text-xs flex items-center gap-1.5 ${isOverdue ? "text-rose-400 font-medium" : "t3"}`}>
+                            <Calendar className="w-3 h-3 shrink-0" />
                             {t("debts.due", { date: formatDate(debt.due_date) })}
-                            {overdueDays > 0 && <span className="text-rose-400 font-semibold ms-1">({overdueDays} {t("debts.days_overdue")})</span>}
+                            {(debt.overdueDays ?? 0) > 0 && (
+                              <span className="text-rose-400 font-semibold ms-1">
+                                ({debt.overdueDays} {t("debts.days_overdue")})
+                              </span>
+                            )}
                           </p>
                         )}
 
                         {/* Notes */}
-                        {debt.notes && <p className="text-xs t3">{debt.notes}</p>}
+                        {debt.notes && <p className="text-xs t3 italic">{debt.notes}</p>}
 
-                        {/* Progress bar */}
-                        <div>
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="text-xs t3">{paymentsCount} {t("debts.payments")}</span>
-                            <span className={`text-xs font-semibold ${pct >= 100 ? "text-emerald-400" : pct >= 50 ? "text-amber-400" : "t3"}`}>
-                              {pct.toFixed(0)}%
-                            </span>
+                        {/* Payment history */}
+                        {(debt.payments ?? []).length > 0 && (
+                          <div>
+                            <div className="flex items-center gap-1.5 mb-2">
+                              <Receipt className="w-3 h-3 t3" />
+                              <p className="text-[10px] font-bold t3 uppercase tracking-wide">
+                                {t("debts.payment_history")} ({debt.payments!.length})
+                              </p>
+                            </div>
+                            <div
+                              className="rounded-xl overflow-hidden"
+                              style={{ border: "1px solid hsl(var(--border-2))" }}
+                            >
+                              {debt.payments!.map((pmt, idx) => (
+                                <div
+                                  key={pmt.id}
+                                  className={`flex items-center gap-3 px-3 py-2.5 ${
+                                    idx < debt.payments!.length - 1
+                                      ? "border-b border-[hsl(var(--border-2))]"
+                                      : ""
+                                  }`}
+                                >
+                                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-[10px] t3">
+                                      {new Date(`${pmt.payment_date}T00:00:00`).toLocaleDateString(
+                                        locale === "ar" ? "ar" : locale === "de" ? "de-DE" : "en-US",
+                                        { day: "numeric", month: "short", year: "numeric" },
+                                      )}
+                                    </p>
+                                    {pmt.notes && (
+                                      <p className="text-[10px] t3 italic truncate mt-0.5">{pmt.notes}</p>
+                                    )}
+                                  </div>
+                                  <span
+                                    className={`text-xs font-bold shrink-0 tabular-nums ${
+                                      debt.debt_type === "receivable" ? "text-emerald-400" : "text-rose-400"
+                                    }`}
+                                  >
+                                    {debt.debt_type === "receivable" ? "+" : "-"}{format(Number(pmt.amount))}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
                           </div>
-                          <div className="h-2 bg-[hsl(var(--bg-input))] rounded-full overflow-hidden">
-                            <motion.div
-                              className="h-full rounded-full"
-                              initial={{ width: 0 }}
-                              animate={{ width: `${pct}%` }}
-                              transition={{ duration: 0.6, ease: "easeOut" }}
-                              style={{ backgroundColor: cfg.bar }}
-                            />
-                          </div>
-                        </div>
+                        )}
 
-                        {/* Actions */}
+                        {/* Action buttons */}
                         <div className="flex items-center gap-2 pt-1">
-                          {isDeleting ? <Loader2 className="w-4 h-4 animate-spin t3" /> : (
+                          {isDeleting ? (
+                            <Loader2 className="w-4 h-4 animate-spin t3" />
+                          ) : (
                             <>
                               {debt.status !== "paid" && (
-                                <button onClick={() => setShowPayment(debt)}
-                                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-emerald-400 bg-emerald-400/10 hover:bg-emerald-400/20 rounded-lg transition-all">
-                                  <DollarSign className="w-3 h-3" />{t("debts.add_payment")}
+                                <button
+                                  onClick={() => setShowPayment(debt)}
+                                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white rounded-lg transition-all"
+                                  style={{ background: "linear-gradient(135deg,#10B981,#059669)" }}
+                                >
+                                  <DollarSign className="w-3 h-3" />
+                                  {t("debts.add_payment")}
                                 </button>
                               )}
-                              <button onClick={() => { setEditing(debt); setShowForm(true); }}
-                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold t2 hover:t1 bg-[hsl(var(--bg-input))] hover:bg-[hsl(var(--bg-card-2))] rounded-lg transition-all">
-                                <Pencil className="w-3 h-3" />{t("common.edit")}
+                              <button
+                                onClick={() => { setEditing(debt); setShowForm(true); }}
+                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold t2 bg-[hsl(var(--bg-input))] hover:bg-[hsl(var(--bg-card-2))] rounded-lg transition-all"
+                              >
+                                <Pencil className="w-3 h-3" />
+                                {t("common.edit")}
                               </button>
-                              <button onClick={() => setConfirmId(debt.id)}
-                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-rose-400 hover:bg-rose-400/10 rounded-lg transition-all ms-auto">
+                              <button
+                                onClick={() => setConfirmId(debt.id)}
+                                className="ms-auto flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-rose-400 hover:bg-rose-400/10 rounded-lg transition-all"
+                              >
                                 <Trash2 className="w-3 h-3" />
                               </button>
                             </>
@@ -520,19 +823,74 @@ export default function DebtsPage() {
         </div>
       )}
 
-      {/* ── Modals ─────────────────────────────────────────────── */}
+      {/* ── Upcoming Payments Timeline ────────────────────── */}
+      {!isLoading && upcoming.length > 0 && (
+        <div className="card p-4">
+          <div className="flex items-center gap-2 mb-1">
+            <Calendar className="w-4 h-4 text-cyan-400" />
+            <p className="text-sm font-bold t1">{t("debts.upcoming")}</p>
+          </div>
+          <p className="text-[10px] t3 mb-3">{t("debts.next_30_days")}</p>
+          {upcoming.map((d) => (
+            <TimelineRow
+              key={d.id}
+              name={d.person_or_entity}
+              amount={d.remaining_amount ?? (Number(d.total_amount) - Number(d.paid_amount))}
+              daysLeft={d.daysLeft}
+              format={format}
+              t={t}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* ── Debt Reduction Trend ─────────────────────────── */}
+      {!isLoading && (summary.totalPayable + summary.totalReceivable) > 0 && (
+        <TrendChart
+          totalRemaining={summary.totalPayable + summary.totalReceivable}
+          avgMonthly={avgMonthly}
+          t={t}
+          locale={locale}
+        />
+      )}
+
+      {/* ── AI Insights ──────────────────────────────────── */}
+      {!isLoading && debts.length > 0 && (
+        <AIPanel
+          debts={debts}
+          totalPaid={totalPaid}
+          totalOriginal={totalOriginal}
+          overdueCount={summary.overdueCount}
+          dtiRatio={dtiRatio}
+          avgMonthly={avgMonthly}
+          t={t}
+          format={format}
+        />
+      )}
+
+      {/* ── Modals ───────────────────────────────────────── */}
       {showForm && (
-        <DebtForm initial={editing} onSubmit={handleSubmit}
-          onClose={() => { setShowForm(false); setEditing(undefined); }} />
+        <DebtForm
+          initial={editing}
+          initialDebtType={newDebtType}
+          onSubmit={handleSubmit}
+          onClose={() => { setShowForm(false); setEditing(undefined); }}
+        />
       )}
       {showPayment && (
-        <DebtPaymentForm debt={showPayment}
+        <DebtPaymentForm
+          debt={showPayment}
           onSubmit={(data: DebtPaymentFormData) => handlePayment(showPayment, data)}
-          onClose={() => setShowPayment(null)} />
+          onClose={() => setShowPayment(null)}
+        />
       )}
       {confirmId && (
-        <ConfirmModal message={t("debts.confirm_delete_msg")} loading={deleteMut.isPending}
-          onConfirm={handleDelete} onCancel={() => setConfirmId(null)} />
+        <ConfirmModal
+          message={t("debts.confirm_delete_msg")}
+          loading={deleteMut.isPending}
+          onConfirm={handleDelete}
+          onCancel={() => setConfirmId(null)}
+        />
       )}
       {contactModal && (
         <ContactDetailModal contactId={contactModal} onClose={() => setContactModal(null)} />

@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import {
   Bell, CheckCheck, Archive, Trash2, ExternalLink,
   Search, Info, CheckCircle, AlertTriangle, XCircle, Clock,
-  Landmark, Target, Briefcase, TrendingUp, Sparkles, Loader2, PiggyBank,
+  Landmark, Target, Briefcase, TrendingUp, Sparkles, Loader2, PiggyBank, Receipt,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
@@ -13,20 +13,21 @@ import { useNotifications } from "@/hooks/useNotifications";
 import { useTranslation } from "@/lib/i18n";
 
 const TYPE_CONFIG: Record<NotificationType, { icon: React.ElementType; cls: string }> = {
-  info:       { icon: Info,         cls: "text-blue-400 bg-blue-400/10"      },
+  info:       { icon: Info,         cls: "text-blue-400 bg-blue-400/10"       },
   success:    { icon: CheckCircle,  cls: "text-emerald-400 bg-emerald-400/10" },
-  warning:    { icon: AlertTriangle,cls: "text-amber-400 bg-amber-400/10"    },
-  error:      { icon: XCircle,      cls: "text-rose-400 bg-rose-400/10"      },
-  reminder:   { icon: Clock,        cls: "text-purple-400 bg-purple-400/10"  },
-  debt:       { icon: Landmark,     cls: "text-orange-400 bg-orange-400/10"  },
-  budget:     { icon: Target,       cls: "text-yellow-400 bg-yellow-400/10"  },
-  work:       { icon: Briefcase,    cls: "text-cyan-400 bg-cyan-400/10"      },
-  investment: { icon: TrendingUp,   cls: "text-purple-400 bg-purple-400/10" },
-  ai:         { icon: Sparkles,     cls: "text-cyan-400 bg-cyan-400/10"      },
-  goal:       { icon: PiggyBank,    cls: "text-amber-400 bg-amber-400/10"    },
+  warning:    { icon: AlertTriangle,cls: "text-amber-400 bg-amber-400/10"     },
+  error:      { icon: XCircle,      cls: "text-rose-400 bg-rose-400/10"       },
+  reminder:   { icon: Clock,        cls: "text-purple-400 bg-purple-400/10"   },
+  debt:       { icon: Landmark,     cls: "text-orange-400 bg-orange-400/10"   },
+  budget:     { icon: Target,       cls: "text-yellow-400 bg-yellow-400/10"   },
+  work:       { icon: Briefcase,    cls: "text-cyan-400 bg-cyan-400/10"       },
+  investment: { icon: TrendingUp,   cls: "text-purple-400 bg-purple-400/10"  },
+  ai:         { icon: Sparkles,     cls: "text-cyan-400 bg-cyan-400/10"       },
+  goal:       { icon: PiggyBank,    cls: "text-amber-400 bg-amber-400/10"     },
+  bill:       { icon: Receipt,      cls: "text-orange-400 bg-orange-400/10"   },
 };
 
-type FilterTab = "all" | "unread" | "debt" | "budget" | "work" | "ai" | "investment" | "goal";
+type FilterTab = "all" | "unread" | "debt" | "budget" | "work" | "ai" | "investment" | "goal" | "bill";
 
 export default function NotificationsPage() {
   const { t }    = useTranslation();
@@ -59,9 +60,9 @@ export default function NotificationsPage() {
     { value: "unread",     key: "notifications.filter_unread"     },
     { value: "debt",       key: "notifications.filter_debt"       },
     { value: "budget",     key: "notifications.filter_budget"     },
-    { value: "work",       key: "notifications.filter_work"       },
-    { value: "investment", key: "notifications.filter_investment" },
     { value: "goal",       key: "notifications.filter_goal"       },
+    { value: "investment", key: "notifications.filter_investment" },
+    { value: "work",       key: "notifications.filter_work"       },
     { value: "ai",         key: "notifications.filter_ai"         },
   ];
 
@@ -74,12 +75,12 @@ export default function NotificationsPage() {
     <div className="space-y-5 max-w-2xl mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <div className="p-2 rounded-xl bg-cyan-400/10">
-            <Bell className="w-4 h-4 text-cyan-400" />
+        <div className="flex min-w-0 items-center gap-2.5">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-cyan-400/10">
+            <Bell className="h-4 w-4 text-cyan-400" />
           </div>
-          <div>
-            <h1 className="text-xl font-bold t1">{t("notifications.title")}</h1>
+          <div className="min-w-0">
+            <h1 className="truncate text-xl font-black t1">{t("notifications.title")}</h1>
             {unreadCount > 0 && (
               <p className="text-xs text-cyan-400 mt-0.5">
                 {t("notifications.unread_count", { count: String(unreadCount) })}

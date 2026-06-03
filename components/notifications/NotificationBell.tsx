@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import {
   Bell, CheckCheck, Archive, Trash2, ExternalLink,
   Info, CheckCircle, AlertTriangle, XCircle, Clock,
-  Landmark, Target, Briefcase, TrendingUp, Sparkles, PiggyBank,
+  Landmark, Target, Briefcase, TrendingUp, Sparkles, PiggyBank, Receipt,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { AppNotification, NotificationType } from "@/types";
@@ -25,6 +25,7 @@ const TYPE_CONFIG: Record<NotificationType, { icon: React.ElementType; cls: stri
   investment: { icon: TrendingUp,  cls: "text-purple-400 bg-purple-400/10" },
   ai:         { icon: Sparkles,    cls: "text-cyan-400 bg-cyan-400/10"     },
   goal:       { icon: PiggyBank,  cls: "text-amber-400 bg-amber-400/10"   },
+  bill:       { icon: Receipt,     cls: "text-orange-400 bg-orange-400/10" },
 };
 
 function NotificationItem({

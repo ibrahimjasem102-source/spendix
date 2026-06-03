@@ -59,6 +59,14 @@ export interface FinancialSummary {
   workIncome: number;
   transactionCount: number;
   topCategories: { name: string; amount: number }[];
+  budgets: {
+    name: string;
+    limit: number;
+    spent: number;
+    remaining: number;
+    percent: number;
+    status: "safe" | "near_limit" | "over";
+  }[];
   debtPayable: number;
   debtReceivable: number;
   overdueDebts: number;

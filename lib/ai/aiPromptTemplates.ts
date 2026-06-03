@@ -3,7 +3,7 @@ import type { FinancialSummary } from "./aiTypes";
 const LANGUAGE_NAMES: Record<string, string> = {
   en: "English",
   de: "German (Deutsch)",
-  ar: "Arabic (العربية)",
+  ar: "Arabic",
 };
 
 export function getLanguageName(language: string): string {
@@ -12,42 +12,54 @@ export function getLanguageName(language: string): string {
 
 export function buildFinancialContextString(summary: FinancialSummary): string {
   const topCats = summary.topCategories
-    .map((c) => `${c.name}: €${c.amount.toFixed(0)}`)
+    .map((category) => `${category.name}: ${category.amount.toFixed(0)}`)
     .join(", ");
 
+  const budgets = summary.budgets
+    .map((budget) =>
+      `${budget.name}: spent ${budget.spent.toFixed(0)} / limit ${budget.limit.toFixed(0)} ` +
+      `(${budget.percent}%, ${budget.status}, remaining ${budget.remaining.toFixed(0)})`
+    )
+    .join("\n");
+
   const trend = summary.monthlyTrend
-    .map((m) => `${m.month}: income €${m.income.toFixed(0)}, expenses €${m.expenses.toFixed(0)}`)
+    .map((month) => `${month.month}: income ${month.income.toFixed(0)}, expenses ${month.expenses.toFixed(0)}`)
     .join("\n");
 
   const recent = summary.recentTransactions
-    .map((t) => `- ${t.title}: €${t.amount.toFixed(2)} (${t.type}, ${t.date})`)
+    .map((transaction) =>
+      `- ${transaction.title}: ${transaction.amount.toFixed(2)} (${transaction.type}, ${transaction.date})`
+    )
     .join("\n");
 
   return `
 REAL-TIME FINANCIAL CONTEXT:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-💰 BALANCE & CASHFLOW:
-- Net Balance: €${summary.totalBalance.toFixed(2)}
-- Monthly Income: €${summary.monthlyIncome.toFixed(2)}
-- Monthly Expenses: €${summary.monthlyExpenses.toFixed(2)}
+
+BALANCE & CASHFLOW:
+- Net Balance: ${summary.totalBalance.toFixed(2)}
+- Monthly Income: ${summary.monthlyIncome.toFixed(2)}
+- Monthly Expenses: ${summary.monthlyExpenses.toFixed(2)}
 - Savings Rate: ${summary.savingsRate}%
-- Daily Burn Rate: €${summary.dailyBurn.toFixed(2)}/day
-- Work Income: €${summary.workIncome.toFixed(2)}
+- Daily Burn Rate: ${summary.dailyBurn.toFixed(2)}/day
+- Work Income: ${summary.workIncome.toFixed(2)}
 - Total Transactions: ${summary.transactionCount}
 
-🏦 DEBT SITUATION:
-- Money I Owe (Payable): €${summary.debtPayable.toFixed(2)}
-- Money Owed to Me (Receivable): €${summary.debtReceivable.toFixed(2)}
+DEBT SITUATION:
+- Money I Owe (Payable): ${summary.debtPayable.toFixed(2)}
+- Money Owed to Me (Receivable): ${summary.debtReceivable.toFixed(2)}
 - Active Debts: ${summary.activeDebts}
 - Overdue Debts: ${summary.overdueDebts}
 
-📊 TOP SPENDING CATEGORIES:
+TOP SPENDING CATEGORIES:
 ${topCats || "No spending data yet"}
 
-📈 INCOME VS EXPENSES TREND (last 3 months):
+BUDGETS THIS MONTH:
+${budgets || "No budgets configured this month"}
+
+INCOME VS EXPENSES TREND (last 3 months):
 ${trend || "No trend data yet"}
 
-📋 RECENT TRANSACTIONS:
+RECENT TRANSACTIONS:
 ${recent || "No recent transactions"}
 `.trim();
 }
@@ -63,6 +75,7 @@ ${contextString}
 YOUR ROLE:
 - Analyze the user's REAL financial data above
 - Give specific, actionable advice based on their actual numbers
+- Do not claim a budget is near/over its limit unless it appears in BUDGETS THIS MONTH with status "near_limit" or "over"
 - Reference specific amounts from their data when relevant
 - Identify risks (overdue debts, high burn rate, low savings)
 - Celebrate wins (good savings rate, debt recovery)
@@ -97,10 +110,14 @@ Generate 4-6 financial insights as a JSON array. Each insight must have:
 - "confidence": number 0.0-1.0
 
 Severity rules:
-- "critical": immediate action needed (overdue debts, negative balance, burn > 100% income)
-- "warning": attention needed (savings < 10%, high burn 80-100%, approaching debt due)
+- "critical": immediate action needed (overdue debts, negative balance, burn > 100% income, budget status "over")
+- "warning": attention needed (savings < 10%, high burn 80-100%, approaching debt due, budget status "near_limit")
 - "positive": good habits or achievements (savings > 20%, debts reducing, income growing)
 - "info": neutral observations and tips
+
+Budget accuracy rule:
+- Only mention a budget as near limit, depleted, or exceeded when BUDGETS THIS MONTH explicitly shows status "near_limit" or "over".
+- If no budgets are configured, discuss spending categories instead of budget limits.
 
 Return ONLY a valid JSON array, no markdown fences, no other text.`;
 }

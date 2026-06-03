@@ -1,6 +1,8 @@
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { DEFAULT_CATEGORIES } from "@/lib/categories";
 
+type Locale = "ar" | "en" | "de";
+
 function getFullName(user: User) {
   return (
     user.user_metadata?.full_name ||
@@ -15,10 +17,21 @@ function getAvatarUrl(user: User) {
   return user.user_metadata?.avatar_url || user.user_metadata?.picture || null;
 }
 
-export async function bootstrapAuthenticatedUser(supabase: SupabaseClient, user: User) {
-  const fullName = getFullName(user);
+function getCategoryName(cat: typeof DEFAULT_CATEGORIES[number], locale: Locale): string {
+  if (locale === "en") return cat.name_en;
+  if (locale === "de") return cat.name_en; // German fallback to English until name_de is added
+  return cat.name_ar;
+}
+
+export async function bootstrapAuthenticatedUser(
+  supabase: SupabaseClient,
+  user: User,
+  locale?: Locale,
+) {
+  const fullName  = getFullName(user);
   const avatarUrl = getAvatarUrl(user);
-  const now = new Date().toISOString();
+  const now       = new Date().toISOString();
+
   const { data: existingSettings, error: settingsReadError } = await supabase
     .from("profile_settings")
     .select("full_name, language, currency, theme")
@@ -27,6 +40,12 @@ export async function bootstrapAuthenticatedUser(supabase: SupabaseClient, user:
 
   if (settingsReadError) throw settingsReadError;
 
+  // Resolve locale: 1. passed explicitly, 2. already in profile, 3. default ar
+  const resolvedLocale: Locale =
+    locale ??
+    (existingSettings?.language as Locale | undefined) ??
+    "ar";
+
   await supabase.from("profiles").upsert({
     id: user.id,
     full_name: fullName || null,
@@ -34,11 +53,11 @@ export async function bootstrapAuthenticatedUser(supabase: SupabaseClient, user:
   }, { onConflict: "id" }).throwOnError();
 
   await supabase.from("profile_settings").upsert({
-    user_id: user.id,
+    user_id:   user.id,
     full_name: existingSettings?.full_name || fullName || null,
-    language: existingSettings?.language || "ar",
-    currency: existingSettings?.currency || "EUR",
-    theme: existingSettings?.theme || "dark",
+    language:  existingSettings?.language  || resolvedLocale,
+    currency:  existingSettings?.currency  || "EUR",
+    theme:     existingSettings?.theme     || "dark",
     updated_at: now,
   }, { onConflict: "user_id" }).throwOnError();
 
@@ -52,10 +71,10 @@ export async function bootstrapAuthenticatedUser(supabase: SupabaseClient, user:
 
   const rows = DEFAULT_CATEGORIES.map((cat) => ({
     user_id: user.id,
-    name: cat.name_ar,
-    type: cat.type,
-    color: cat.color,
-    icon: cat.icon,
+    name:    getCategoryName(cat, resolvedLocale),
+    type:    cat.type,
+    color:   cat.color,
+    icon:    cat.icon,
     section: cat.section,
   }));
 

@@ -1,36 +1,55 @@
 "use client";
 
 import { useGlobalActions } from "@/contexts/GlobalActionsContext";
-import { useGuest } from "@/contexts/GuestContext";
 import TransactionForm from "@/components/transactions/TransactionForm";
 import InvestmentForm from "@/components/investments/InvestmentForm";
 import DebtForm from "@/components/debts/DebtForm";
 import DebtPaymentFABModal from "@/components/modals/DebtPaymentFABModal";
-import WorkPaymentForm from "@/components/work/WorkPaymentForm";
-import WorkSessionForm from "@/components/work/WorkSessionForm";
-import GoalFormModal, { type GoalFormData, type FinancialGoal } from "@/components/goals/GoalFormModal";
+import WorkForm from "@/components/work/WorkForm";
+import GoalFormModal, { type GoalFormData } from "@/components/goals/GoalFormModal";
+import SubscriptionQuickForm from "@/components/subscriptions/SubscriptionQuickForm";
 import {
   useCreateTransaction,
   useCreateInvestment,
   useCreateDebt,
+  useCreateSubscription,
   useCreateWorkSession,
   useCreateWorkPayment,
+  useWorkSessions,
+  useWorkPayments,
+  useCreateGoal,
 } from "@/lib/query/hooks";
-import { emit } from "@/lib/events";
-import type { TransactionFormData, InvestmentFormData, DebtFormData, WorkSessionFormData, WorkPaymentFormData } from "@/types";
-
-const GOALS_STORAGE_KEY = "spendix_financial_goals";
+import type { TransactionFormData, InvestmentFormData, DebtFormData, SubscriptionFormData, WorkSessionFormData, WorkPaymentFormData } from "@/types";
 
 export default function GlobalModals() {
   const { activeModal, closeModal } = useGlobalActions();
-  const { isGuest } = useGuest();
 
   // All hooks must be called unconditionally
-  const createTxMut          = useCreateTransaction(isGuest);
+  const createTxMut          = useCreateTransaction();
   const createInvMut         = useCreateInvestment();
   const createDebtMut        = useCreateDebt();
+  const createSubMut         = useCreateSubscription();
   const createWorkSessionMut = useCreateWorkSession();
   const createWorkPaymentMut = useCreateWorkPayment();
+  const createGoalMut        = useCreateGoal();
+
+  // Work sessions — loaded so WorkForm can show the session picker in payment tab
+  const { data: rawWorkSessions = [] } = useWorkSessions(activeModal === "work_session" || activeModal === "work_payment");
+  const { data: workPayments    = [] } = useWorkPayments(activeModal === "work_session" || activeModal === "work_payment");
+
+  // Compute status so paid sessions are excluded from the payment picker
+  const today = new Date().toISOString().slice(0, 10);
+  const workSessions = rawWorkSessions.map((s) => {
+    const paid = workPayments
+      .filter((p) => p.work_session_id === s.id)
+      .reduce((a, p) => a + Number(p.amount), 0);
+    const expected = Number(s.expected_amount);
+    const status: "pending" | "paid" | "overdue" =
+      expected > 0 && paid >= expected ? "paid"
+      : s.due_date && s.due_date < today ? "overdue"
+      : "pending";
+    return { ...s, status, paid_amount: paid };
+  });
 
   if (!activeModal) return null;
 
@@ -73,35 +92,46 @@ export default function GlobalModals() {
     return <DebtPaymentFABModal onClose={closeModal} />;
   }
 
-  /* ── Work Session ────────────────────────────────────────── */
-  if (activeModal === "work_session") {
+  if (activeModal === "subscription") {
+    async function handleSubscription(data: SubscriptionFormData) {
+      await createSubMut.mutateAsync(data);
+    }
+    return <SubscriptionQuickForm onSubmit={handleSubscription} onClose={closeModal} />;
+  }
+
+  /* ── Work (Session + Payment combined) ──────────────────── */
+  if (activeModal === "work_session" || activeModal === "work_payment") {
     async function handleWorkSession(data: WorkSessionFormData) {
       await createWorkSessionMut.mutateAsync(data);
     }
-    return <WorkSessionForm onSubmit={handleWorkSession} onClose={closeModal} />;
-  }
-
-  /* ── Work Payment ────────────────────────────────────────── */
-  if (activeModal === "work_payment") {
     async function handleWorkPayment(data: WorkPaymentFormData) {
       await createWorkPaymentMut.mutateAsync(data);
     }
-    return <WorkPaymentForm onSubmit={handleWorkPayment} onClose={closeModal} />;
+    return (
+      <WorkForm
+        initialTab={activeModal === "work_payment" ? "payment" : "session"}
+        sessions={workSessions}
+        onSubmitSession={handleWorkSession}
+        onSubmitPayment={handleWorkPayment}
+        onClose={closeModal}
+      />
+    );
   }
 
   /* ── Goal ────────────────────────────────────────────────── */
   if (activeModal === "goal") {
-    function handleGoal(data: GoalFormData) {
-      try {
-        const raw = localStorage.getItem(GOALS_STORAGE_KEY);
-        const existing: FinancialGoal[] = raw ? (JSON.parse(raw) as FinancialGoal[]) : [];
-        const newGoal: FinancialGoal = {
-          id: crypto.randomUUID(),
-          ...data,
-        };
-        localStorage.setItem(GOALS_STORAGE_KEY, JSON.stringify([newGoal, ...existing]));
-        emit("spendix:goal-added");
-      } catch {}
+    async function handleGoal(data: GoalFormData) {
+      await createGoalMut.mutateAsync({
+        title: data.title,
+        target_amount: data.targetAmount,
+        saved_amount: data.savedAmount,
+        monthly_contribution: data.monthlyContribution,
+        due_date: data.dueDate || null,
+        category: data.category as import("@/types").GoalCategory,
+        tracking_type: "manual",
+        start_date: new Date().toISOString().slice(0, 10),
+        color: null,
+      });
       closeModal();
     }
     return <GoalFormModal onSubmit={handleGoal} onClose={closeModal} />;

@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { type Investment, type InvestmentFormData, type AssetType } from "@/types";
 import { useTranslation } from "@/lib/i18n";
 import { useCurrency } from "@/lib/currency";
+import { useGuest } from "@/contexts/GuestContext";
 import { useToast } from "@/hooks/useToast";
 import ToastList from "@/components/ui/Toast";
 import ConfirmModal from "@/components/ui/ConfirmModal";
@@ -35,6 +36,7 @@ const ASSET_TYPES: AssetType[] = ["stock", "crypto", "etf", "real_estate", "othe
 export default function InvestmentsPage() {
   const { t, formatDate } = useTranslation();
   const { format }        = useCurrency();
+  const { isGuest, isLoading: guestLoading } = useGuest();
   const { toasts, addToast, dismiss } = useToast();
 
   const [showForm,   setShowForm]   = useState(false);
@@ -42,8 +44,8 @@ export default function InvestmentsPage() {
   const [confirmId,  setConfirmId]  = useState<string | null>(null);
   const [activeType, setActiveType] = useState<AssetType | "all">("all");
 
-  const { data: investments = [], isLoading } = useInvestments();
-  const { data: portfolioHistory = [] }       = usePortfolioHistory();
+  const { data: investments = [], isLoading } = useInvestments(!guestLoading);
+  const { data: portfolioHistory = [] }       = usePortfolioHistory(!guestLoading);
 
   const createMut = useCreateInvestment();
   const updateMut = useUpdateInvestment();
@@ -124,20 +126,14 @@ export default function InvestmentsPage() {
     <div className="space-y-5">
 
       {/* ── Header ───────────────────────────────────────────── */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold t1">{t("investments.title")}</h1>
-          <p className="text-sm t2 mt-0.5">{t("investments.subtitle")}</p>
+      <div className="flex min-w-0 items-center gap-2.5">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-purple-400/10">
+          <TrendingUp className="h-4 w-4 text-purple-400" />
         </div>
-        <motion.button
-          onClick={() => { setEditing(undefined); setShowForm(true); }}
-          whileTap={{ scale: 0.95 }} transition={tapTransition}
-          className="flex items-center gap-2 px-4 py-2.5 text-white rounded-xl text-sm font-semibold pressable"
-          style={{ background: "linear-gradient(135deg, #7C3AED, #6D28D9)" }}>
-          <Plus className="w-3.5 h-3.5" />
-          <span className="hidden sm:inline">{t("investments.add")}</span>
-          <span className="sm:hidden">{t("common.add")}</span>
-        </motion.button>
+        <div className="min-w-0">
+          <h1 className="truncate text-xl font-black t1">{t("investments.title")}</h1>
+          <p className="mt-0.5 text-xs font-medium t2">{t("investments.subtitle")}</p>
+        </div>
       </div>
 
       {/* ── Portfolio Hero ────────────────────────────────────── */}
@@ -235,7 +231,14 @@ export default function InvestmentsPage() {
               <h3 className="text-sm font-semibold t1">{t("investments.portfolio_value")}</h3>
               <p className="text-xs t3 mt-0.5">{t("investments.over_time")}</p>
             </div>
-            <PortfolioChart data={portfolioHistory} />
+            {isGuest ? (
+              <div className="h-[200px] flex flex-col items-center justify-center gap-3 rounded-2xl bg-purple-400/5 border border-purple-400/10">
+                <TrendingUp className="w-8 h-8 text-purple-400/30" />
+                <p className="text-xs t3 text-center px-4">{t("investments.history_guest")}</p>
+              </div>
+            ) : (
+              <PortfolioChart data={portfolioHistory} />
+            )}
           </div>
         </div>
       )}
@@ -283,7 +286,7 @@ export default function InvestmentsPage() {
         </div>
 
         {/* Content */}
-        {isLoading ? (
+        {guestLoading || isLoading ? (
           <div className="py-16 flex items-center justify-center gap-2 t3">
             <Loader2 className="w-4 h-4 animate-spin" />
             <span className="text-sm">{t("common.loading")}</span>
@@ -298,13 +301,6 @@ export default function InvestmentsPage() {
                 ? t("investments.no_data")
                 : `${t("common.no_data")} — ${t(`investments.types.${activeType}`)}`}
             </p>
-            {activeType === "all" && (
-              <button
-                onClick={() => setShowForm(true)}
-                className="text-sm text-purple-400 hover:underline mt-1">
-                {t("investments.add")}
-              </button>
-            )}
           </div>
         ) : (
           <div className="divide-y divide-[hsl(var(--border))]">

@@ -41,6 +41,10 @@ export const queryKeys = {
     all: ["contacts"] as const,
     list: () => [...queryKeys.contacts.all, "list"] as const,
   },
+  categories: {
+    all: ["categories"] as const,
+    list: () => [...queryKeys.categories.all, "list"] as const,
+  },
   accounts: {
     all: ["accounts"] as const,
     list: () => [...queryKeys.accounts.all, "list"] as const,
@@ -48,10 +52,6 @@ export const queryKeys = {
   subscriptions: {
     all: ["subscriptions"] as const,
     list: () => [...queryKeys.subscriptions.all, "list"] as const,
-  },
-  bills: {
-    all: ["bills"] as const,
-    list: () => [...queryKeys.bills.all, "list"] as const,
   },
   calendar: {
     all: ["calendar"] as const,
@@ -61,9 +61,15 @@ export const queryKeys = {
     all:  ["goals"] as const,
     list: () => [...queryKeys.goals.all, "list"] as const,
   },
-  savings: {
-    all:          ["savings"] as const,
-    pots:         () => [...queryKeys.savings.all, "pots"] as const,
-    transactions: (potId: string) => [...queryKeys.savings.all, "transactions", potId] as const,
+  tags: {
+    all:  ["tags"] as const,
+    list: () => [...queryKeys.tags.all, "list"] as const,
+  },
+  household: {
+    all:     ["household"] as const,
+    detail:  () => [...queryKeys.household.all, "detail"] as const,
+    members: () => [...queryKeys.household.all, "members"] as const,
+    summary: () => [...queryKeys.household.all, "summary"] as const,
+    pending: () => [...queryKeys.household.all, "pending"] as const,
   },
 };

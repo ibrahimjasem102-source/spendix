@@ -14,6 +14,8 @@ import { useTranslation } from "@/lib/i18n";
 import { useCurrency } from "@/lib/currency";
 import { spring, tapTransition } from "@/lib/motion";
 import { safeFetch } from "@/lib/fetch-safe";
+import SheetDragHandle from "@/components/ui/SheetDragHandle";
+import ConfirmModal from "@/components/ui/ConfirmModal";
 import type { Subscription, SubscriptionFormData, BillingCycle, SubscriptionStatus, AccountType } from "@/types";
 
 // ── Constants ────────────────────────────────────────────────
@@ -122,6 +124,7 @@ function SubscriptionForm({ initial, onSubmit, onClose }: FormProps) {
     setLoading(true); setError("");
     try {
       await onSubmit(form);
+      setLoading(false);
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : t("common.error"));
@@ -146,7 +149,9 @@ function SubscriptionForm({ initial, onSubmit, onClose }: FormProps) {
       >
         {/* Header */}
         <div className="shrink-0 px-5 pt-4 pb-3" style={{ background: `${accent}10` }}>
-          <div className="w-10 h-1 rounded-full bg-white/12 mx-auto mb-3 sm:hidden" />
+          <div className="mb-1 sm:hidden">
+            <SheetDragHandle onClose={onClose} />
+          </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               {form.icon && <span className="text-2xl">{form.icon}</span>}
@@ -519,47 +524,6 @@ function SubscriptionCard({ sub, onEdit, onDelete, onToggleStatus }: CardProps) 
 
 // ── Delete Confirm ───────────────────────────────────────────
 
-function DeleteConfirm({ sub, onConfirm, onCancel }: { sub: Subscription; onConfirm: () => void; onCancel: () => void }) {
-  const { t } = useTranslation();
-  const { format } = useCurrency();
-  const color = sub.color ?? "#6366F1";
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ backgroundColor: "rgba(11,15,20,0.80)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)" }}
-      onClick={(e) => e.target === e.currentTarget && onCancel()}
-    >
-      <motion.div
-        initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
-        transition={spring}
-        className="w-full max-w-sm rounded-[1.75rem] p-6 space-y-4"
-        style={{ backgroundColor: "hsl(var(--bg-card))", border: "1px solid hsl(var(--border))" }}
-      >
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl"
-            style={{ backgroundColor: `${color}14` }}>
-            {sub.icon ?? "📋"}
-          </div>
-          <div>
-            <p className="font-bold t1">{sub.name}</p>
-            <p className="text-xs t3">{format(sub.amount)} / {sub.billing_cycle}</p>
-          </div>
-        </div>
-        <p className="text-sm t2">{t("subscriptions.delete_confirm")}</p>
-        <div className="flex gap-3 pt-1">
-          <button onClick={onCancel}
-            className="flex-1 py-3 rounded-2xl text-sm font-semibold t2 bg-[hsl(var(--bg-input))] hover:t1 transition-all">
-            {t("common.cancel")}
-          </button>
-          <button onClick={onConfirm}
-            className="flex-1 py-3 rounded-2xl text-sm font-bold text-white bg-rose-500 hover:bg-rose-600 transition-all">
-            {t("common.delete")}
-          </button>
-        </div>
-      </motion.div>
-    </div>
-  );
-}
 
 // ── Main Page ────────────────────────────────────────────────
 
@@ -585,17 +549,19 @@ export default function SubscriptionsPage() {
 
   async function handleCreate(data: SubscriptionFormData) {
     await createSubscription.mutateAsync(data);
+    setShowForm(false);
   }
 
   async function handleEdit(data: SubscriptionFormData) {
     if (!editing) return;
     await updateSubscription.mutateAsync({ id: editing.id, data });
+    setEditing(null);
   }
 
   async function handleDelete() {
     if (!deleting) return;
-    await deleteSubscription.mutateAsync(deleting.id);
-    setDeleting(null);
+    const id = deleting.id; setDeleting(null);
+    await deleteSubscription.mutateAsync(id);
   }
 
   async function handleToggleStatus(sub: Subscription) {
@@ -604,21 +570,16 @@ export default function SubscriptionsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold t1">{t("subscriptions.title")}</h1>
-          <p className="text-sm t3 mt-0.5">{t("subscriptions.subtitle")}</p>
+      <div className="flex min-w-0 items-center gap-2.5">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-indigo-400/10">
+          <RefreshCw className="h-4 w-4 text-indigo-400" />
         </div>
-        <motion.button
-          onClick={() => setShowForm(true)}
-          whileTap={{ scale: 0.93 }} transition={tapTransition}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-2xl text-sm font-bold text-white"
-          style={{ background: "linear-gradient(135deg, #6366F1, #4F46E5)", boxShadow: "0 4px 16px #6366F140" }}>
-          <Plus className="w-4 h-4" />
-          {t("subscriptions.add")}
-        </motion.button>
+        <div className="min-w-0">
+          <h1 className="truncate text-xl font-black t1">{t("subscriptions.title")}</h1>
+          <p className="mt-0.5 text-xs font-medium t3">{t("subscriptions.subtitle")}</p>
+        </div>
       </div>
 
       {/* Summary card */}
@@ -673,7 +634,7 @@ export default function SubscriptionsPage() {
                     <p className="text-sm font-bold t1 truncate">{sub.name}</p>
                     <p className="text-[10px] t3">{sub.next_billing_date}</p>
                   </div>
-                  <div className="text-right shrink-0">
+                  <div className="text-end shrink-0">
                     <p className="text-sm font-bold" style={{ color: urgency }}>{format(sub.amount)}</p>
                     <p className="text-[10px] font-semibold" style={{ color: urgency }}>{dayLabel(days, t)}</p>
                   </div>
@@ -741,14 +702,6 @@ export default function SubscriptionsPage() {
             <p className="font-bold t1 text-lg">{t("subscriptions.empty_title")}</p>
             <p className="text-sm t3 mt-1">{t("subscriptions.empty_subtitle")}</p>
           </div>
-          <motion.button
-            onClick={() => setShowForm(true)}
-            whileTap={{ scale: 0.95 }} transition={tapTransition}
-            className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl text-sm font-bold text-white"
-            style={{ background: "linear-gradient(135deg, #6366F1, #4F46E5)" }}>
-            <Plus className="w-4 h-4" />
-            {t("subscriptions.add_first")}
-          </motion.button>
         </motion.div>
       )}
 
@@ -763,9 +716,10 @@ export default function SubscriptionsPage() {
           />
         )}
         {deleting && (
-          <DeleteConfirm
+          <ConfirmModal
             key="delete"
-            sub={deleting}
+            message={t("subscriptions.delete_confirm")}
+            loading={deleteSubscription.isPending}
             onConfirm={handleDelete}
             onCancel={() => setDeleting(null)}
           />

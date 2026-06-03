@@ -6,9 +6,6 @@ import type { CalendarEvent, CalendarEventType } from "@/types";
 const EVENT_COLORS: Record<CalendarEventType, string> = {
   income:       "#10B981",
   expense:      "#F43F5E",
-  bill_due:     "#F59E0B",
-  bill_paid:    "#10B981",
-  bill_overdue: "#EF4444",
   subscription: "#8B5CF6",
   debt_due:     "#F43F5E",
   investment:   "#3B82F6",
@@ -40,7 +37,7 @@ export async function GET(request: Request) {
       .from("transactions")
       .select("id,title,amount,type,transaction_date,category:categories(name,color,icon)")
       .eq("user_id", user.id)
-      .eq("type", "income")
+      .in("type", ["income", "expense"])
       .gte("transaction_date", monthStart)
       .lte("transaction_date", monthEnd)
       .order("transaction_date")
@@ -51,11 +48,11 @@ export async function GET(request: Request) {
       events.push({
         id:         tx.id,
         date:       tx.transaction_date,
-        type:       "income",
+        type:       tx.type === "income" ? "income" : "expense",
         title:      tx.title,
         amount:     Number(tx.amount),
         icon:       cat?.icon ?? null,
-        color:      EVENT_COLORS.income,
+        color:      tx.type === "income" ? EVENT_COLORS.income : EVENT_COLORS.expense,
         source:     "transaction",
         source_id:  tx.id,
         action_url: "/transactions",
@@ -63,66 +60,7 @@ export async function GET(request: Request) {
     }
   } catch { /* table might not exist in some DB versions */ }
 
-  // ── 2. Bills: due_date in month ──────────────────────────
-  try {
-    const { data: bills } = await supabase
-      .from("bills")
-      .select("id,name,amount,due_date,paid_at,status,icon,color")
-      .eq("user_id", user.id)
-      .or(`due_date.gte.${monthStart},paid_at.gte.${monthStart}`)
-      .or(`due_date.lte.${monthEnd},paid_at.lte.${monthEnd}`)
-      .limit(100);
-
-    // Simpler: filter in JS after fetch
-    const { data: allBills } = await supabase
-      .from("bills")
-      .select("id,name,amount,due_date,paid_at,status,icon,color")
-      .eq("user_id", user.id)
-      .limit(500);
-
-    for (const b of allBills ?? []) {
-      const inDue  = b.due_date  >= monthStart && b.due_date  <= monthEnd;
-      const inPaid = b.paid_at   && b.paid_at   >= monthStart && b.paid_at   <= monthEnd;
-
-      if (inDue) {
-        const today = now.toISOString().slice(0, 10);
-        const type: CalendarEventType =
-          b.status === "paid"    ? "bill_paid"
-          : b.due_date < today   ? "bill_overdue"
-          : "bill_due";
-        events.push({
-          id:         `bill-due-${b.id}`,
-          date:       b.due_date,
-          type,
-          title:      b.name,
-          amount:     b.amount ? Number(b.amount) : null,
-          icon:       b.icon ?? null,
-          color:      EVENT_COLORS[type],
-          source:     "bill",
-          source_id:  b.id,
-          action_url: "/bills",
-        });
-      }
-
-      if (inPaid && b.status === "paid" && b.paid_at !== b.due_date) {
-        events.push({
-          id:         `bill-paid-${b.id}`,
-          date:       b.paid_at!,
-          type:       "bill_paid",
-          title:      b.name,
-          amount:     b.amount ? Number(b.amount) : null,
-          icon:       b.icon ?? null,
-          color:      EVENT_COLORS.bill_paid,
-          source:     "bill",
-          source_id:  b.id,
-          action_url: "/bills",
-        });
-      }
-    }
-    void bills; // suppress unused warning
-  } catch { /* bills table may not exist yet */ }
-
-  // ── 3. Subscriptions: next_billing_date in month ─────────
+  // ── 2. Subscriptions: next_billing_date in month ─────────
   try {
     const { data: subs } = await supabase
       .from("subscriptions")
@@ -261,9 +199,9 @@ export async function GET(request: Request) {
 
   // Sort by date then by type priority
   const PRIORITY: Record<CalendarEventType, number> = {
-    bill_overdue: 0, debt_due: 1, bill_due: 2, subscription: 3,
-    income: 4, work_payment: 5, work_session: 6, investment: 7,
-    bill_paid: 8, expense: 9,
+    debt_due: 0, subscription: 1,
+    income: 2, work_payment: 3, work_session: 4, investment: 5,
+    expense: 6,
   };
   events.sort((a, b) => a.date.localeCompare(b.date) || (PRIORITY[a.type] - PRIORITY[b.type]));
 

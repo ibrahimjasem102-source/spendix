@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Wallet, Eye, EyeOff, Loader2 } from "lucide-react";
@@ -18,6 +18,13 @@ export default function SignupPage() {
   const [error, setError]       = useState("");
   const [confirmationSent, setConfirmationSent] = useState(false);
   const [loading, setLoading]   = useState(false);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) router.replace("/dashboard");
+    });
+  }, [router]);
 
   async function handleSubmit(e: { preventDefault(): void }) {
     e.preventDefault();
@@ -40,15 +47,22 @@ export default function SignupPage() {
     }
 
     if (data.session) {
-      await fetch("/api/auth/bootstrap", { method: "POST" }).catch(() => undefined);
-      await migrateGuestData().catch(() => undefined);
-      router.replace("/dashboard");
+      const currentLocale = typeof window !== "undefined"
+        ? (window.localStorage.getItem("spendix_locale") ?? "ar")
+        : "ar";
+      await fetch("/api/auth/bootstrap", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ locale: currentLocale }),
+      }).catch((err) => { console.warn("[signup] bootstrap failed:", err); });
+      await migrateGuestData({ saveSettings: true }).catch((err) => {
+        console.warn("[signup] migration failed:", err);
+      });
+      window.location.replace("/dashboard");
     } else {
       setConfirmationSent(true);
       setLoading(false);
-      return;
     }
-    router.refresh();
   }
 
   return (
@@ -81,7 +95,7 @@ export default function SignupPage() {
             {confirmationSent && (
               <div className="px-4 py-3 rounded-xl text-sm"
                 style={{ background: "hsl(160 84% 39% / 0.1)", color: "hsl(160 84% 65%)", border: "1px solid hsl(160 84% 39% / 0.2)" }}>
-                تم إنشاء الحساب. افتح رسالة التأكيد في بريدك الإلكتروني، ثم سجّل الدخول.
+                {t("auth.confirmation_sent")}
               </div>
             )}
 
@@ -152,6 +166,12 @@ export default function SignupPage() {
             {t("auth.already_have_account")}{" "}
             <Link href="/login" className="font-semibold text-purple-400 hover:text-purple-300 transition-colors">
               {t("auth.sign_in")}
+            </Link>
+          </p>
+
+          <p className="text-center text-xs" style={{ color: "hsl(215 18% 38%)" }}>
+            <Link href="/dashboard" className="hover:underline transition-colors" style={{ color: "hsl(215 18% 50%)" }}>
+              {t("auth.continue_as_guest")}
             </Link>
           </p>
         </div>

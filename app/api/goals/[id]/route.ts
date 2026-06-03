@@ -6,6 +6,12 @@ import type { GoalCategory, GoalFormData, GoalTrackingType } from "@/types";
 const GOAL_CATEGORIES: GoalCategory[]     = ["emergency","home","travel","education","car","retirement","other"];
 const TRACKING_TYPES: GoalTrackingType[]  = ["manual","savings","income","investment","debt_payoff"];
 
+function isOptionalCompletedAtError(message = "") {
+  return message.includes("completed_at") ||
+    message.includes("Could not find") ||
+    message.includes("schema cache");
+}
+
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -27,8 +33,9 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   if (body.start_date !== undefined)          update.start_date          = body.start_date;
   if (body.notes !== undefined)              update.notes               = body.notes ?? null;
   if (body.color !== undefined)              update.color               = body.color ?? null;
+  if (body.milestones !== undefined)        update.milestones          = Array.isArray(body.milestones) ? body.milestones : [];
 
-  const { data: goal, error } = await supabase
+  let { data: goal, error } = await supabase
     .from("goals")
     .update(update)
     .eq("id", id)
@@ -36,7 +43,35 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     .select()
     .single();
 
+  // Retry without milestones if column doesn't exist
+  if (error && (error.message.includes("milestones") || error.message.includes("Could not find") || error.message.includes("schema cache"))) {
+    const { milestones: _m, ...updateWithoutMilestones } = update;
+    const retry = await supabase.from("goals").update(updateWithoutMilestones).eq("id", id).eq("user_id", user.id).select().single();
+    goal = retry.data;
+    error = retry.error;
+  }
+
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  if (
+    goal.tracking_type === "manual" &&
+    !goal.completed_at &&
+    Number(goal.target_amount) > 0 &&
+    Number(goal.saved_amount) >= Number(goal.target_amount)
+  ) {
+    const completedAt = new Date().toISOString();
+    const { error: completedError } = await supabase
+      .from("goals")
+      .update({ completed_at: completedAt })
+      .eq("id", id)
+      .eq("user_id", user.id);
+
+    if (completedError && !isOptionalCompletedAtError(completedError.message)) {
+      return NextResponse.json({ error: completedError.message }, { status: 500 });
+    }
+    if (!completedError) goal.completed_at = completedAt;
+  }
+
   return NextResponse.json({ goal });
 }
 

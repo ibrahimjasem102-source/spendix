@@ -123,4 +123,52 @@ export const notify = {
       priority: "high",
       action_url: "/goals",
     }),
+
+  goalProgress: (supabase: SupabaseClient, userId: string, goalId: string, title: string, pct: number) =>
+    createNotification(supabase, {
+      user_id:           userId,
+      title:             `تقدم رائع في هدفك "${title}" 🎯`,
+      message:           `لقد وصلت إلى ${pct}% من هدفك المالي. استمر في المدخرات لتحقيقه.`,
+      type:              "goal",
+      source:            "goal",
+      priority:          "normal",
+      related_source_id: goalId,
+      action_url:        "/goals",
+    }),
+
+  budgetAlert: (supabase: SupabaseClient, userId: string, categoryName: string, pctSpent: number, remaining: string) =>
+    createNotification(supabase, {
+      user_id:    userId,
+      title:      `تنبيه ميزانية: ${categoryName}`,
+      message:    `أنفقت ${pctSpent.toFixed(0)}% من ميزانية "${categoryName}". المتبقي: ${remaining}. راجع إنفاقك.`,
+      type:       "budget",
+      source:     "budget",
+      priority:   pctSpent >= 100 ? "high" : "normal",
+      action_url: "/budgets",
+    }),
+
+  investmentAlert: (supabase: SupabaseClient, userId: string, investmentId: string, name: string, gainPct: number, gainAbs: string) =>
+    createNotification(supabase, {
+      user_id:           userId,
+      title:             gainPct >= 0 ? `📈 ${name} تحقق مكاسب` : `⚠️ ${name} يتراجع`,
+      message:           gainPct >= 0
+        ? `استثمار "${name}" ارتفع ${gainPct.toFixed(1)}% (${gainAbs}+). راجع محفظتك.`
+        : `استثمار "${name}" تراجع ${Math.abs(gainPct).toFixed(1)}% (${gainAbs}). فكر في إعادة التقييم.`,
+      type:              "investment",
+      source:            "investment",
+      priority:          gainPct <= -15 ? "high" : "normal",
+      related_source_id: investmentId,
+      action_url:        "/investments",
+    }),
+
+  aiAlert: (supabase: SupabaseClient, userId: string, title: string, message: string, actionUrl?: string) =>
+    createNotification(supabase, {
+      user_id:    userId,
+      title,
+      message,
+      type:       "ai",
+      source:     "ai",
+      priority:   "normal",
+      action_url: actionUrl ?? "/ai-insights",
+    }),
 };

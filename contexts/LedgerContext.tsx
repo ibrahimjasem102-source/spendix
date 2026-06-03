@@ -9,18 +9,17 @@ import {
   calculateBalance, getCashflowSummary,
   filterLedger, sortByDate,
 } from "@/lib/ledger/engine";
-import { buildInitialLedger } from "@/lib/ledger/sync";
-import { mockTransactions, mockInvestments, mockDebts } from "@/lib/mock-data";
+import { useFinancialEngine } from "@/lib/finance/engine";
 import { on } from "@/lib/events";
 
 const STORAGE_KEY = "spendix_ledger_additions";
 
 interface LedgerContextType {
-  entries: UnifiedLedgerEntry[];
-  balance: number;
-  cashflow: CashflowSummary;
-  addEntry: (entry: UnifiedLedgerEntry) => void;
-  getFiltered: (filters: LedgerFilters) => UnifiedLedgerEntry[];
+  entries:    UnifiedLedgerEntry[];
+  balance:    number;
+  cashflow:   CashflowSummary;
+  addEntry:   (entry: UnifiedLedgerEntry) => void;
+  getFiltered:(filters: LedgerFilters) => UnifiedLedgerEntry[];
 }
 
 const defaultCashflow: CashflowSummary = {
@@ -28,24 +27,21 @@ const defaultCashflow: CashflowSummary = {
 };
 
 const LedgerContext = createContext<LedgerContextType>({
-  entries: [],
-  balance: 0,
-  cashflow: defaultCashflow,
-  addEntry: () => {},
+  entries:     [],
+  balance:     0,
+  cashflow:    defaultCashflow,
+  addEntry:    () => {},
   getFiltered: () => [],
 });
 
 export function LedgerProvider({ children }: { children: React.ReactNode }) {
-  // Base entries built from mock data (never changes)
-  const baseEntries = useMemo(
-    () => sortByDate(buildInitialLedger(mockTransactions, mockInvestments, mockDebts)),
-    []
-  );
+  // Real ledger data from Supabase via the financial engine
+  const { ledgerEntries: realEntries } = useFinancialEngine();
 
-  // Runtime additions (from FAB adds or events)
+  // Optimistic additions — entries added before the server refetches
   const [additions, setAdditions] = useState<UnifiedLedgerEntry[]>([]);
 
-  // Hydrate from localStorage on mount
+  // Hydrate additions from localStorage on mount
   useEffect(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
@@ -53,6 +49,7 @@ export function LedgerProvider({ children }: { children: React.ReactNode }) {
     } catch {}
   }, []);
 
+  // Listen for new ledger entries dispatched from other parts of the app
   useEffect(() => {
     return on("spendix:ledger-entry-added", (entry) => {
       if (!entry?.id) return;
@@ -65,6 +62,18 @@ export function LedgerProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
+  // Remove optimistic additions once they appear in real server data
+  useEffect(() => {
+    if (realEntries.length === 0) return;
+    const realIds = new Set(realEntries.map((e) => e.id));
+    setAdditions((prev) => {
+      const filtered = prev.filter((a) => !realIds.has(a.id));
+      if (filtered.length === prev.length) return prev;
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered)); } catch {}
+      return filtered;
+    });
+  }, [realEntries]);
+
   const addEntry = useCallback((entry: UnifiedLedgerEntry) => {
     setAdditions((prev) => {
       if (prev.some((p) => p.id === entry.id)) return prev;
@@ -74,13 +83,25 @@ export function LedgerProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
-  const entries = useMemo(
-    () => sortByDate([...additions, ...baseEntries]),
-    [baseEntries, additions]
+  // Merge: optimistic additions first (deduplicated against real data)
+  const entries = useMemo(() => {
+    const realIds = new Set(realEntries.map((e) => e.id));
+    const pending = additions.filter((a) => !realIds.has(a.id));
+    return sortByDate([...pending, ...realEntries]);
+  }, [realEntries, additions]);
+
+  // Balance = same logic as dashboard: only cash movements (exclude investments/subscriptions/work sessions)
+  // investments are tracked separately and don't reduce your "cash on hand"
+  const cashEntries = useMemo(
+    () => entries.filter(
+      (e) => e.type === "transaction" || e.type === "income"
+          || e.type === "salary"       || e.type === "debt"
+    ),
+    [entries]
   );
 
-  const balance  = useMemo(() => calculateBalance(entries),    [entries]);
-  const cashflow = useMemo(() => getCashflowSummary(entries),  [entries]);
+  const balance  = useMemo(() => calculateBalance(cashEntries),   [cashEntries]);
+  const cashflow = useMemo(() => getCashflowSummary(cashEntries), [cashEntries]);
 
   const getFiltered = useCallback(
     (filters: LedgerFilters) => filterLedger(entries, filters),

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { AppNotification } from "@/types";
 import { createClient } from "@/lib/supabase/client";
 import { safeFetch } from "@/lib/fetch-safe";
+import { useGuest } from "@/contexts/GuestContext";
 
 interface UseNotificationsReturn {
   notifications: AppNotification[];
@@ -18,12 +19,21 @@ interface UseNotificationsReturn {
 }
 
 export function useNotifications(): UseNotificationsReturn {
+  const { isGuest, isLoading: guestLoading } = useGuest();
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [loading, setLoading]             = useState(true);
   const [error, setError]                 = useState<string | null>(null);
   const channelRef = useRef<ReturnType<ReturnType<typeof createClient>["channel"]> | null>(null);
+  const canFetch = !guestLoading && !isGuest;
 
   const fetch = useCallback(async () => {
+    if (!canFetch) {
+      setNotifications([]);
+      setError(null);
+      setLoading(false);
+      return;
+    }
+
     try {
       const res = await safeFetch("/api/notifications?limit=50");
       if (!res.ok) throw new Error("fetch failed");
@@ -35,9 +45,16 @@ export function useNotifications(): UseNotificationsReturn {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [canFetch]);
 
   useEffect(() => {
+    if (!canFetch) {
+      setNotifications([]);
+      setError(null);
+      setLoading(false);
+      return;
+    }
+
     void fetch();
 
     const supabase = createClient();
@@ -78,9 +95,10 @@ export function useNotifications(): UseNotificationsReturn {
         supabase.removeChannel(channelRef.current);
       }
     };
-  }, [fetch]);
+  }, [canFetch, fetch]);
 
   const markAsRead = useCallback(async (id: string) => {
+    if (!canFetch) return;
     setNotifications((prev) =>
       prev.map((n) => n.id === id ? { ...n, status: "read" as const, read_at: new Date().toISOString() } : n)
     );
@@ -89,16 +107,18 @@ export function useNotifications(): UseNotificationsReturn {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status: "read" }),
     });
-  }, []);
+  }, [canFetch]);
 
   const markAllAsRead = useCallback(async () => {
+    if (!canFetch) return;
     setNotifications((prev) =>
       prev.map((n) => n.status === "unread" ? { ...n, status: "read" as const, read_at: new Date().toISOString() } : n)
     );
     await safeFetch("/api/notifications/mark-all-read", { method: "POST" });
-  }, []);
+  }, [canFetch]);
 
   const archiveNotification = useCallback(async (id: string) => {
+    if (!canFetch) return;
     setNotifications((prev) =>
       prev.map((n) => n.id === id ? { ...n, status: "archived" as const } : n)
     );
@@ -107,12 +127,13 @@ export function useNotifications(): UseNotificationsReturn {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status: "archived" }),
     });
-  }, []);
+  }, [canFetch]);
 
   const deleteNotification = useCallback(async (id: string) => {
+    if (!canFetch) return;
     setNotifications((prev) => prev.filter((n) => n.id !== id));
     await safeFetch(`/api/notifications/${id}`, { method: "DELETE" });
-  }, []);
+  }, [canFetch]);
 
   const unreadCount = notifications.filter((n) => n.status === "unread").length;
 

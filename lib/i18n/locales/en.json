@@ -6,7 +6,7 @@
     "ai_insights": "AI", "settings": "Settings",
     "ai_assistant": "Assistant",
     "sign_in": "Sign in", "sign_out": "Sign out", "collapse": "Collapse",
-    "more": "More", "work": "Work", "profile": "Profile", "hub": "Hub", "accounts": "Accounts", "subscriptions": "Subscriptions", "bills": "Bills", "calendar": "Calendar"
+    "more": "More", "work": "Work", "profile": "Profile", "accounts": "Accounts", "subscriptions": "Subscriptions", "bills": "Bills", "calendar": "Calendar"
   },
   "common": {
     "save": "Save changes", "saved": "Saved", "saving": "Saving...", "cancel": "Cancel", "add": "Add",
@@ -216,7 +216,12 @@
   "topbar": {
     "search": "Search transactions...", "notifications": "Notifications",
     "last_7_days": "Last 7 days", "last_30_days": "Last 30 days",
-    "last_3_months": "Last 3 months", "this_year": "This year"
+    "last_3_months": "Last 3 months", "this_year": "This year",
+    "switch_light": "Light mode", "switch_dark": "Dark mode",
+    "guest_mode": "Guest Mode", "signed_in": "Signed in as",
+    "dark": "Dark", "light": "Light",
+    "appearance": "Appearance", "language": "Language",
+    "quick_links": "Quick Links"
   },
   "actions": {
     "open": "Quick Add", "close": "Close",

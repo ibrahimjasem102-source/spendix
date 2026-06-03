@@ -25,7 +25,7 @@ export async function PUT(request: Request, { params }: Params) {
     const txUpdates: Record<string, unknown> = {};
     if (body.amount !== undefined)         txUpdates.amount = body.amount;
     if (body.payment_date !== undefined)   txUpdates.transaction_date = body.payment_date;
-    if (body.employer_or_client !== undefined) txUpdates.title = `دفعة عمل: ${body.employer_or_client}`;
+    if (body.employer_or_client !== undefined) txUpdates.title = `Work payment: ${body.employer_or_client}`;
     if (body.notes !== undefined)          txUpdates.notes = body.notes;
 
     if (Object.keys(txUpdates).length > 0) {

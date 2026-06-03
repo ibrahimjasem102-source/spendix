@@ -23,7 +23,14 @@ export async function GET() {
 
   if (error) {
     if (isMissingContactsTable(error.message)) {
-      return NextResponse.json({ contacts: [], contactsAvailable: false, setupRequired: "supabase/migrations/005_financial_contacts.sql" });
+      return NextResponse.json(
+        {
+          errorKey: "contacts.setup_required",
+          contactsAvailable: false,
+          setupRequired: "supabase/migrations/005_financial_contacts.sql",
+        },
+        { status: 409 },
+      );
     }
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
@@ -38,6 +45,8 @@ export async function POST(request: Request) {
   const body: ContactFormData = await request.json();
   const name = body.name?.trim();
   const type = CONTACT_TYPES.has(body.type) ? body.type : "person";
+
+  console.log("[Contact API] POST payload:", { name, type, phone: body.phone, email: body.email, notes: body.notes });
 
   if (!name) {
     return NextResponse.json({ errorKey: "contacts.name_required" }, { status: 400 });
@@ -57,6 +66,12 @@ export async function POST(request: Request) {
     .single();
 
   if (error) {
+    console.error("[Contact API] Supabase error:", {
+      message: error.message,
+      code:    error.code,
+      details: error.details,
+      hint:    error.hint,
+    });
     if (isMissingContactsTable(error.message)) {
       return NextResponse.json(
         {
@@ -67,7 +82,8 @@ export async function POST(request: Request) {
         { status: 409 }
       );
     }
-    return NextResponse.json({ error: error.message, code: error.code }, { status: 500 });
+    return NextResponse.json({ error: error.message, code: error.code, details: error.details, hint: error.hint }, { status: 500 });
   }
+  console.log("[Contact API] created contact:", data.id);
   return NextResponse.json({ contact: data }, { status: 201 });
 }

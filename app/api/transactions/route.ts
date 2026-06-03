@@ -26,7 +26,23 @@ function isOptionalColumnError(message: string) {
     message.includes("transactions_source_check") ||
     message.includes("violates check constraint") ||
     message.includes("Could not find") ||
-    message.includes("schema cache");
+    message.includes("schema cache") ||
+    message.includes("transaction_tags") ||
+    message.includes("tags");
+}
+
+async function syncTags(
+  supabase: Awaited<ReturnType<typeof import("@/lib/supabase/server").createClient>>,
+  transactionId: string,
+  tagIds: string[] | undefined
+): Promise<void> {
+  if (!Array.isArray(tagIds)) return;
+  // Delete existing and reinsert — simple replace strategy
+  await supabase.from("transaction_tags").delete().eq("transaction_id", transactionId);
+  if (tagIds.length === 0) return;
+  await supabase.from("transaction_tags").insert(
+    tagIds.map((tag_id) => ({ transaction_id: transactionId, tag_id }))
+  );
 }
 
 export async function GET(request: Request) {
@@ -123,6 +139,12 @@ export async function POST(request: Request) {
   if (error) {
     console.error("[transactions/post]", { requestId, code: error.code, message: error.message });
     return NextResponse.json({ error: error.message, code: error.code }, { status: 500 });
+  }
+
+  // Sync tags (best-effort, non-blocking)
+  if (Array.isArray(body.tag_ids) && body.tag_ids.length > 0) {
+    const txId = (data as { id: string } | null)?.id;
+    if (txId) await syncTags(supabase, txId, body.tag_ids).catch(() => null);
   }
 
   return NextResponse.json({ transaction: data }, { status: 201 });

@@ -378,7 +378,7 @@ export async function getDashboardStats(userId: string, supabase?: Supabase): Pr
     savingsRate: calculateSavingsRate(monthlyIncome, monthlyExpenses),
     dailyBurn: monthlyCashflow.reduce((sum, point) => sum + point.amount, 0) / monthlyCashflow.length,
     workIncome: transactions
-      .filter((transaction) => transaction.source === "work_payment")
+      .filter((transaction) => transaction.source === "work" || transaction.source === "work_payment")
       .reduce((sum, transaction) => sum + numberValue(transaction.amount), 0),
     transactionCount: transactions.length,
     recentTransactions: calculateRecentTransactions(transactions, 10),

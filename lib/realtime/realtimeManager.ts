@@ -5,7 +5,10 @@ import type { RealtimeChannel } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 import { invalidateForRealtimeTable } from "@/lib/query/invalidation";
 
-type TableName = "transactions" | "budgets" | "debts" | "debt_payments" | "investments" | "notifications" | "work_sessions" | "work_payments" | "financial_contacts";
+type TableName =
+  | "transactions" | "budgets" | "debts" | "debt_payments" | "investments"
+  | "notifications" | "work_sessions" | "work_payments" | "financial_contacts"
+  | "goals" | "subscriptions" | "accounts" | "tags";
 
 const TABLES: TableName[] = [
   "transactions",
@@ -17,6 +20,10 @@ const TABLES: TableName[] = [
   "work_sessions",
   "work_payments",
   "financial_contacts",
+  "goals",
+  "subscriptions",
+  "accounts",
+  "tags",
 ];
 
 export function createRealtimeManager(queryClient: QueryClient) {

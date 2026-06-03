@@ -17,20 +17,31 @@ export function GuestProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const supabase = createClient();
+    let active = true;
 
-    // onAuthStateChange fires INITIAL_SESSION synchronously from cached session
+    supabase.auth.getSession()
+      .then(({ data: { session } }) => {
+        if (!active) return;
+        setAuthToken(session?.access_token ?? null);
+        setIsGuest(!session?.user);
+        setIsLoading(false);
+      })
+      .catch(() => {
+        if (!active) return;
+        setIsGuest(true);
+        setIsLoading(false);
+      });
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+      if (!active) return;
       setAuthToken(session?.access_token ?? null);
       setIsGuest(!session?.user);
       setIsLoading(false);
     });
 
-    // Fallback if onAuthStateChange doesn't fire (e.g. no cached session)
-    const timeout = setTimeout(() => setIsLoading(false), 3000);
-
     return () => {
+      active = false;
       subscription.unsubscribe();
-      clearTimeout(timeout);
     };
   }, []);
 

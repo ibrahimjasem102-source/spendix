@@ -1,82 +1,319 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { motion } from "framer-motion";
 import {
-  User, Globe, Palette, Bell, Sparkles, Check, DollarSign,
-  Moon, Sun, Shield, LogOut, ChevronRight, KeyRound, LockKeyhole, Loader2,
+  Bell,
+  Check,
+  ChevronRight,
+  Download,
+  Globe,
+  KeyRound,
+  Loader2,
+  LockKeyhole,
+  LogIn,
+  LogOut,
+  Moon,
+  Palette,
+  Shield,
+  Sparkles,
+  Sun,
+  Trash2,
+  User,
+  WalletCards,
 } from "lucide-react";
-import Link from "next/link";
-import { useTranslation, LOCALES, type Locale } from "@/lib/i18n";
-import { useCurrency, CURRENCIES, type Currency } from "@/lib/currency";
-import { useTheme } from "@/lib/theme";
-import { createClient } from "@/lib/supabase/client";
-import { fadeIn, spring, tapTransition } from "@/lib/motion";
-import { ROOM_DEFINITIONS, useRoomLocks } from "@/contexts/RoomLockContext";
 import { useGuest } from "@/contexts/GuestContext";
+import { ROOM_DEFINITIONS, useRoomLocks } from "@/contexts/RoomLockContext";
+import { useCurrency, CURRENCIES, type Currency } from "@/lib/currency";
+import { useTranslation, LOCALES, type Locale } from "@/lib/i18n";
+import { fadeIn, spring, tapTransition } from "@/lib/motion";
+import { createClient } from "@/lib/supabase/client";
+import { migrateGuestData } from "@/lib/guest/migrate";
+import { useTheme } from "@/lib/theme";
 
-function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
+function Toggle({ checked, onChange, disabled = false }: {
+  checked: boolean;
+  onChange: (value: boolean) => void;
+  disabled?: boolean;
+}) {
   return (
     <motion.button
       type="button"
-      onClick={() => onChange(!checked)}
-      whileTap={{ scale: 0.9 }}
+      onClick={() => !disabled && onChange(!checked)}
+      whileTap={{ scale: disabled ? 1 : 0.94 }}
       transition={tapTransition}
-      className={`relative inline-flex h-[22px] w-10 items-center rounded-full transition-colors ${
-        checked ? "bg-cyan-400" : "bg-[hsl(var(--bg-input))] border border-[hsl(var(--border))]"
+      disabled={disabled}
+      className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors disabled:opacity-50 ${
+        checked ? "bg-cyan-400" : "border border-[hsl(var(--border))] bg-[hsl(var(--bg-input))]"
       }`}
+      aria-pressed={checked}
     >
-      <span className={`inline-block w-[16px] h-[16px] rounded-full bg-white shadow-sm transform transition-all duration-200 ${
-        checked ? "translate-x-[20px]" : "translate-x-[3px]"
+      <span className={`h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${
+        checked
+          ? "translate-x-[22px] rtl:translate-x-[4px]"
+          : "translate-x-1 rtl:translate-x-[22px]"
       }`} />
     </motion.button>
   );
 }
 
-function SettingRow({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
+function SectionShell({
+  title,
+  description,
+  icon: Icon,
+  children,
+  tone = "cyan",
+}: {
+  title: string;
+  description?: string;
+  icon: React.ElementType;
+  children: React.ReactNode;
+  tone?: "cyan" | "emerald" | "violet" | "amber" | "rose" | "slate";
+}) {
+  const tones = {
+    cyan: "bg-cyan-400/10 text-cyan-300",
+    emerald: "bg-emerald-400/10 text-emerald-300",
+    violet: "bg-violet-400/10 text-violet-300",
+    amber: "bg-amber-400/10 text-amber-300",
+    rose: "bg-rose-400/10 text-rose-300",
+    slate: "bg-slate-400/10 text-slate-300",
+  };
+
   return (
-    <div className="flex items-center justify-between py-4 border-b border-[hsl(var(--border-2))] last:border-0">
-      <div className="flex-1 min-w-0 me-4">
-        <p className="text-sm font-medium t1">{label}</p>
-        {hint && <p className="text-xs t3 mt-0.5 leading-relaxed">{hint}</p>}
+    <motion.section
+      variants={fadeIn}
+      initial="hidden"
+      animate="visible"
+      transition={spring}
+      className="space-y-2"
+    >
+      <div className="flex items-center gap-2 px-1.5">
+        <div className={`grid h-7 w-7 shrink-0 place-items-center rounded-lg ${tones[tone]}`}>
+          <Icon className="h-3.5 w-3.5" />
+        </div>
+        <div className="min-w-0">
+          <p className="text-[10px] font-black uppercase tracking-[0.15em] t3">{title}</p>
+          {description && <p className="mt-0.5 line-clamp-1 text-[11px] leading-tight t3">{description}</p>}
+        </div>
+      </div>
+      <div className="card overflow-hidden p-2.5">{children}</div>
+    </motion.section>
+  );
+}
+
+function SettingLine({ label, hint, children }: {
+  label: string;
+  hint?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex min-h-[48px] items-center justify-between gap-3 border-b border-[hsl(var(--border-2))] px-1.5 py-2 last:border-0">
+      <div className="min-w-0 flex-1">
+        <p className="text-[13px] font-semibold t1">{label}</p>
+        {hint && <p className="mt-0.5 line-clamp-1 text-[11px] leading-tight t3">{hint}</p>}
       </div>
       {children}
     </div>
   );
 }
 
-type SectionId = "profile" | "language" | "currency" | "appearance" | "notifications" | "ai" | "security";
+function SummaryTile({
+  icon: Icon,
+  label,
+  value,
+  tone,
+}: {
+  icon: React.ElementType;
+  label: string;
+  value: string;
+  tone: "cyan" | "emerald" | "violet" | "amber";
+}) {
+  const tones = {
+    cyan: "bg-cyan-400/10 text-cyan-300",
+    emerald: "bg-emerald-400/10 text-emerald-300",
+    violet: "bg-violet-400/10 text-violet-300",
+    amber: "bg-amber-400/10 text-amber-300",
+  };
 
-interface Section { id: SectionId; label: string; icon: React.ElementType; badge?: string }
+  return (
+    <div className="min-w-0 rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--bg-card))] p-3">
+      <div className="mb-2 flex items-center gap-2">
+        <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-xl ${tones[tone]}`}>
+          <Icon className="h-4 w-4" />
+        </span>
+        <p className="min-w-0 truncate text-[10px] font-bold uppercase tracking-[0.13em] t3">{label}</p>
+      </div>
+      <p className="truncate text-sm font-black t1">{value}</p>
+    </div>
+  );
+}
+
+function ChoiceButton({
+  selected,
+  onClick,
+  title,
+  subtitle,
+  prefix,
+}: {
+  selected: boolean;
+  onClick: () => void;
+  title: string;
+  subtitle?: string;
+  prefix?: React.ReactNode;
+}) {
+  return (
+    <motion.button
+      type="button"
+      onClick={onClick}
+      whileTap={{ scale: 0.98 }}
+      transition={tapTransition}
+      className={`flex min-h-[48px] items-center gap-2.5 rounded-xl border px-3 py-2 text-start transition-all ${
+        selected
+          ? "border-cyan-400/40 bg-cyan-400/10"
+          : "border-[hsl(var(--border-2))] bg-[hsl(var(--bg-card-2))] hover:border-[hsl(var(--border))]"
+      }`}
+    >
+      {prefix && <div className="shrink-0">{prefix}</div>}
+      <div className="min-w-0 flex-1">
+        <p className={`truncate text-[13px] font-bold ${selected ? "text-cyan-300" : "t1"}`}>{title}</p>
+        {subtitle && <p className="truncate text-[11px] t3">{subtitle}</p>}
+      </div>
+      {selected && <Check className="h-4 w-4 shrink-0 text-cyan-300" />}
+    </motion.button>
+  );
+}
+
+function PanelButton({
+  selected,
+  onClick,
+  icon: Icon,
+  title,
+  value,
+}: {
+  selected: boolean;
+  onClick: () => void;
+  icon: React.ElementType;
+  title: string;
+  value?: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`flex min-h-12 shrink-0 items-center gap-2 rounded-2xl border px-3 text-start transition-all ${
+        selected
+          ? "border-cyan-400/35 bg-cyan-400/10 text-cyan-300"
+          : "border-[hsl(var(--border))] bg-[hsl(var(--bg-card))] t2"
+      }`}
+    >
+      <Icon className="h-4 w-4 shrink-0" />
+      <span className="min-w-0">
+        <span className="block truncate text-xs font-black">{title}</span>
+        {value && <span className="block truncate text-[10px] opacity-70">{value}</span>}
+      </span>
+    </button>
+  );
+}
+
+type ProfileState = { name: string; email: string };
+type NotificationState = {
+  budget: boolean;
+  weekly: boolean;
+  ai_alerts: boolean;
+  email: boolean;
+  debt_reminders: boolean;
+};
+type AIState = { enabled: boolean; auto: boolean; model: "claude-haiku" | "claude-sonnet" };
+type SettingsPanel = "account" | "preferences" | "automation" | "security";
 
 export default function SettingsPage() {
   const { t, locale, setLocale } = useTranslation();
   const { currency, setCurrency } = useCurrency();
-  const { theme, setTheme }       = useTheme();
+  const { theme, setTheme } = useTheme();
   const { isGuest } = useGuest();
   const { config: roomConfig, hasPin, setPin, clearPin, setRoomLocked, lockAllRooms } = useRoomLocks();
 
-  const [active, setActive]    = useState<SectionId>("profile");
-  const [saved,  setSaved]     = useState(false);
-  const [saving, setSaving]    = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [deleteStep, setDeleteStep] = useState<"idle" | "export" | "confirm">("idle");
+  const [deleting, setDeleting] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [importDone, setImportDone] = useState(false);
+  const [hasGuestData, setHasGuestData] = useState(false);
   const [userEmail, setUserEmail] = useState("");
-  const [profile, setProfile]  = useState({ name: "", email: "" });
-  const [notifs,  setNotifs]   = useState({ budget: true, weekly: true, ai_alerts: false, email: false, debt_reminders: true });
-  const [ai,      setAI]       = useState({ enabled: true, auto: false, model: "claude-haiku" });
-  const [roomPin, setRoomPin]  = useState("");
+  const [profile, setProfile] = useState<ProfileState>({ name: "", email: "" });
+  const [notifs, setNotifs] = useState<NotificationState>(() => {
+    if (typeof window === "undefined") return { budget: true, weekly: true, ai_alerts: false, email: false, debt_reminders: true };
+    try { return JSON.parse(localStorage.getItem("spendix_notifs") ?? "null") ?? { budget: true, weekly: true, ai_alerts: false, email: false, debt_reminders: true }; } catch { return { budget: true, weekly: true, ai_alerts: false, email: false, debt_reminders: true }; }
+  });
+  const [ai, setAI] = useState<AIState>(() => {
+    if (typeof window === "undefined") return { enabled: true, auto: false, model: "claude-haiku" };
+    try { return JSON.parse(localStorage.getItem("spendix_ai_settings") ?? "null") ?? { enabled: true, auto: false, model: "claude-haiku" }; } catch { return { enabled: true, auto: false, model: "claude-haiku" }; }
+  });
+  const [activePanel, setActivePanel] = useState<SettingsPanel>("account");
+  const [roomPin, setRoomPin] = useState("");
   const [pinSaved, setPinSaved] = useState(false);
   const [pinError, setPinError] = useState("");
 
   useEffect(() => {
     const supabase = createClient();
     supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) {
-        setUserEmail(user.email ?? "");
-        setProfile({ name: user.user_metadata?.full_name ?? "", email: user.email ?? "" });
-      }
+      if (!user) return;
+      const email = user.email ?? "";
+      setUserEmail(email);
+      setProfile({ name: user.user_metadata?.full_name ?? "", email });
     });
   }, []);
+
+  useEffect(() => {
+    const keys = [
+      "spendix_guest_transactions", "spendix_guest_goals", "spendix_guest_budgets",
+      "spendix_guest_debts", "spendix_guest_investments", "spendix_guest_work_sessions",
+    ];
+    const has = keys.some((k) => {
+      try { return JSON.parse(localStorage.getItem(k) ?? "[]").length > 0; } catch { return false; }
+    });
+    setHasGuestData(has);
+  }, []);
+
+  const initials = useMemo(() => {
+    const source = profile.name.trim() || userEmail || "S";
+    return source.slice(0, 2).toUpperCase();
+  }, [profile.name, userEmail]);
+
+  const currentLocale = LOCALES.find((item) => item.code === locale);
+  const currentCurrency = CURRENCIES.find((item) => item.code === currency);
+  const lockedRoomsCount = ROOM_DEFINITIONS.filter((room) => roomConfig.rooms[room.id]).length;
+  const enabledNotifications = Object.values(notifs).filter(Boolean).length;
+  const panels: Array<{ id: SettingsPanel; title: string; value: string; icon: React.ElementType }> = [
+    {
+      id: "account",
+      title: t("settings.profile"),
+      value: isGuest ? t("topbar.guest_mode") : userEmail || "-",
+      icon: User,
+    },
+    {
+      id: "preferences",
+      title: t("settings.appearance"),
+      value: `${currentLocale?.badge ?? locale} · ${currency}`,
+      icon: Palette,
+    },
+    {
+      id: "automation",
+      title: t("settings.notifications"),
+      value: `${enabledNotifications}/5`,
+      icon: Bell,
+    },
+    {
+      id: "security",
+      title: t("settings.security"),
+      value: `${lockedRoomsCount}/${ROOM_DEFINITIONS.length}`,
+      icon: Shield,
+    },
+  ];
 
   async function handleSignOut() {
     setSigningOut(true);
@@ -87,43 +324,70 @@ export default function SettingsPage() {
     window.location.replace("/login");
   }
 
+  async function handleImportGuest() {
+    setImporting(true);
+    try {
+      await migrateGuestData({ saveSettings: false });
+      setHasGuestData(false);
+      setImportDone(true);
+      setTimeout(() => setImportDone(false), 3000);
+    } finally {
+      setImporting(false);
+    }
+  }
+
+  async function handleExport(type: "transactions" | "goals" | "debts") {
+    setExporting(true);
+    try {
+      const res = await fetch(`/api/export?type=${type}`);
+      if (!res.ok) return;
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `spendix-${type}-${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } finally {
+      setExporting(false);
+    }
+  }
+
+  async function handleDeleteAccount() {
+    setDeleting(true);
+    const res = await fetch("/api/auth/account", { method: "DELETE" });
+    if (!res.ok) { setDeleting(false); setDeleteStep("idle"); return; }
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    window.location.replace("/login");
+  }
+
   async function handleSave() {
     setSaving(true);
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
-      // Save full_name to auth metadata so it's immediately available
-      if (profile.name.trim()) {
-        await supabase.auth.updateUser({
-          data: { full_name: profile.name.trim() },
-        });
+      const fullName = profile.name.trim();
+      if (fullName) {
+        await supabase.auth.updateUser({ data: { full_name: fullName } });
       }
-      // Save all settings including full_name to profile_settings
+
       await supabase.from("profile_settings").upsert({
-        user_id:  user.id,
-        full_name: profile.name.trim() || null,
-        language:  locale,
+        user_id: user.id,
+        full_name: fullName || null,
+        language: locale,
         currency,
         theme,
         updated_at: new Date().toISOString(),
       }, { onConflict: "user_id" });
     }
+    // Save notification and AI preferences to localStorage
+    localStorage.setItem("spendix_notifs",      JSON.stringify(notifs));
+    localStorage.setItem("spendix_ai_settings", JSON.stringify(ai));
     setSaving(false);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   }
-
-  const SECTIONS: Section[] = [
-    { id: "profile",       label: t("settings.profile"),       icon: User       },
-    { id: "language",      label: t("settings.language"),      icon: Globe      },
-    { id: "currency",      label: t("settings.currency"),      icon: DollarSign },
-    { id: "appearance",    label: t("settings.appearance"),    icon: Palette    },
-    { id: "notifications", label: t("settings.notifications"), icon: Bell, badge: "3" },
-    { id: "ai",            label: t("settings.ai"),            icon: Sparkles   },
-    { id: "security",      label: t("settings.security"),      icon: Shield     },
-  ];
-
-  const initials = profile.name ? profile.name.slice(0, 2).toUpperCase() : (userEmail[0] ?? "U").toUpperCase();
 
   function handleRoomPinSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -138,321 +402,265 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="space-y-4 sm:space-y-5 max-w-3xl mx-auto">
-      {/* Header */}
-      <div>
-        <h1 className="text-lg sm:text-xl font-bold t1">{t("settings.title")}</h1>
-        <p className="text-xs sm:text-sm t2 mt-0.5">{t("settings.subtitle")}</p>
+    <div className="space-y-4 pb-32">
+      <div className="sticky top-0 z-20 -mx-3 border-b border-[hsl(var(--border-2))] bg-[hsl(var(--bg))]/92 px-3 py-2.5 backdrop-blur-xl sm:-mx-5 sm:px-5 lg:-mx-7 lg:px-7 xl:-mx-8 xl:px-8">
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <h1 className="text-lg font-black t1">{t("settings.title")}</h1>
+            <p className="mt-0.5 truncate text-[11px] t3">{t("settings.subtitle")}</p>
+          </div>
+          <motion.button
+            type="button"
+            onClick={handleSave}
+            disabled={saving}
+            whileTap={{ scale: 0.96 }}
+            transition={tapTransition}
+            className={`inline-flex min-h-9 shrink-0 items-center justify-center gap-2 rounded-xl px-3 text-xs font-bold transition-all disabled:opacity-50 ${
+              saved
+                ? "border border-emerald-400/20 bg-emerald-400/10 text-emerald-300"
+                : "bg-cyan-400 text-[#071018]"
+            }`}
+          >
+            {saved ? <Check className="h-3.5 w-3.5" /> : saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
+            {saved ? t("settings.saved") : saving ? t("common.loading") : t("settings.save")}
+          </motion.button>
+        </div>
       </div>
 
-      {/* Guest login banner */}
+      <div className="card overflow-hidden">
+        <div className="flex items-center gap-3 px-4 py-3">
+          <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-cyan-400/10 text-cyan-300">
+            {isGuest ? <User className="h-5 w-5" /> : <span className="text-sm font-black">{initials}</span>}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-bold t1">{profile.name || t("settings.profile")}</p>
+            <p className="mt-0.5 truncate text-xs t3">{isGuest ? t("topbar.guest_mode") : userEmail || profile.email || "-"}</p>
+          </div>
+          <div className="hidden grid-cols-3 gap-1.5 sm:grid">
+            {[
+              { label: t("settings.language"), value: currentLocale?.badge ?? locale },
+              { label: t("settings.currency"), value: currentCurrency?.symbol ?? currency },
+              { label: t("settings.security"), value: `${lockedRoomsCount}/${ROOM_DEFINITIONS.length}` },
+            ].map((item) => (
+              <div key={item.label} className="min-w-16 rounded-xl bg-[hsl(var(--bg-input))] px-2.5 py-1.5 text-center">
+                <p className="text-[9px] t3">{item.label}</p>
+                <p className="text-xs font-black t1">{item.value}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
       {isGuest && (
-        <div className="rounded-2xl border border-cyan-400/20 bg-cyan-400/5 p-4 flex items-center gap-4">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 to-violet-500">
-            <User className="h-5 w-5 text-white" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold t1">{t("topbar.guest_mode")}</p>
-            <p className="text-xs t3 mt-0.5">{t("auth.dont_have_account")} <span className="text-cyan-400">{t("auth.sign_up")}</span></p>
-          </div>
-          <div className="flex flex-col gap-2 shrink-0">
-            <Link
-              href="/login"
-              className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-400 to-cyan-500 px-4 py-2 text-xs font-bold text-[#0B0F14] transition-all hover:brightness-110"
-            >
+        <div className="rounded-2xl border border-cyan-400/20 bg-cyan-400/5 p-3">
+          <div className="flex items-center gap-3">
+            <User className="h-4 w-4 shrink-0 text-cyan-300" />
+            <p className="min-w-0 flex-1 text-xs leading-relaxed t2">{t("guest_banner.message")}</p>
+            <Link href="/login" className="inline-flex min-h-9 shrink-0 items-center justify-center gap-1.5 rounded-xl bg-cyan-400 px-3 text-xs font-bold text-[#071018]">
+              <LogIn className="h-3.5 w-3.5" />
               {t("nav.sign_in")}
-            </Link>
-            <Link
-              href="/signup"
-              className="flex items-center justify-center rounded-xl border border-[hsl(var(--border))] px-4 py-2 text-xs font-semibold t2 hover:t1 transition-all"
-            >
-              {t("auth.sign_up")}
             </Link>
           </div>
         </div>
       )}
 
-      {/* Mobile: horizontal scrollable tabs; Desktop: sidebar */}
-      <div className="flex flex-col sm:flex-row gap-4 sm:gap-5">
+      <div className="flex gap-2 overflow-x-auto pb-1">
+        {panels.map((panel) => (
+          <PanelButton
+            key={panel.id}
+            selected={activePanel === panel.id}
+            onClick={() => setActivePanel(panel.id)}
+            icon={panel.icon}
+            title={panel.title}
+            value={panel.value}
+          />
+        ))}
+      </div>
 
-        {/* Mobile tabs — scrollable chips */}
-        <div className="sm:hidden">
-          <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-4 px-4" style={{ scrollbarWidth: "none" }}>
-            {SECTIONS.map(({ id, label, icon: Icon }) => (
-              <button
-                key={id}
-                onClick={() => setActive(id)}
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-all shrink-0 ${
-                  active === id
-                    ? "bg-[hsl(var(--bg-card-2))] t1 shadow-sm"
-                    : "t3 hover:t2 bg-[hsl(var(--bg-input))]"
-                }`}
-              >
-                <Icon className="w-3.5 h-3.5 shrink-0" />
-                {label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Desktop sidebar nav */}
-        <div className="hidden sm:block w-44 shrink-0 space-y-0.5">
-          {SECTIONS.map(({ id, label, icon: Icon, badge }) => (
-            <motion.button
-              key={id}
-              onClick={() => setActive(id)}
-              whileTap={{ scale: 0.97 }}
-              transition={tapTransition}
-              className={`flex items-center gap-2.5 w-full px-3 py-2.5 rounded-[0.875rem] text-sm font-medium transition-all ${
-                active === id
-                  ? "t1 bg-[hsl(var(--bg-card-2))]"
-                  : "t3 hover:t2 hover:bg-[hsl(var(--bg-input))]"
-              }`}
-            >
-              <Icon className="w-4 h-4 shrink-0" />
-              <span className="flex-1 text-start">{label}</span>
-              {badge && (
-                <span className="text-[10px] font-bold bg-rose-400/10 text-rose-400 px-1.5 py-0.5 rounded-md">
-                  {badge}
-                </span>
+      <motion.div
+        key={activePanel}
+        variants={fadeIn}
+        initial="hidden"
+        animate="visible"
+        transition={spring}
+        className="space-y-4"
+      >
+        {activePanel === "account" && (
+          <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
+            <SectionShell icon={User} title={t("settings.profile")} description={isGuest ? t("topbar.guest_mode") : userEmail} tone="cyan">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="block">
+                  <span className="mb-1.5 block text-xs font-semibold t3">{t("settings.full_name")}</span>
+                  <input
+                    value={profile.name}
+                    onChange={(event) => setProfile((current) => ({ ...current, name: event.target.value }))}
+                    className="field"
+                    disabled={isGuest}
+                  />
+                </label>
+                <label className="block">
+                  <span className="mb-1.5 block text-xs font-semibold t3">{t("settings.email")}</span>
+                  <input
+                    value={profile.email}
+                    readOnly
+                    className="field opacity-60 cursor-not-allowed"
+                  />
+                </label>
+              </div>
+              {!isGuest && (
+                <button
+                  type="button"
+                  onClick={handleSignOut}
+                  disabled={signingOut}
+                  className="mt-3 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl border border-rose-400/25 bg-rose-400/10 px-3 text-xs font-bold text-rose-300 disabled:opacity-50 sm:w-auto"
+                >
+                  {signingOut ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <LogOut className="h-3.5 w-3.5" />}
+                  {t("nav.sign_out")}
+                </button>
               )}
-            </motion.button>
-          ))}
-        </div>
+            </SectionShell>
 
-        {/* Content */}
-        <motion.div
-          key={active}
-          variants={fadeIn}
-          initial="hidden"
-          animate="visible"
-          transition={spring}
-          className="flex-1 card p-4 sm:p-6 space-y-1 min-w-0"
-        >
-
-          {/* ── Profile ──────────────────────────────── */}
-          {active === "profile" && (
-            <div>
-              <h2 className="text-base font-bold t1 mb-5">{t("settings.profile")}</h2>
-
-              {/* Avatar + info */}
-              <div className="flex items-center gap-4 mb-6 pb-5 border-b border-[hsl(var(--border-2))]">
-                <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-xl font-bold text-white shrink-0"
-                  style={{ background: "linear-gradient(135deg, #06B6D4, #7C3AED)" }}>
-                  {initials}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-bold t1">{profile.name || t("settings.full_name")}</p>
-                  <p className="text-xs t3 mt-0.5">{userEmail}</p>
-                </div>
-                {!isGuest && (
-                  <motion.button
-                    onClick={handleSignOut}
-                    disabled={signingOut}
-                    whileTap={{ scale: 0.95 }}
-                    transition={tapTransition}
-                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-rose-400/25 bg-rose-400/8 text-xs font-semibold text-rose-400 hover:bg-rose-400/15 transition-all disabled:opacity-50 shrink-0"
-                  >
-                    {signingOut
-                      ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      : <LogOut className="w-3.5 h-3.5" />}
-                    {t("nav.sign_out")}
-                  </motion.button>
-                )}
-              </div>
-
-              <div className="space-y-4">
-                {([
-                  ["full_name", "name", "text", t("settings.full_name")],
-                  ["email", "email", "email", t("settings.email")],
-                ] as const).map(([key, field, type, label]) => (
-                  <div key={field}>
-                    <label className="block text-xs font-semibold t3 uppercase tracking-wide mb-1.5">{label}</label>
-                    <input type={type} value={profile[field]}
-                      onChange={(e) => setProfile(p => ({ ...p, [field]: e.target.value }))}
-                      className="field" />
+            {!isGuest && hasGuestData && (
+              <SectionShell icon={LogIn} title={t("settings.import_guest_title")} description={t("settings.import_guest_hint")} tone="cyan">
+                {importDone ? (
+                  <div className="flex items-center gap-2 rounded-xl border border-emerald-400/20 bg-emerald-400/10 px-3 py-2.5 text-sm font-semibold text-emerald-300">
+                    <Check className="h-4 w-4" />
+                    {t("settings.import_guest_done")}
                   </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* ── Language ─────────────────────────────── */}
-          {active === "language" && (
-            <div>
-              <h2 className="text-base font-bold t1 mb-5">{t("settings.language")}</h2>
-              <div className="grid grid-cols-1 gap-2">
-                {LOCALES.map((l) => (
-                  <motion.button
-                    key={l.code}
-                    onClick={() => void setLocale(l.code as Locale)}
-                    whileTap={{ scale: 0.98 }}
-                    transition={tapTransition}
-                    className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl border text-start transition-all ${
-                      locale === l.code
-                        ? "border-cyan-400/30 bg-cyan-400/5"
-                        : "border-[hsl(var(--border-2))] bg-[hsl(var(--bg-card-2))] hover:border-[hsl(var(--border))]"
-                    }`}
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleImportGuest}
+                    disabled={importing}
+                    className="flex min-h-10 w-full items-center gap-3 rounded-xl border border-cyan-400/25 bg-cyan-400/10 px-3 text-sm font-semibold text-cyan-300 transition-all disabled:opacity-50"
                   >
-                    <span className="text-xl">{l.badge === "AR" ? "🇸🇦" : l.badge === "DE" ? "🇩🇪" : "🇬🇧"}</span>
-                    <div className="flex-1">
-                      <p className={`text-sm font-semibold ${locale === l.code ? "text-cyan-400" : "t1"}`}>{l.nativeLabel ?? l.label}</p>
-                      <p className="text-xs t3">{l.label}</p>
-                    </div>
-                    {locale === l.code && <Check className="w-4 h-4 text-cyan-400 shrink-0" />}
-                  </motion.button>
+                    {importing ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogIn className="h-4 w-4" />}
+                    {t("settings.import_guest_btn")}
+                  </button>
+                )}
+              </SectionShell>
+            )}
+          </div>
+        )}
+
+        {activePanel === "preferences" && (
+          <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
+            <SectionShell icon={Globe} title={t("settings.language")} description={t("settings.language_hint")} tone="cyan">
+              <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-1">
+                {LOCALES.map((item) => (
+                  <ChoiceButton
+                    key={item.code}
+                    selected={locale === item.code}
+                    onClick={() => void setLocale(item.code as Locale)}
+                    title={item.nativeLabel}
+                    subtitle={item.label}
+                    prefix={<span className="grid h-8 w-8 place-items-center rounded-lg bg-cyan-400/10 text-xs font-black text-cyan-300">{item.badge}</span>}
+                  />
                 ))}
               </div>
-              <p className="text-xs t3 mt-4">{t("settings.language_hint")}</p>
-            </div>
-          )}
+            </SectionShell>
 
-          {/* ── Currency ─────────────────────────────── */}
-          {active === "currency" && (
-            <div>
-              <h2 className="text-base font-bold t1 mb-5">{t("settings.currency")}</h2>
-              <div className="grid grid-cols-2 gap-2">
-                {CURRENCIES.map((c) => (
-                  <motion.button
-                    key={c.code}
-                    onClick={() => setCurrency(c.code as Currency)}
-                    whileTap={{ scale: 0.97 }}
-                    transition={tapTransition}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-2xl border transition-all ${
-                      currency === c.code
-                        ? "border-cyan-400/30 bg-cyan-400/5"
-                        : "border-[hsl(var(--border-2))] bg-[hsl(var(--bg-card-2))] hover:border-[hsl(var(--border))]"
-                    }`}
-                  >
-                    <span className="text-lg font-bold w-8 text-center"
-                      style={{ color: currency === c.code ? "#06B6D4" : undefined }}>
-                      {c.symbol}
-                    </span>
-                    <div className="text-start">
-                      <p className={`text-sm font-semibold ${currency === c.code ? "text-cyan-400" : "t1"}`}>{c.code}</p>
-                      <p className="text-[10px] t3">{t(c.labelKey)}</p>
-                    </div>
-                    {currency === c.code && <Check className="w-3.5 h-3.5 text-cyan-400 ms-auto" />}
-                  </motion.button>
-                ))}
-              </div>
-              <p className="text-xs t3 mt-4">{t("settings.currency_hint")}</p>
-            </div>
-          )}
-
-          {/* ── Appearance ───────────────────────────── */}
-          {active === "appearance" && (
-            <div>
-              <h2 className="text-base font-bold t1 mb-5">{t("settings.appearance")}</h2>
-              <div className="grid grid-cols-2 gap-3 mb-6">
-                {(["dark", "light"] as const).map((th) => (
-                  <motion.button
-                    key={th}
-                    onClick={() => setTheme(th)}
-                    whileTap={{ scale: 0.97 }}
-                    transition={tapTransition}
-                    className={`p-5 rounded-2xl border flex flex-col items-center gap-3 transition-all ${
-                      theme === th
-                        ? "border-cyan-400/30 bg-cyan-400/5"
-                        : "border-[hsl(var(--border-2))] bg-[hsl(var(--bg-card-2))] hover:border-[hsl(var(--border))]"
-                    }`}
-                  >
-                    {th === "dark" ? <Moon className="w-6 h-6 text-purple-400" /> : <Sun className="w-6 h-6 text-amber-400" />}
-                    <span className={`text-sm font-semibold ${theme === th ? "text-cyan-400" : "t1"}`}>
-                      {t(`settings.${th}_mode`)}
-                    </span>
-                    {theme === th && <Check className="w-4 h-4 text-cyan-400" />}
-                  </motion.button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* ── Notifications ────────────────────────── */}
-          {active === "notifications" && (
-            <div>
-              <h2 className="text-base font-bold t1 mb-2">{t("settings.notifications")}</h2>
-              <p className="text-xs t3 mb-5">{t("settings.notifications_hint")}</p>
-              <SettingRow label={t("settings.budget_alerts")} hint={t("settings.budget_alerts_hint")}>
-                <Toggle checked={notifs.budget} onChange={(v) => setNotifs(p => ({ ...p, budget: v }))} />
-              </SettingRow>
-              <SettingRow label={t("settings.debt_reminders")} hint={t("settings.debt_reminders_hint")}>
-                <Toggle checked={notifs.debt_reminders} onChange={(v) => setNotifs(p => ({ ...p, debt_reminders: v }))} />
-              </SettingRow>
-              <SettingRow label={t("settings.weekly_summary")} hint={t("settings.weekly_summary_hint")}>
-                <Toggle checked={notifs.weekly} onChange={(v) => setNotifs(p => ({ ...p, weekly: v }))} />
-              </SettingRow>
-              <SettingRow label={t("settings.ai_alerts")} hint={t("settings.ai_alerts_hint")}>
-                <Toggle checked={notifs.ai_alerts} onChange={(v) => setNotifs(p => ({ ...p, ai_alerts: v }))} />
-              </SettingRow>
-              <SettingRow label={t("settings.email_notifications")} hint={t("settings.email_notifications_hint")}>
-                <Toggle checked={notifs.email} onChange={(v) => setNotifs(p => ({ ...p, email: v }))} />
-              </SettingRow>
-            </div>
-          )}
-
-          {/* ── AI Settings ──────────────────────────── */}
-          {active === "ai" && (
-            <div>
-              <h2 className="text-base font-bold t1 mb-2">{t("settings.ai")}</h2>
-              <p className="text-xs t3 mb-5">{t("settings.ai_hint")}</p>
-              <SettingRow label={t("settings.enable_ai")} hint={t("settings.enable_ai_hint")}>
-                <Toggle checked={ai.enabled} onChange={(v) => setAI(p => ({ ...p, enabled: v }))} />
-              </SettingRow>
-              <SettingRow label={t("settings.auto_refresh")} hint={t("settings.auto_refresh_hint")}>
-                <Toggle checked={ai.auto} onChange={(v) => setAI(p => ({ ...p, auto: v }))} />
-              </SettingRow>
-              <div className="py-4">
-                <p className="text-sm font-semibold t1 mb-3">{t("settings.ai_model")}</p>
-                <div className="space-y-2">
-                  {[
-                    { id: "claude-haiku",  label: "Claude Haiku",  desc: t("settings.model_fast")     },
-                    { id: "claude-sonnet", label: "Claude Sonnet", desc: t("settings.model_balanced")  },
-                  ].map((m) => (
-                    <motion.button
-                      key={m.id}
-                      onClick={() => setAI(p => ({ ...p, model: m.id }))}
-                      whileTap={{ scale: 0.98 }}
-                      transition={tapTransition}
-                      className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl border text-start transition-all ${
-                        ai.model === m.id
-                          ? "border-cyan-400/30 bg-cyan-400/5 t1"
-                          : "border-[hsl(var(--border-2))] bg-[hsl(var(--bg-card-2))] t2 hover:border-[hsl(var(--border))]"
-                      }`}
-                    >
-                      <div>
-                        <p className="text-sm font-semibold">{m.label}</p>
-                        <p className="text-xs t3">{m.desc}</p>
-                      </div>
-                      {ai.model === m.id && (
-                        <span className="w-5 h-5 rounded-full bg-cyan-400 flex items-center justify-center shrink-0">
-                          <Check className="w-3 h-3 text-[hsl(var(--bg-page))]" />
-                        </span>
-                      )}
-                    </motion.button>
+            <div className="space-y-4">
+              <SectionShell icon={WalletCards} title={t("settings.currency")} description={t("settings.currency_hint")} tone="emerald">
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {CURRENCIES.map((item) => (
+                    <ChoiceButton
+                      key={item.code}
+                      selected={currency === item.code}
+                      onClick={() => setCurrency(item.code as Currency)}
+                      title={item.code}
+                      subtitle={t(item.labelKey)}
+                      prefix={<span className="grid h-8 w-8 place-items-center rounded-lg bg-emerald-400/10 text-sm font-black text-emerald-300">{item.symbol}</span>}
+                    />
                   ))}
                 </div>
-              </div>
+              </SectionShell>
+
+              <SectionShell icon={Palette} title={t("settings.appearance")} tone="violet">
+                <div className="grid grid-cols-2 gap-2">
+                  <ChoiceButton
+                    selected={theme === "dark"}
+                    onClick={() => setTheme("dark")}
+                    title={t("settings.dark_mode")}
+                    prefix={<span className="grid h-8 w-8 place-items-center rounded-lg bg-violet-400/10 text-violet-300"><Moon className="h-4 w-4" /></span>}
+                  />
+                  <ChoiceButton
+                    selected={theme === "light"}
+                    onClick={() => setTheme("light")}
+                    title={t("settings.light_mode")}
+                    prefix={<span className="grid h-8 w-8 place-items-center rounded-lg bg-amber-400/10 text-amber-300"><Sun className="h-4 w-4" /></span>}
+                  />
+                </div>
+              </SectionShell>
             </div>
-          )}
+          </div>
+        )}
 
-          {/* ── Security ─────────────────────────────── */}
-          {active === "security" && (
-            <div>
-              <h2 className="text-base font-bold t1 mb-2">{t("settings.security")}</h2>
-              <p className="text-xs t3 mb-5">{t("rooms.settings_hint")}</p>
+        {activePanel === "automation" && (
+          <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
+            <SectionShell icon={Bell} title={t("settings.notifications")} description={t("settings.notifications_hint")} tone="amber">
+              <div className="mb-2 flex items-center justify-between rounded-xl bg-[hsl(var(--bg-card-2))] px-3 py-2">
+                <span className="text-xs font-semibold t2">{t("settings.notifications")}</span>
+                <span className="rounded-lg bg-amber-400/10 px-2 py-1 text-xs font-bold text-amber-300">{enabledNotifications}/5</span>
+              </div>
+              <SettingLine label={t("settings.budget_alerts")} hint={t("settings.budget_alerts_hint")}>
+                <Toggle checked={notifs.budget} onChange={(value) => setNotifs((current) => ({ ...current, budget: value }))} />
+              </SettingLine>
+              <SettingLine label={t("settings.debt_reminders")} hint={t("settings.debt_reminders_hint")}>
+                <Toggle checked={notifs.debt_reminders} onChange={(value) => setNotifs((current) => ({ ...current, debt_reminders: value }))} />
+              </SettingLine>
+              <SettingLine label={t("settings.weekly_summary")} hint={t("settings.weekly_summary_hint")}>
+                <Toggle checked={notifs.weekly} onChange={(value) => setNotifs((current) => ({ ...current, weekly: value }))} />
+              </SettingLine>
+              <SettingLine label={t("settings.ai_alerts")} hint={t("settings.ai_alerts_hint")}>
+                <Toggle checked={notifs.ai_alerts} onChange={(value) => setNotifs((current) => ({ ...current, ai_alerts: value }))} />
+              </SettingLine>
+              <SettingLine label={t("settings.email_notifications")} hint={t("settings.email_notifications_hint")}>
+                <Toggle checked={notifs.email} onChange={(value) => setNotifs((current) => ({ ...current, email: value }))} />
+              </SettingLine>
+            </SectionShell>
 
-              <form onSubmit={handleRoomPinSubmit} className="rounded-2xl border border-[hsl(var(--border-2))] bg-[hsl(var(--bg-card-2))] p-4">
-                <div className="mb-3 flex items-start gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-cyan-400/10 text-cyan-300">
+            <SectionShell icon={Sparkles} title={t("settings.ai")} description={t("settings.ai_hint")} tone="violet">
+              <SettingLine label={t("settings.enable_ai")} hint={t("settings.enable_ai_hint")}>
+                <Toggle checked={ai.enabled} onChange={(value) => setAI((current) => ({ ...current, enabled: value }))} />
+              </SettingLine>
+              <SettingLine label={t("settings.auto_refresh")} hint={t("settings.auto_refresh_hint")}>
+                <Toggle checked={ai.auto} onChange={(value) => setAI((current) => ({ ...current, auto: value }))} />
+              </SettingLine>
+              <div className="pt-2">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide t3">{t("settings.ai_model")}</p>
+                <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1">
+                  <ChoiceButton
+                    selected={ai.model === "claude-haiku"}
+                    onClick={() => setAI((current) => ({ ...current, model: "claude-haiku" }))}
+                    title="Claude Haiku"
+                    subtitle={t("settings.model_fast")}
+                  />
+                  <ChoiceButton
+                    selected={ai.model === "claude-sonnet"}
+                    onClick={() => setAI((current) => ({ ...current, model: "claude-sonnet" }))}
+                    title="Claude Sonnet"
+                    subtitle={t("settings.model_balanced")}
+                  />
+                </div>
+              </div>
+            </SectionShell>
+          </div>
+        )}
+
+        {activePanel === "security" && (
+          <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
+            <SectionShell icon={Shield} title={t("settings.security")} description={t("rooms.settings_hint")} tone="slate">
+              <form onSubmit={handleRoomPinSubmit} className="mb-3 rounded-xl border border-[hsl(var(--border-2))] bg-[hsl(var(--bg-card-2))] p-3">
+                <div className="mb-2 flex items-center gap-3">
+                  <span className="grid h-9 w-9 place-items-center rounded-lg bg-cyan-400/10 text-cyan-300">
                     <KeyRound className="h-4 w-4" />
-                  </div>
+                  </span>
                   <div className="min-w-0">
                     <p className="text-sm font-bold t1">{t("rooms.pin_title")}</p>
-                    <p className="mt-0.5 text-xs t3">{hasPin ? t("rooms.pin_active") : t("rooms.pin_inactive")}</p>
+                    <p className="line-clamp-1 text-xs t3">{hasPin ? t("rooms.pin_active") : t("rooms.pin_inactive")}</p>
                   </div>
                 </div>
-
                 <div className="flex flex-col gap-2 sm:flex-row">
                   <input
                     value={roomPin}
@@ -466,26 +674,18 @@ export default function SettingsPage() {
                     className="field flex-1"
                     placeholder={t("rooms.new_pin_placeholder")}
                   />
-                  <motion.button
-                    type="submit"
-                    whileTap={{ scale: 0.96 }}
-                    transition={tapTransition}
-                    className="min-h-[44px] rounded-xl bg-cyan-400 px-4 text-sm font-bold text-[#071018]"
-                  >
+                  <button type="submit" className="min-h-10 rounded-xl bg-cyan-400 px-4 text-sm font-bold text-[#071018]">
                     {pinSaved ? t("common.saved") : t("rooms.save_pin")}
-                  </motion.button>
+                  </button>
                 </div>
                 {pinError && <p className="mt-2 text-xs text-rose-300">{pinError}</p>}
               </form>
 
-              <div className="mt-4 rounded-2xl border border-[hsl(var(--border-2))] bg-[hsl(var(--bg-card-2))] px-4">
+              <div className="grid gap-1 sm:grid-cols-2 lg:grid-cols-1">
                 {ROOM_DEFINITIONS.map((room) => (
-                  <SettingRow key={room.id} label={t(room.labelKey)} hint={t(room.descriptionKey)}>
-                    <Toggle
-                      checked={roomConfig.rooms[room.id]}
-                      onChange={(value) => setRoomLocked(room.id, value)}
-                    />
-                  </SettingRow>
+                  <SettingLine key={room.id} label={t(room.labelKey)} hint={t(room.descriptionKey)}>
+                    <Toggle checked={roomConfig.rooms[room.id]} onChange={(value) => setRoomLocked(room.id, value)} />
+                  </SettingLine>
                 ))}
               </div>
 
@@ -495,69 +695,123 @@ export default function SettingsPage() {
                 </p>
               )}
 
-              <div className="mt-4 space-y-2">
+              <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-1">
                 <button
                   type="button"
                   onClick={lockAllRooms}
                   disabled={!hasPin}
-                  className="flex w-full items-center gap-3 rounded-2xl border border-[hsl(var(--border-2))] bg-[hsl(var(--bg-card-2))] px-4 py-3 text-start transition-all hover:border-[hsl(var(--border))] disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex min-h-10 items-center gap-3 rounded-xl border border-[hsl(var(--border-2))] bg-[hsl(var(--bg-card-2))] px-3 text-sm font-semibold t1 transition-all disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  <LockKeyhole className="w-4 h-4 shrink-0 text-amber-300" />
-                  <span className="text-sm font-medium t1">{t("rooms.lock_now")}</span>
-                  <ChevronRight className="w-4 h-4 t3 ms-auto" />
+                  <LockKeyhole className="h-4 w-4 text-amber-300" />
+                  <span className="flex-1 text-start">{t("rooms.lock_now")}</span>
+                  <ChevronRight className="h-4 w-4 t3" />
                 </button>
                 <button
                   type="button"
                   onClick={clearPin}
-                  className="flex w-full items-center gap-3 rounded-2xl border border-[hsl(var(--border-2))] bg-[hsl(var(--bg-card-2))] px-4 py-3 text-start transition-all hover:border-rose-400/30 hover:bg-rose-400/5"
+                  className="flex min-h-10 items-center gap-3 rounded-xl border border-rose-400/20 bg-rose-400/10 px-3 text-sm font-semibold text-rose-300 transition-all"
                 >
-                  <Shield className="w-4 h-4 shrink-0 text-rose-400" />
-                  <span className="text-sm font-medium text-rose-400">{t("rooms.disable_all")}</span>
-                  <ChevronRight className="w-4 h-4 t3 ms-auto" />
-                </button>
-                <button
-                  type="button"
-                  onClick={async () => {
-                    const supabase = createClient();
-                    await supabase.auth.signOut();
-                    const { setAuthToken } = await import("@/lib/auth/token-store");
-                    setAuthToken(null);
-                    window.location.replace("/login");
-                  }}
-                  className="flex w-full items-center gap-3 rounded-2xl border border-[hsl(var(--border-2))] bg-[hsl(var(--bg-card-2))] px-4 py-3 text-start transition-all hover:border-rose-400/30 hover:bg-rose-400/5">
-                  <LogOut className="w-4 h-4 shrink-0 text-rose-400" />
-                  <span className="text-sm font-medium text-rose-400">{t("nav.sign_out")}</span>
-                  <ChevronRight className="w-4 h-4 t3 ms-auto" />
+                  <Shield className="h-4 w-4" />
+                  <span className="flex-1 text-start">{t("rooms.disable_all")}</span>
+                  <ChevronRight className="h-4 w-4 opacity-70" />
                 </button>
               </div>
-            </div>
-          )}
+            </SectionShell>
 
-          {/* Save button */}
-          {active !== "security" && (
-            <div className="flex justify-end pt-5 border-t border-[hsl(var(--border-2))] mt-4">
-              <motion.button
-                onClick={handleSave}
-                disabled={saving}
-                whileTap={{ scale: 0.96 }}
-                transition={tapTransition}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all disabled:opacity-50 ${
-                  saved
-                    ? "bg-emerald-400/10 text-emerald-400 border border-emerald-400/20"
-                    : "text-[hsl(var(--bg-page))]"
-                }`}
-                style={!saved ? { background: "linear-gradient(135deg, #06B6D4, #0891B2)" } : {}}
-              >
-                {saved
-                  ? <><Check className="w-3.5 h-3.5" />{t("settings.saved")}</>
-                  : saving
-                    ? t("common.loading")
-                    : t("settings.save")}
-              </motion.button>
+            <div className="space-y-4">
+              {!isGuest && (
+                <SectionShell icon={Download} title={t("settings.export_title")} description={t("settings.export_hint")} tone="emerald">
+                  <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-1">
+                    {(["transactions", "goals", "debts"] as const).map((type) => (
+                      <button
+                        key={type}
+                        type="button"
+                        onClick={() => handleExport(type)}
+                        disabled={exporting}
+                        className="flex min-h-10 items-center justify-center gap-2 rounded-xl border border-emerald-400/20 bg-emerald-400/10 px-3 text-xs font-semibold text-emerald-300 transition-all disabled:opacity-50"
+                      >
+                        {exporting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
+                        {t(`settings.export_${type}`)}
+                      </button>
+                    ))}
+                  </div>
+                </SectionShell>
+              )}
+
+              {!isGuest && (
+                <SectionShell icon={Trash2} title={t("settings.danger_zone")} description={t("settings.danger_zone_hint")} tone="rose">
+                  {deleteStep === "idle" && (
+                    <button
+                      type="button"
+                      onClick={() => setDeleteStep("export")}
+                      className="flex min-h-10 w-full items-center gap-3 rounded-xl border border-rose-400/25 bg-rose-400/10 px-3 text-sm font-semibold text-rose-300 transition-all"
+                    >
+                      <Trash2 className="h-4 w-4 shrink-0" />
+                      <span className="flex-1 text-start">{t("settings.delete_account")}</span>
+                    </button>
+                  )}
+
+                  {deleteStep === "export" && (
+                    <div className="space-y-3 rounded-xl border border-amber-400/30 bg-amber-400/8 p-3">
+                      <p className="text-sm font-semibold text-amber-300">{t("settings.delete_export_first")}</p>
+                      <p className="text-xs text-amber-300/70">{t("settings.delete_export_hint")}</p>
+                      <div className="flex gap-2">
+                        <a
+                          href="/api/export?type=backup"
+                          download
+                          className="flex min-h-10 flex-1 items-center justify-center gap-2 rounded-xl bg-amber-500 px-3 text-xs font-bold text-white"
+                          onClick={() => setTimeout(() => setDeleteStep("confirm"), 1500)}
+                        >
+                          <Download className="h-3.5 w-3.5" />
+                          {t("settings.delete_export_btn")}
+                        </a>
+                        <button
+                          type="button"
+                          onClick={() => setDeleteStep("confirm")}
+                          className="min-h-10 rounded-xl border border-rose-400/30 px-3 text-xs font-semibold text-rose-300"
+                        >
+                          {t("settings.delete_skip_export")}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setDeleteStep("idle")}
+                          className="min-h-10 rounded-xl border border-[hsl(var(--border))] px-3 text-xs font-semibold t2"
+                        >
+                          {t("common.cancel")}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {deleteStep === "confirm" && (
+                    <div className="space-y-3 rounded-xl border border-rose-400/30 bg-rose-400/10 p-3">
+                      <p className="text-sm font-semibold text-rose-300">{t("settings.delete_confirm_text")}</p>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={handleDeleteAccount}
+                          disabled={deleting}
+                          className="flex min-h-10 flex-1 items-center justify-center gap-2 rounded-xl bg-rose-500 px-3 text-xs font-bold text-white disabled:opacity-50"
+                        >
+                          {deleting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+                          {t("settings.delete_confirm_btn")}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setDeleteStep("idle")}
+                          className="min-h-10 rounded-xl border border-[hsl(var(--border))] px-4 text-xs font-semibold t2"
+                        >
+                          {t("common.cancel")}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </SectionShell>
+              )}
             </div>
-          )}
-        </motion.div>
-      </div>
+          </div>
+        )}
+      </motion.div>
     </div>
   );
 }

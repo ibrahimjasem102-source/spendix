@@ -1,8 +1,8 @@
 import Sidebar from "@/components/layout/Sidebar";
 import TopBar from "@/components/layout/TopBar";
-import GuestBanner from "@/components/layout/GuestBanner";
 import BottomNav from "@/components/navigation/BottomNav";
 import GlobalModals from "@/components/modals/GlobalModals";
+import FinancialActionHub from "@/components/actions/FinancialActionHub";
 import PageTransition from "@/components/navigation/PageTransition";
 import Breadcrumbs from "@/components/navigation/Breadcrumbs";
 import LastPageTracker from "@/components/navigation/LastPageTracker";
@@ -35,7 +35,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                   {/* Main column */}
                   <div className="app-main-panel relative z-10 flex-1 flex flex-col overflow-hidden min-w-0">
                     <TopBar />
-                    <GuestBanner />
                     <main className="flex-1 overflow-y-auto overflow-x-hidden">
                       <PageTransition>
                         {/* Responsive container:
@@ -68,6 +67,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 </div>
 
                 <GlobalModals />
+                <FinancialActionHub />
                 <LastPageTracker />
                 <SchedulerTrigger />
                 <FinancialEventBridge />

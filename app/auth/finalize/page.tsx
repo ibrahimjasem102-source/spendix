@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { Loader2, Wallet } from "lucide-react";
 import { migrateGuestData } from "@/lib/guest/migrate";
 import { useTranslation } from "@/lib/i18n";
@@ -12,20 +11,25 @@ function safeNext(value: string | null) {
 }
 
 export default function AuthFinalizePage() {
-  const router = useRouter();
   const { t } = useTranslation();
 
   useEffect(() => {
     async function finalize() {
       const params = new URLSearchParams(window.location.search);
-      await fetch("/api/auth/bootstrap", { method: "POST" }).catch(() => undefined);
-      await migrateGuestData().catch(() => undefined);
-      router.replace(safeNext(params.get("next")));
-      router.refresh();
+      const currentLocale = window.localStorage.getItem("spendix_locale") ?? "ar";
+      await fetch("/api/auth/bootstrap", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ locale: currentLocale }),
+      }).catch((err) => { console.warn("[finalize] bootstrap failed:", err); });
+      await migrateGuestData({ saveSettings: true }).catch((err) => {
+        console.warn("[finalize] migration failed:", err);
+      });
+      window.location.replace(safeNext(params.get("next")));
     }
 
     void finalize();
-  }, [router]);
+  }, []);
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4" style={{ backgroundColor: "hsl(214 28% 5%)" }}>

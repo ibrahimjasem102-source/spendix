@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(cd c:\\\\Spendix; npx tsc --noEmit 2>&1 | Where-Object { $_ -match \"login|signup|migrate|theme|currency\" })"
+    ]
+  }
+}

@@ -2,12 +2,19 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { GUEST_CATEGORIES } from "@/lib/guest/categories";
 
-const SELECT = "id,user_id,name,type,color,icon,section,created_at";
+const SELECT = "id,user_id,name,type,color,icon,section,parent_id,created_at";
 const LEGACY_SELECT = "id,user_id,name,type,color,created_at";
 
 function isOptionalCategoryColumnError(message = "") {
   return message.includes("categories.icon") ||
     message.includes("categories.section") ||
+    message.includes("categories.parent_id") ||
+    message.includes("Could not find") ||
+    message.includes("schema cache");
+}
+
+function isIgnorableCleanupError(message = "") {
+  return message.includes("does not exist") ||
     message.includes("Could not find") ||
     message.includes("schema cache");
 }
@@ -51,7 +58,7 @@ export async function POST(request: Request) {
 
   const body = await request.json() as {
     name: string; type: string; color: string;
-    icon?: string; section?: string;
+    icon?: string; section?: string; parent_id?: string | null;
   };
 
   if (!body.name?.trim()) return NextResponse.json({ error: "Name required" }, { status: 400 });
@@ -65,6 +72,7 @@ export async function POST(request: Request) {
       color:   body.color || "#6B7280",
       icon:    body.icon   ?? null,
       section: body.section ?? "general",
+      parent_id: body.parent_id ?? null,
     })
     .select(SELECT)
     .single();
@@ -95,13 +103,16 @@ export async function PATCH(request: Request) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const body = await request.json() as { id: string; name?: string; color?: string; icon?: string };
+  const body = await request.json() as { id: string; name?: string; color?: string; icon?: string; type?: string; section?: string; parent_id?: string | null };
   if (!body.id) return NextResponse.json({ error: "id required" }, { status: 400 });
 
   const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
   if (body.name)  updates.name  = body.name.trim();
   if (body.color) updates.color = body.color;
   if (body.icon !== undefined) updates.icon = body.icon;
+  if (body.type !== undefined) updates.type = body.type === "income" ? "income" : "expense";
+  if (body.section !== undefined) updates.section = body.section ?? "general";
+  if (body.parent_id !== undefined) updates.parent_id = body.parent_id ?? null;
 
   const result = await supabase
     .from("categories")
@@ -114,7 +125,7 @@ export async function PATCH(request: Request) {
   let error = result.error;
 
   if (error && isOptionalCategoryColumnError(error.message)) {
-    const { icon: _icon, section: _section, ...legacyUpdates } = updates;
+    const { icon: _icon, section: _section, parent_id: _parentId, ...legacyUpdates } = updates;
     const legacy = await supabase
       .from("categories")
       .update(legacyUpdates)
@@ -138,6 +149,39 @@ export async function DELETE(request: Request) {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get("id");
   if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
+
+  const clearTargets = ["transactions", "recurring_rules", "bills", "subscriptions"];
+  for (const table of clearTargets) {
+    const { error } = await supabase
+      .from(table)
+      .update({ category_id: null })
+      .eq("category_id", id)
+      .eq("user_id", user.id);
+
+    if (error && !isIgnorableCleanupError(error.message)) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+  }
+
+  const { error: budgetError } = await supabase
+    .from("budgets")
+    .delete()
+    .eq("category_id", id)
+    .eq("user_id", user.id);
+
+  if (budgetError && !isIgnorableCleanupError(budgetError.message)) {
+    return NextResponse.json({ error: budgetError.message }, { status: 500 });
+  }
+
+  const { error: childError } = await supabase
+    .from("categories")
+    .update({ parent_id: null })
+    .eq("parent_id", id)
+    .eq("user_id", user.id);
+
+  if (childError && !isIgnorableCleanupError(childError.message) && !isOptionalCategoryColumnError(childError.message)) {
+    return NextResponse.json({ error: childError.message }, { status: 500 });
+  }
 
   const { error } = await supabase
     .from("categories")

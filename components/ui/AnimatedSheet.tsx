@@ -3,6 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
 import { backdropVariants, sheetVariants, sheetTransition, ease } from "@/lib/motion";
+import SheetDragHandle from "@/components/ui/SheetDragHandle";
 
 interface Props {
   open: boolean;
@@ -53,7 +54,7 @@ export default function AnimatedSheet({ open, onClose, title, children, maxHeigh
               {/* Handle + header */}
               <div className="shrink-0 pt-3 pb-2 px-6">
                 {/* Drag handle */}
-                <div className="w-10 h-1 rounded-full bg-white/15 mx-auto mb-3" />
+                <SheetDragHandle onClose={onClose} className="mb-1" />
 
                 {title && (
                   <div className="flex items-center justify-between">

@@ -23,10 +23,32 @@ export async function POST(request: Request, { params }: Params) {
 
   if (debtError || !debt) return NextResponse.json({ error: "Debt not found" }, { status: 404 });
 
+  const paymentAmount = Number(body.amount);
+  if (!Number.isFinite(paymentAmount) || paymentAmount <= 0) {
+    return NextResponse.json({ errorKey: "transactions.amount_positive" }, { status: 400 });
+  }
+  if (!body.payment_date) {
+    return NextResponse.json({ errorKey: "debts.payment_date" }, { status: 400 });
+  }
+
+  const { data: existingPayments, error: paymentsError } = await supabase
+    .from("debt_payments")
+    .select("amount")
+    .eq("debt_id", debtId)
+    .eq("user_id", user.id);
+
+  if (paymentsError) return NextResponse.json({ error: paymentsError.message }, { status: 500 });
+
+  const paidBefore = (existingPayments ?? []).reduce((sum, payment) => sum + Number(payment.amount), 0);
+  const remaining = Math.max(Number(debt.total_amount) - paidBefore, 0);
+  if (paymentAmount > remaining + 0.000_001) {
+    return NextResponse.json({ errorKey: "debts.payment_exceeds_remaining" }, { status: 400 });
+  }
+
   const { data: tx, error: txError } = await insertLinkedTransaction(supabase, {
     user_id: user.id,
     title: `Debt payment: ${debt.person_or_entity}`,
-    amount: body.amount,
+    amount: paymentAmount,
     type: transactionTypeForDebtPayment(debt.debt_type),
     source: "debt_payment",
     related_source_id: debtId,
@@ -37,26 +59,25 @@ export async function POST(request: Request, { params }: Params) {
 
   if (txError || !tx) return NextResponse.json({ error: txError?.message ?? "Transaction failed" }, { status: 500 });
 
-  const { error: payError } = await supabase
+  const { data: payment, error: payError } = await supabase
     .from("debt_payments")
     .insert({
       user_id: user.id,
       debt_id: debtId,
       transaction_id: tx.id,
-      amount: body.amount,
+      amount: paymentAmount,
       payment_date: body.payment_date,
       notes: body.notes ?? null,
-    });
+    })
+    .select("id")
+    .single();
 
-  if (payError) return NextResponse.json({ error: payError.message }, { status: 500 });
+  if (payError || !payment) {
+    await supabase.from("transactions").delete().eq("id", tx.id).eq("user_id", user.id);
+    return NextResponse.json({ error: payError?.message ?? "Payment failed" }, { status: 500 });
+  }
 
-  const { data: allPayments } = await supabase
-    .from("debt_payments")
-    .select("amount")
-    .eq("debt_id", debtId)
-    .eq("user_id", user.id);
-
-  const newPaid = (allPayments ?? []).reduce((sum, payment) => sum + Number(payment.amount), 0);
+  const newPaid = paidBefore + paymentAmount;
   const newStatus =
     newPaid >= Number(debt.total_amount) ? "paid"
     : newPaid > 0 ? "partially_paid"
@@ -70,9 +91,13 @@ export async function POST(request: Request, { params }: Params) {
     .select("id,user_id,person_or_entity,debt_type,total_amount,paid_amount,due_date,status,notes,contact_id,created_at,updated_at")
     .single();
 
-  if (updateErr) return NextResponse.json({ error: updateErr.message }, { status: 500 });
+  if (updateErr) {
+    await supabase.from("debt_payments").delete().eq("id", payment.id).eq("user_id", user.id);
+    await supabase.from("transactions").delete().eq("id", tx.id).eq("user_id", user.id);
+    return NextResponse.json({ error: updateErr.message }, { status: 500 });
+  }
 
-  const amountLabel = Number(body.amount).toFixed(2);
+  const amountLabel = paymentAmount.toFixed(2);
   if (newStatus === "paid") {
     void notify.debtPaid(supabase, user.id, debtId, debt.person_or_entity);
   } else if (debt.debt_type === "receivable") {
