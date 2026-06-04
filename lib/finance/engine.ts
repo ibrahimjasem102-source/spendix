@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { useTransactions, useDebts, useInvestments, useWorkPayments, useWorkSessions, useSubscriptions } from "@/lib/query/hooks";
+import { useTransactions, useDebts, useInvestments, useWorkPayments, useWorkSessions, useSubscriptions, useGoals } from "@/lib/query/hooks";
 import { useGuest } from "@/contexts/GuestContext";
 import { transactionToLedgerEntry } from "@/lib/ledger/sync";
 import {
@@ -11,7 +11,7 @@ import {
   sortByDate,
 } from "@/lib/ledger/engine";
 import type { UnifiedLedgerEntry } from "@/lib/ledger/types";
-import type { Investment, Debt, Subscription, Transaction, WorkSession, WorkPayment } from "@/types";
+import type { Investment, Debt, Goal, Subscription, Transaction, WorkSession, WorkPayment } from "@/types";
 
 // ── Real-type converters ───────────────────────────────────────
 
@@ -127,6 +127,31 @@ function workSessionToEntry(session: WorkSession, status: "pending" | "overdue")
   };
 }
 
+function goalToEntry(goal: Goal): UnifiedLedgerEntry {
+  const progress = goal.target_amount > 0
+    ? Math.min(100, Math.round(((goal.computed_saved ?? goal.saved_amount) / goal.target_amount) * 100))
+    : 0;
+  return {
+    id:               `ledger-goal-${goal.id}`,
+    user_id:          goal.user_id,
+    type:             "goal",
+    title:            goal.title,
+    amount:           Number(goal.target_amount),
+    direction:        "neutral",
+    category:         goal.category,
+    related_module_id: goal.id,
+    date:             goal.due_date ?? goal.created_at.slice(0, 10),
+    metadata: {
+      progress,
+      saved:     goal.computed_saved ?? goal.saved_amount,
+      status:    goal.status,
+      due_date:  goal.due_date,
+      notes:     goal.notes,
+    },
+    created_at: goal.created_at,
+  };
+}
+
 // ── Public snapshot type ───────────────────────────────────────
 
 export interface FinancialSnapshot {
@@ -176,6 +201,7 @@ export interface FinancialSnapshot {
   transactions: Transaction[];
   debts: Debt[];
   investments: Investment[];
+  goals: Goal[];
   /** Work sessions with computed status (for ledger + analytics) */
   workSessions: WorkSession[];
 
@@ -209,6 +235,7 @@ export function useFinancialEngine(): FinancialSnapshot {
   const { data: rawWorkSessions = [] } = useWorkSessions(authenticated);
 
   const { data: subscriptions = [] } = useSubscriptions(authenticated);
+  const { data: goals        = [] } = useGoals(ready);
 
   const debts       = debtsResult?.debts   ?? [];
   const debtSummary = debtsResult?.summary;
@@ -246,8 +273,13 @@ export function useFinancialEngine(): FinancialSnapshot {
         ...workSessions
           .filter((s) => s.status === "pending" || s.status === "overdue")
           .map((s) => workSessionToEntry(s, s.status as "pending" | "overdue")),
+
+        // Goals — active (not completed) as neutral planning entries
+        ...goals
+          .filter((g) => g.status !== "completed")
+          .map(goalToEntry),
       ]),
-    [transactions, investments, debts, subscriptions, workSessions],
+    [transactions, investments, debts, subscriptions, workSessions, goals],
   );
 
   // ── Cash position ────────────────────────────────────────────
@@ -341,6 +373,7 @@ export function useFinancialEngine(): FinancialSnapshot {
     transactions,
     debts,
     investments,
+    goals,
     workSessions,
     isLoading: authLoading || txLoading || (!isGuest && (debtLoading || invLoading || workLoading)),
     isError:   txError   || (!isGuest && (debtError || invError || workError)),

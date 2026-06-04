@@ -811,6 +811,8 @@
       "bill": "Rechnung",
       "subscription": "Abonnement",
       "salary": "Gehalt",
+      "goal": "Sparziel",
+      "recurring": "Wiederkehrend",
       "transfer": "Umbuchung",
       "budget_alert": "Budgetwarnung",
       "ai_insight": "KI-Einblick"

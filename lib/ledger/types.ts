@@ -7,6 +7,8 @@ export type LedgerEntryType =
   | "repayment"     // debt repaid
   | "subscription"  // recurring subscription charge
   | "salary"        // work / salary payment
+  | "goal"          // savings goal milestone
+  | "recurring"     // upcoming recurring transaction
   | "transfer"      // between-account transfer
   | "budget_alert"  // budget limit event
   | "ai_insight";   // AI-generated event
@@ -57,6 +59,8 @@ export const ENTRY_CONFIG: Record<
   repayment:    { label: "Repayment",    color: "text-amber-400",   bg: "bg-amber-400/10",   border: "border-amber-400/20"   },
   subscription: { label: "Subscription", color: "text-violet-400",  bg: "bg-violet-400/10",  border: "border-violet-400/20"  },
   salary:       { label: "Salary",       color: "text-emerald-400", bg: "bg-emerald-400/10", border: "border-emerald-400/20" },
+  goal:         { label: "Goal",         color: "text-indigo-400",  bg: "bg-indigo-400/10",  border: "border-indigo-400/20"  },
+  recurring:    { label: "Recurring",    color: "text-teal-400",    bg: "bg-teal-400/10",    border: "border-teal-400/20"    },
   transfer:     { label: "Transfer",     color: "text-sky-400",     bg: "bg-sky-400/10",     border: "border-sky-400/20"     },
   budget_alert: { label: "Budget Alert", color: "text-yellow-400",  bg: "bg-yellow-400/10",  border: "border-yellow-400/20"  },
   ai_insight:   { label: "AI Insight",   color: "text-cyan-400",    bg: "bg-cyan-400/10",    border: "border-cyan-400/20"    },

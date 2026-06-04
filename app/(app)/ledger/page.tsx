@@ -31,10 +31,12 @@ const TYPE_TABS: { label: string; value: LedgerEntryType | "all"; color?: string
   { label: "common.all",             value: "all" },
   { label: "transactions.income",    value: "income",       color: "#34d399" },
   { label: "transactions.expense",   value: "transaction",  color: "#fb7185" },
-  { label: "nav.subscriptions",      value: "subscription", color: "#818cf8" },
   { label: "nav.debts",              value: "debt",         color: "#f59e0b" },
   { label: "nav.investments",        value: "investment",   color: "#a78bfa" },
+  { label: "nav.subscriptions",      value: "subscription", color: "#818cf8" },
   { label: "work.sessions",          value: "salary",       color: "#22d3ee" },
+  { label: "nav.goals",              value: "goal",         color: "#818cf8" },
+  { label: "nav.recurring",          value: "recurring",    color: "#2dd4bf" },
 ];
 
 const DIRECTION_OPTS: { label: string; value: LedgerDirection | "all" }[] = [
@@ -49,6 +51,8 @@ const TYPE_EDIT_ROUTES: Partial<Record<LedgerEntryType, string>> = {
   investment:   "/investments",
   subscription: "/subscriptions",
   salary:       "/work",
+  goal:         "/goals",
+  recurring:    "/recurring",
 };
 
 export default function LedgerPage() {

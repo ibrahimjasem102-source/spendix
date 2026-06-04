@@ -833,6 +833,8 @@
       "bill": "Bill",
       "subscription": "Subscription",
       "salary": "Salary",
+      "goal": "Savings Goal",
+      "recurring": "Recurring",
       "transfer": "Transfer",
       "budget_alert": "Budget Alert",
       "ai_insight": "AI Insight"
