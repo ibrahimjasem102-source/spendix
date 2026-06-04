@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
 import {
   addGuestCategory, addGuestGoal, addGuestTag, addGuestTransaction, contributeGuestGoal,
   addGuestContact, deleteGuestBudget, deleteGuestContact, deleteGuestGoal, deleteGuestTag, deleteGuestTransaction,
@@ -100,6 +100,31 @@ export function useTransactions(enabled = true) {
       const data = await fetchJson<{ transactions: Transaction[] }>("/api/transactions");
       return data.transactions ?? [];
     },
+    staleTime: 30_000,
+  });
+}
+
+const PAGE_SIZE = 25;
+
+export function useInfiniteTransactions(enabled = true) {
+  const { isGuest, isLoading } = useGuest();
+  return useInfiniteQuery({
+    queryKey: [...transactionListKey(isGuest), "infinite"],
+    enabled:  enabled && !isLoading,
+    initialPageParam: 0,
+    queryFn: async ({ pageParam = 0 }) => {
+      if (isGuest) {
+        const all = getGuestTransactions();
+        return { transactions: all.slice(pageParam, pageParam + PAGE_SIZE), nextOffset: pageParam + PAGE_SIZE, total: all.length };
+      }
+      const data = await fetchJson<{ transactions: Transaction[] }>(
+        `/api/transactions?limit=${PAGE_SIZE}&offset=${pageParam}`
+      );
+      const txs = data.transactions ?? [];
+      return { transactions: txs, nextOffset: pageParam + PAGE_SIZE, total: null as number | null };
+    },
+    getNextPageParam: (last) =>
+      last.transactions.length === PAGE_SIZE ? last.nextOffset : undefined,
     staleTime: 30_000,
   });
 }

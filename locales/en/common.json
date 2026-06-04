@@ -65,7 +65,9 @@
     "deleting": "Deleting...",
     "actions": "Actions",
     "empty": "No data yet.",
-    "unknown_error": "Something went wrong. Please try again."
+    "unknown_error": "Something went wrong. Please try again.",
+    "load_more": "Load more",
+    "select": "Select..."
   },
   "dashboard": {
     "title": "Overview",
@@ -804,6 +806,7 @@
   "ledger": {
     "title": "Unified Ledger",
     "total_entries": "{{count}} total entries",
+    "remaining_entries": "remaining",
     "filters": "Filters",
     "direction": "Direction",
     "all_flows": "All flows",

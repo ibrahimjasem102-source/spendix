@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeftRight,
@@ -55,6 +55,8 @@ const TYPE_EDIT_ROUTES: Partial<Record<LedgerEntryType, string>> = {
   recurring:    "/recurring",
 };
 
+const PAGE = 25;
+
 export default function LedgerPage() {
   const router = useRouter();
   const { entries, balance, cashflow } = useLedger();
@@ -73,6 +75,7 @@ export default function LedgerPage() {
   const [filters,    setFilters]    = useState<LedgerFilters>({ type: "all", direction: "all" });
   const [search,     setSearch]     = useState("");
   const [showFilters, setShowFilters] = useState(false);
+  const [page,       setPage]       = useState(1);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [deletingEntry,      setDeletingEntry]      = useState<UnifiedLedgerEntry | null>(null);
   const [deleteLoading,      setDeleteLoading]      = useState(false);
@@ -83,10 +86,17 @@ export default function LedgerPage() {
     return map;
   }, [transactions]);
 
-  const visible = useMemo(
+  const allVisible = useMemo(
     () => sortByDate(filterLedger(entries, { ...filters, search: search.trim() || undefined })),
     [entries, filters, search],
   );
+
+  // Reset to page 1 when filters/search change
+  useEffect(() => { setPage(1); }, [filters, search]);
+
+  // Paginated slice
+  const visible = useMemo(() => allVisible.slice(0, page * PAGE), [allVisible, page]);
+  const hasMore = visible.length < allVisible.length;
 
   const activeFilterCount = [
     filters.type !== "all",
@@ -98,7 +108,7 @@ export default function LedgerPage() {
 
   const visibleCashflow = useMemo(() => {
     let inflow = 0; let outflow = 0;
-    for (const e of visible) {
+    for (const e of allVisible) {
       if (e.direction === "inflow")  inflow  += e.amount;
       if (e.direction === "outflow") outflow += e.amount;
     }
@@ -300,7 +310,7 @@ export default function LedgerPage() {
       {activeFilterCount > 0 && (
         <div className="flex items-center justify-between px-1">
           <p className="text-xs t3">
-            <span className="font-semibold t1">{visible.length}</span> / {entries.length}
+            <span className="font-semibold t1">{allVisible.length}</span> / {entries.length}
             {search && <span className="text-cyan-400"> · {t("ledger.matching", { query: search })}</span>}
           </p>
           <button onClick={resetFilters} className="text-[10px] font-semibold text-rose-400 hover:text-rose-300 transition-colors">
@@ -315,6 +325,17 @@ export default function LedgerPage() {
         onEdit={handleEdit}
         onDelete={handleDelete}
       />
+
+      {/* Load more */}
+      {hasMore && (
+        <button
+          type="button"
+          onClick={() => setPage((p) => p + 1)}
+          className="w-full rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--bg-input))] py-3 text-sm font-semibold t2 hover:t1 hover:border-cyan-400/30 hover:bg-cyan-400/5 transition-all"
+        >
+          {t("common.load_more")} · {allVisible.length - visible.length} {t("ledger.remaining_entries")}
+        </button>
+      )}
 
       {editingTransaction && (
         <TransactionForm

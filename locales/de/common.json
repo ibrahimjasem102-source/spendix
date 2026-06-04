@@ -64,7 +64,9 @@
     "deleting": "Wird geloescht...",
     "actions": "Aktionen",
     "empty": "Noch keine Daten.",
-    "unknown_error": "Etwas ist schiefgelaufen. Bitte erneut versuchen."
+    "unknown_error": "Etwas ist schiefgelaufen. Bitte erneut versuchen.",
+    "load_more": "Mehr laden",
+    "select": "Auswählen..."
   },
   "dashboard": {
     "title": "Übersicht",
@@ -782,6 +784,7 @@
   "ledger": {
     "title": "Einheitliches Hauptbuch",
     "total_entries": "{{count}} Eintraege insgesamt",
+    "remaining_entries": "verbleibend",
     "filters": "Filter",
     "direction": "Richtung",
     "all_flows": "Alle Fluesse",
