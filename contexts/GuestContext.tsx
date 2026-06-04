@@ -14,14 +14,26 @@ const GuestContext = createContext<GuestContextType>({ isGuest: true, isLoading:
 function detectSessionSync(): boolean {
   if (typeof window === "undefined") return false;
   try {
+    // 1. Our own persisted key (set explicitly on login/logout)
+    const stored = localStorage.getItem("spendix_access_token");
+    if (stored) {
+      setAuthToken(stored); // set immediately — no race condition
+      return true;
+    }
+    // 2. Fallback: Supabase's internal key (handles first load after deploy)
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     if (!supabaseUrl) return false;
     const projectRef = new URL(supabaseUrl).hostname.split(".")[0];
-    const raw = localStorage.getItem(`sb-${projectRef}-auth-token`);
-    if (!raw) return false;
-    const parsed = raw === "chunked" ? null : JSON.parse(raw) as { access_token?: string };
-    return !!(parsed?.access_token);
-  } catch { return false; }
+    const baseKey    = `sb-${projectRef}-auth-token`;
+    const raw        = localStorage.getItem(baseKey);
+    if (!raw || raw === "chunked") return false;
+    const parsed = JSON.parse(raw) as { access_token?: string };
+    if (parsed?.access_token) {
+      setAuthToken(parsed.access_token); // persist to our key + set in memory
+      return true;
+    }
+  } catch {}
+  return false;
 }
 
 export function GuestProvider({ children }: { children: React.ReactNode }) {
