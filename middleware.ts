@@ -53,40 +53,43 @@ export async function middleware(request: NextRequest) {
 
   let supabaseResponse = NextResponse.next({ request });
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
-        setAll(cookiesToSet: { name: string; value: string; options?: CookieOptions }[]) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value)
-          );
-          supabaseResponse = NextResponse.next({ request });
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
-          );
-        },
-      },
-    }
-  );
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
   const { pathname } = request.nextUrl;
   const isAuthRoute = pathname.startsWith("/login") || pathname.startsWith("/signup");
 
-  // Authenticated users are bounced away from login/signup
-  if (user && isAuthRoute) {
-    return applySecurityHeaders(NextResponse.redirect(new URL("/dashboard", request.url)));
-  }
-  // Unauthenticated users can access everything (guest mode)
+  // Skip Supabase cookie-based auth for API routes — they use Bearer token directly
+  // Running getUser() on API routes causes Supabase to set session-clearing cookies
+  // that propagate to the browser and trigger spurious SIGNED_OUT events
+  if (!pathname.startsWith("/api/")) {
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return request.cookies.getAll();
+          },
+          setAll(cookiesToSet: { name: string; value: string; options?: CookieOptions }[]) {
+            cookiesToSet.forEach(({ name, value }) =>
+              request.cookies.set(name, value)
+            );
+            supabaseResponse = NextResponse.next({ request });
+            cookiesToSet.forEach(({ name, value, options }) =>
+              supabaseResponse.cookies.set(name, value, options)
+            );
+          },
+        },
+      }
+    );
 
+    const { data: { user } } = await supabase.auth.getUser();
+
+    // Authenticated users are bounced away from login/signup
+    if (user && isAuthRoute) {
+      return applySecurityHeaders(NextResponse.redirect(new URL("/dashboard", request.url)));
+    }
+  }
+
+  // Unauthenticated users can access everything (guest mode)
   return applySecurityHeaders(supabaseResponse);
 }
 

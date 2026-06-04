@@ -8,6 +8,10 @@ export async function createClient() {
   const cookieStore = await cookies();
   const headerStore = await headers();
   const authorization = headerStore.get("authorization");
+  // TEMP DIAGNOSTIC — remove after fix
+  if (process.env.NODE_ENV === "production") {
+    console.log("[server-client] authorization header:", authorization ? `Bearer ${authorization.slice(7,27)}…` : "MISSING");
+  }
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
