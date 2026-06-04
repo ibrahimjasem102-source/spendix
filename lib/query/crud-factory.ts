@@ -3,6 +3,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { QueryClient, QueryKey } from "@tanstack/react-query";
 import { safeFetch } from "@/lib/fetch-safe";
+import { setAuthToken } from "@/lib/auth/token-store";
 
 // ── Core fetch ─────────────────────────────────────────────────────────────
 
@@ -13,15 +14,47 @@ export class HttpError extends Error {
   }
 }
 
+// Refresh session and retry once on 401
+async function refreshSessionToken(): Promise<string | null> {
+  try {
+    // Dynamically import to avoid circular deps
+    const { createClient } = await import("@/lib/supabase/client");
+    const supabase = createClient();
+    const { data, error } = await supabase.auth.refreshSession();
+    if (error || !data.session) return null;
+    const token = data.session.access_token;
+    setAuthToken(token);
+    return token;
+  } catch {
+    return null;
+  }
+}
+
 export async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
   const ctrl = new AbortController();
-  const tid = window.setTimeout(() => ctrl.abort(), 15_000);
-  try {
-    const res = await safeFetch(url, { ...init, cache: "no-store", signal: ctrl.signal });
-    const payload = await res.json().catch(() => null);
-    if (!res.ok)
-      throw new HttpError(payload?.error ?? payload?.errorKey ?? `HTTP ${res.status}`, res.status);
+  const tid  = window.setTimeout(() => ctrl.abort(), 15_000);
+
+  async function attempt(retrying = false): Promise<T> {
+    const res     = await safeFetch(url, { ...init, cache: "no-store", signal: ctrl.signal });
+    const payload = await res.json().catch(() => null) as Record<string, unknown> | null;
+
+    if (res.status === 401 && !retrying) {
+      // Token might be expired — refresh and retry once
+      const newToken = await refreshSessionToken();
+      if (newToken) return attempt(true);
+    }
+
+    if (!res.ok) {
+      throw new HttpError(
+        (payload?.error ?? payload?.errorKey ?? `HTTP ${res.status}`) as string,
+        res.status,
+      );
+    }
     return payload as T;
+  }
+
+  try {
+    return await attempt();
   } catch (err) {
     if (err instanceof DOMException && err.name === "AbortError")
       throw new Error("Request timed out");
@@ -43,14 +76,10 @@ export const putJson   = <T>(url: string, body: unknown) => fetchJson<T>(url, { 
 export const patchJson = <T>(url: string, body: unknown) => fetchJson<T>(url, { method: "PATCH", ...j(body) });
 
 export async function deleteItem(url: string): Promise<void> {
-  const r = await safeFetch(url, { method: "DELETE" });
-  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  await fetchJson<unknown>(url, { method: "DELETE" });
 }
 
-// ── CRUD factory ─────────────────────────────────────────────────────────────
-// Returns three React hooks (useCreate, useUpdate, useDelete) for any entity
-// that follows the standard REST CRUD pattern. Call makeCrud() at module level,
-// then export the returned hooks — they obey React hook rules when consumed.
+// ── CRUD factory ──────────────────────────────────────────────────────────
 
 export interface CrudConfig<T, TCreate, TUpdate = Partial<TCreate>> {
   keys: { all: QueryKey; list: () => QueryKey };

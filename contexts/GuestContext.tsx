@@ -2,66 +2,53 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { setAuthToken } from "@/lib/auth/token-store";
+import { signedIn, signedOut, initSession } from "@/lib/auth/session-manager";
 
 interface GuestContextType {
-  isGuest: boolean;
+  isGuest:  boolean;
   isLoading: boolean;
 }
 
 const GuestContext = createContext<GuestContextType>({ isGuest: true, isLoading: true });
 
-function detectSessionSync(): boolean {
-  if (typeof window === "undefined") return false;
-  try {
-    // 1. Our own persisted key (set explicitly on login/logout)
-    const stored = localStorage.getItem("spendix_access_token");
-    if (stored) {
-      setAuthToken(stored); // set immediately — no race condition
-      return true;
-    }
-    // 2. Fallback: Supabase's internal key (handles first load after deploy)
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    if (!supabaseUrl) return false;
-    const projectRef = new URL(supabaseUrl).hostname.split(".")[0];
-    const baseKey    = `sb-${projectRef}-auth-token`;
-    const raw        = localStorage.getItem(baseKey);
-    if (!raw || raw === "chunked") return false;
-    const parsed = JSON.parse(raw) as { access_token?: string };
-    if (parsed?.access_token) {
-      setAuthToken(parsed.access_token); // persist to our key + set in memory
-      return true;
-    }
-  } catch {}
-  return false;
-}
-
 export function GuestProvider({ children }: { children: React.ReactNode }) {
-  const hasSession = detectSessionSync();
-  const [isGuest, setIsGuest] = useState(!hasSession);
+  // Synchronous init: reads token from localStorage immediately
+  // so isGuest is correct before the first render
+  const hasSession = initSession();
+
+  const [isGuest,   setIsGuest]   = useState(!hasSession);
   const [isLoading, setIsLoading] = useState(!hasSession);
 
   useEffect(() => {
     const supabase = createClient();
     let active = true;
 
-    supabase.auth.getSession()
-      .then(({ data: { session } }) => {
-        if (!active) return;
-        setAuthToken(session?.access_token ?? null);
-        setIsGuest(!session?.user);
-        setIsLoading(false);
-      })
-      .catch(() => {
-        if (!active) return;
+    // Confirm session is valid (also refreshes if needed)
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!active) return;
+      if (session?.access_token) {
+        signedIn(session.access_token);
+        setIsGuest(false);
+      } else {
+        signedOut();
         setIsGuest(true);
-        setIsLoading(false);
-      });
+      }
+      setIsLoading(false);
+    }).catch(() => {
+      if (!active) return;
+      setIsLoading(false);
+    });
 
+    // Keep in sync with auth state changes (login/logout from any tab)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
       if (!active) return;
-      setAuthToken(session?.access_token ?? null);
-      setIsGuest(!session?.user);
+      if (session?.access_token) {
+        signedIn(session.access_token);
+        setIsGuest(false);
+      } else {
+        signedOut();
+        setIsGuest(true);
+      }
       setIsLoading(false);
     });
 

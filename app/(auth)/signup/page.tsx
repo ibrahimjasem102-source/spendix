@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Wallet, Eye, EyeOff, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { setAuthToken } from "@/lib/auth/token-store";
+import { signedIn } from "@/lib/auth/session-manager";
 import { migrateGuestData } from "@/lib/guest/migrate";
 import { useTranslation } from "@/lib/i18n";
 import OAuthButtons from "@/components/auth/OAuthButtons";
@@ -48,7 +48,7 @@ export default function SignupPage() {
     }
 
     if (data.session) {
-      setAuthToken(data.session.access_token);
+      signedIn(data.session.access_token);
 
       // Set server-side session cookie
       await fetch("/api/auth/set-session", {

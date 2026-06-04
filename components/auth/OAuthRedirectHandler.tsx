@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { setAuthToken } from "@/lib/auth/token-store";
+import { signedIn } from "@/lib/auth/session-manager";
 import { migrateGuestData } from "@/lib/guest/migrate";
 
 function isAuthCallbackUrl(url: string) {
@@ -38,7 +38,7 @@ export default function OAuthRedirectHandler() {
       const supabase = createClient();
       const { data, error } = await supabase.auth.exchangeCodeForSession(code);
       if (data.session) {
-        setAuthToken(data.session.access_token);
+        signedIn(data.session.access_token);
       }
       if (error) {
         await import("@capacitor/browser").then(({ Browser }) => Browser.close()).catch(() => undefined);

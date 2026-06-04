@@ -46,8 +46,8 @@ export default function Sidebar() {
   async function handleSignOut() {
     const supabase = createClient();
     await supabase.auth.signOut();
-    const { setAuthToken } = await import("@/lib/auth/token-store");
-    setAuthToken(null);
+    const { signedOut } = await import("@/lib/auth/session-manager");
+    signedOut();
     window.location.replace("/login");
   }
 
