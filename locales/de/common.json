@@ -1510,7 +1510,22 @@
     "admin_invite_member_only": "Admins können Mitglieder einladen. Nur der Inhaber kann Adminrechte vergeben.",
     "remove_member": "Mitglied entfernen",
     "error_invite": "Einladung konnte nicht gesendet werden.",
-    "error_accept": "Ungültiger oder abgelaufener Token."
+    "error_accept": "Ungültiger oder abgelaufener Token.",
+    "health_score": "Gesundheitswert",
+    "health_excellent": "Ausgezeichnet",
+    "health_good": "Gut",
+    "health_fair": "Akzeptabel",
+    "health_needs_attention": "Beachten",
+    "of_total": "vom Gesamt",
+    "savings_rate": "Sparrate",
+    "insights": "Intelligente Einblicke",
+    "insight_saving_well": "Super! Der Haushalt spart {{rate}}% des Einkommens",
+    "insight_low_savings": "Sparrate ist niedrig — versuchen Sie Ausgaben zu reduzieren",
+    "insight_negative_balance": "Negativer Saldo — Ausgaben übersteigen Einnahmen",
+    "insight_top_earner": "{{email}} ist der Hauptverdiener diesen Monat",
+    "insight_overspending": "Warnung: Ausgaben übersteigen Gesamteinnahmen",
+    "create_hint": "Neuen Haushalt erstellen und Familie einladen",
+    "token_hint": "Mit Einladungscode einem Haushalt beitreten"
   },
   "hub": {
     "title": "Neu",

@@ -1532,7 +1532,22 @@
     "admin_invite_member_only": "Admins can invite members. Only the owner can grant admin access.",
     "remove_member": "Remove member",
     "error_invite": "Could not send invitation.",
-    "error_accept": "Invalid or expired token."
+    "error_accept": "Invalid or expired token.",
+    "health_score": "Health Score",
+    "health_excellent": "Excellent",
+    "health_good": "Good",
+    "health_fair": "Fair",
+    "health_needs_attention": "Needs Attention",
+    "of_total": "of total",
+    "savings_rate": "Savings rate",
+    "insights": "Smart Insights",
+    "insight_saving_well": "Great! The household saves {{rate}}% of income this month",
+    "insight_low_savings": "Savings rate is low — try reducing expenses",
+    "insight_negative_balance": "Net balance is negative — expenses exceed income",
+    "insight_top_earner": "{{email}} is the top earner this month",
+    "insight_overspending": "Warning: Total expenses exceed total income",
+    "create_hint": "Create a new household and invite your family",
+    "token_hint": "Join an existing household with an invitation code"
   },
   "hub": {
     "title": "New",
