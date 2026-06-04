@@ -195,8 +195,10 @@ export function useFinancialEngine(): FinancialSnapshot {
   const { data: transactions = [], isLoading: txLoading, isError: txError } =
     useTransactions(ready);
 
+  // useDebts handles guest vs authenticated internally — pass ready so guest debts
+  // are included in balance calculations too (lending money should reduce balance)
   const { data: debtsResult, isLoading: debtLoading, isError: debtError } =
-    useDebts(authenticated);
+    useDebts(ready);
 
   const { data: investments = [], isLoading: invLoading, isError: invError } =
     useInvestments(authenticated);
