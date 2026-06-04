@@ -104,14 +104,19 @@ function RecurringForm({ initial, onSubmit, onClose, categories }: FormProps) {
       <motion.div
         initial={{ y: 60, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 60, opacity: 0 }}
         transition={spring}
-        className="modal-card w-full sm:max-w-md rounded-t-[2rem] sm:rounded-[1.75rem] overflow-hidden flex flex-col"
-        style={{ maxHeight: "92dvh" }}
+        className="w-full sm:max-w-md rounded-t-[2rem] sm:rounded-[1.75rem] overflow-hidden flex flex-col"
+        style={{
+          backgroundColor: "hsl(var(--bg-card))",
+          border: "1px solid hsl(var(--border))",
+          maxHeight: "92dvh",
+        }}
       >
-        {/* Drag handle */}
-        <SheetDragHandle onClose={onClose} />
-
         {/* Header */}
-        <div className="shrink-0 px-5 pt-2 pb-4 border-b border-[hsl(var(--border-2))]">
+        <div className="shrink-0 px-5 pt-3 pb-4 border-b border-[hsl(var(--border-2))]">
+          {/* Drag handle */}
+          <div className="mb-3 sm:hidden">
+            <SheetDragHandle onClose={onClose} />
+          </div>
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2.5">
               <div className="flex h-9 w-9 items-center justify-center rounded-2xl"
@@ -267,7 +272,7 @@ function RecurringForm({ initial, onSubmit, onClose, categories }: FormProps) {
             )}
           </div>
 
-          <div className="shrink-0 px-5 pt-2" style={{ paddingBottom: "max(20px, calc(env(safe-area-inset-bottom,0px) + 12px))" }}>
+          <div className="shrink-0 px-5 pt-2" style={{ paddingBottom: "max(80px, calc(env(safe-area-inset-bottom,0px) + 72px))" }}>
             <motion.button type="submit" disabled={loading}
               whileTap={{ scale: 0.97 }} transition={tapTransition}
               className="flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-bold text-white transition-all disabled:opacity-40"
