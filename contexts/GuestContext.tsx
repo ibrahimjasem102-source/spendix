@@ -1,72 +1,76 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { signedIn, signedOut, initSession } from "@/lib/auth/session-manager";
 import { getAuthToken } from "@/lib/auth/token-store";
 
 interface GuestContextType {
-  isGuest:  boolean;
+  isGuest:   boolean;
   isLoading: boolean;
 }
 
 const GuestContext = createContext<GuestContextType>({ isGuest: true, isLoading: true });
 
 export function GuestProvider({ children }: { children: React.ReactNode }) {
-  // Synchronous init from localStorage — no race condition on first render
-  const hasSession = initSession();
-
-  const [isGuest,   setIsGuest]   = useState(!hasSession);
-  const [isLoading, setIsLoading] = useState(!hasSession);
+  // Synchronous init from localStorage — correct state before first render
+  const hasSession       = initSession();
+  const [isGuest,    setIsGuest]    = useState(!hasSession);
+  const [isLoading,  setIsLoading]  = useState(!hasSession);
+  const resolvedOnce = useRef(false);
 
   useEffect(() => {
     const supabase = createClient();
     let active = true;
 
-    // onAuthStateChange is the primary listener.
-    // Rules:
-    //   SIGNED_IN / TOKEN_REFRESHED → always authenticate
-    //   SIGNED_OUT                  → only sign out if we also have no local token
-    //   INITIAL_SESSION with null   → trust local token if present, else sign out
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!active) return;
 
       if (session?.access_token) {
-        // Supabase confirmed a valid session — trust it
+        // Supabase confirmed a valid session
         signedIn(session.access_token);
         setIsGuest(false);
         setIsLoading(false);
+        resolvedOnce.current = true;
         return;
       }
 
-      // session is null
-      if (event === "SIGNED_OUT") {
-        // Explicit logout — always honour
-        signedOut();
-        setIsGuest(true);
-        setIsLoading(false);
-        return;
-      }
+      // ── session is null ──────────────────────────────────────
+      // CRITICAL: Never trust SIGNED_OUT / null session from Supabase alone.
+      // Supabase fires SIGNED_OUT after token refresh failures, network errors,
+      // or internal state mismatches — even when the user legitimately logged in.
+      //
+      // We rely on OUR OWN token (spendix_access_token) as the source of truth.
+      // Only call signedOut() from explicit user logout, never from here.
 
-      // INITIAL_SESSION / TOKEN_REFRESHED with null session:
-      // Supabase lost its internal session, but we may still have our Bearer token.
-      // Keep the user authenticated if spendix_access_token is present.
       const localToken = getAuthToken();
+
       if (localToken) {
-        // Token exists — stay authenticated, do not call signedOut()
+        // We have a valid Bearer token — stay authenticated
         setIsGuest(false);
         setIsLoading(false);
       } else {
-        // No local token either — truly a guest
-        signedOut();
+        // No local token AND Supabase says no session → truly a guest
         setIsGuest(true);
         setIsLoading(false);
       }
+
+      resolvedOnce.current = true;
     });
+
+    // Safety timeout: if onAuthStateChange never fires (edge case),
+    // fall back to local token state after 3 seconds
+    const timeout = setTimeout(() => {
+      if (!active || resolvedOnce.current) return;
+      const localToken = getAuthToken();
+      setIsGuest(!localToken);
+      setIsLoading(false);
+    }, 3000);
 
     return () => {
       active = false;
       subscription.unsubscribe();
+      clearTimeout(timeout);
     };
   }, []);
 
