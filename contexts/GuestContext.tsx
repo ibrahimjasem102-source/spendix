@@ -24,11 +24,27 @@ export function GuestProvider({ children }: { children: React.ReactNode }) {
     let active = true;
 
     // Confirm session is valid (also refreshes if needed)
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!active) return;
       if (session?.access_token) {
         signedIn(session.access_token);
         setIsGuest(false);
+      } else if (hasSession) {
+        // We had a local token but getSession returned null — try refreshing
+        try {
+          const { data: refreshData } = await supabase.auth.refreshSession();
+          if (refreshData.session?.access_token) {
+            signedIn(refreshData.session.access_token);
+            setIsGuest(false);
+          } else {
+            signedOut();
+            setIsGuest(true);
+          }
+        } catch {
+          // Network error during refresh — keep existing token, assume still valid
+          setIsLoading(false);
+          return;
+        }
       } else {
         signedOut();
         setIsGuest(true);
@@ -36,6 +52,7 @@ export function GuestProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(false);
     }).catch(() => {
       if (!active) return;
+      // Network error — keep existing state rather than logging out
       setIsLoading(false);
     });
 

@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { QueryClient, QueryKey } from "@tanstack/react-query";
 import { safeFetch } from "@/lib/fetch-safe";
 import { setAuthToken } from "@/lib/auth/token-store";
+import { notifyMutationError } from "@/lib/query/mutation-toast";
 
 // ── Core fetch ─────────────────────────────────────────────────────────────
 
@@ -45,10 +46,12 @@ export async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> 
     }
 
     if (!res.ok) {
-      throw new HttpError(
+      const err = new HttpError(
         (payload?.error ?? payload?.errorKey ?? `HTTP ${res.status}`) as string,
         res.status,
       );
+      notifyMutationError(err);
+      throw err;
     }
     return payload as T;
   }

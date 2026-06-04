@@ -59,22 +59,15 @@ export default function LoginPage() {
 
     if (data.session) {
       signedIn(data.session.access_token);
-      try {
-        const sessionRes = await fetch("/api/auth/set-session", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            access_token: data.session.access_token,
-            refresh_token: data.session.refresh_token,
-          }),
-        });
-        if (!sessionRes.ok) {
-          const body = await sessionRes.json().catch(() => ({})) as { error?: string };
-          console.warn("[login] set-session failed:", body.error);
-        }
-      } catch (err) {
-        console.warn("[login] set-session error:", err);
-      }
+      // Set server-side cookies (best-effort — Bearer token is the primary auth mechanism)
+      fetch("/api/auth/set-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token,
+        }),
+      }).catch(() => undefined);
     }
 
     // Pass current locale so categories are seeded in the right language
@@ -82,18 +75,24 @@ export default function LoginPage() {
       ? (window.localStorage.getItem("spendix_locale") ?? "ar")
       : "ar";
 
-    await fetch("/api/auth/bootstrap", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(data.session ? { "Authorization": `Bearer ${data.session.access_token}` } : {}),
-      },
-      body: JSON.stringify({ locale: currentLocale }),
-    }).catch((err) => { console.warn("[login] bootstrap failed:", err); });
+    // Bootstrap: retry once on failure
+    const bootstrapHeaders = {
+      "Content-Type": "application/json",
+      ...(data.session ? { "Authorization": `Bearer ${data.session.access_token}` } : {}),
+    };
+    const bootstrapBody = JSON.stringify({ locale: currentLocale });
+    try {
+      const res = await fetch("/api/auth/bootstrap", { method: "POST", headers: bootstrapHeaders, body: bootstrapBody });
+      if (!res.ok) {
+        // retry once after 800ms
+        await new Promise((r) => setTimeout(r, 800));
+        await fetch("/api/auth/bootstrap", { method: "POST", headers: bootstrapHeaders, body: bootstrapBody }).catch(() => undefined);
+      }
+    } catch {
+      await fetch("/api/auth/bootstrap", { method: "POST", headers: bootstrapHeaders, body: bootstrapBody }).catch(() => undefined);
+    }
 
-    await migrateGuestData({ saveSettings: true }).catch((err) => {
-      console.warn("[login] migration failed:", err);
-    });
+    await migrateGuestData({ saveSettings: true }).catch(() => undefined);
     window.location.replace("/dashboard");
   }
 

@@ -106,22 +106,7 @@ EXCEPTION WHEN OTHERS THEN
   NULL; -- already NOT NULL or table doesn't exist
 END $$;
 
--- ════════════════════════════════════════════════════════════════
--- HIGH — savings_transactions: add updated_at column + trigger
--- ════════════════════════════════════════════════════════════════
-
-ALTER TABLE public.savings_transactions
-  ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
-
-DROP TRIGGER IF EXISTS trg_savings_transactions_updated_at ON public.savings_transactions;
-
-DO $$ BEGIN
-  IF EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'set_updated_at') THEN
-    CREATE TRIGGER trg_savings_transactions_updated_at
-      BEFORE UPDATE ON public.savings_transactions
-      FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
-  END IF;
-END $$;
+-- savings_transactions: skipped (table removed from app)
 
 -- ════════════════════════════════════════════════════════════════
 -- HIGH — Missing FK index: transactions.category_id
@@ -137,7 +122,8 @@ CREATE INDEX IF NOT EXISTS idx_transactions_category
 -- ════════════════════════════════════════════════════════════════
 
 DROP TRIGGER IF EXISTS on_auth_user_created_categories ON auth.users;
-DROP FUNCTION IF EXISTS public.create_default_categories();
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+DROP FUNCTION IF EXISTS public.create_default_categories() CASCADE;
 
 -- ════════════════════════════════════════════════════════════════
 -- MEDIUM — Compound indexes for bills and subscriptions
