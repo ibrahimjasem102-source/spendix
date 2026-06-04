@@ -278,7 +278,7 @@ export default function HouseholdPage() {
 
   if (isGuest) {
     return (
-      <div className="mx-auto max-w-xl space-y-4 pb-28">
+      <div className="mx-auto max-w-xl space-y-4">
         <div className="rounded-[24px] border border-cyan-400/20 bg-cyan-400/5 p-5">
           <div className="mb-5 flex items-start gap-3">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-cyan-400/10">
@@ -288,7 +288,7 @@ export default function HouseholdPage() {
               <p className="text-[10px] font-bold uppercase tracking-[0.15em] t3">
                 {t("household.title")}
               </p>
-              <h1 className="mt-1 text-xl font-bold t1">{t("household.guest_title")}</h1>
+              <h1 className="mt-1 text-xl font-black t1">{t("household.guest_title")}</h1>
               <p className="mt-1 text-sm t2 leading-relaxed">{t("household.guest_subtitle")}</p>
             </div>
           </div>
@@ -303,7 +303,7 @@ export default function HouseholdPage() {
   // ── No household yet ─────────────────────────────────────────
   if (!household) {
     return (
-      <div className="space-y-4 max-w-xl mx-auto pb-28">
+      <div className="space-y-4 max-w-xl mx-auto">
         {/* Header */}
         <div className="rounded-[24px] border border-cyan-400/20 bg-cyan-400/5 p-5">
           <div className="mb-4 flex items-center gap-3">
@@ -311,7 +311,7 @@ export default function HouseholdPage() {
               <Home className="h-5 w-5 text-cyan-400" />
             </div>
             <div className="min-w-0">
-              <h1 className="text-xl font-bold t1">{t("household.title")}</h1>
+              <h1 className="text-xl font-black t1">{t("household.title")}</h1>
               <p className="text-xs t3 mt-0.5 leading-relaxed">{t("household.subtitle")}</p>
             </div>
           </div>
@@ -455,7 +455,7 @@ export default function HouseholdPage() {
     : 0;
 
   return (
-    <div className="space-y-4 max-w-2xl mx-auto pb-28">
+    <div className="space-y-4 max-w-2xl mx-auto">
       {/* Header */}
       <div className="relative overflow-hidden rounded-[24px] border border-cyan-400/20 bg-cyan-400/5 p-5">
         <div className="mb-5 flex items-start justify-between gap-3">
@@ -465,7 +465,7 @@ export default function HouseholdPage() {
             </div>
             <div className="min-w-0">
               <p className="text-[10px] font-bold uppercase tracking-[0.15em] t3">{t("household.title")}</p>
-              <h1 className="mt-1 truncate text-xl font-bold t1">{household.name}</h1>
+              <h1 className="mt-1 truncate text-xl font-black t1">{household.name}</h1>
               <p className="text-xs t3 mt-0.5">
                 {summary.length} {t("household.members_count")}
               </p>

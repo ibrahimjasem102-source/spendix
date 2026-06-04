@@ -197,7 +197,7 @@ export default function AIInsightsPage() {
   const isBusy = loading || generating;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
 
       {/* ── Live Analysis (local engines) ── */}
       <section className="space-y-3">
@@ -243,7 +243,7 @@ export default function AIInsightsPage() {
       {/* Header */}
       <motion.div {...fadeBlur} className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold t1">{t("ai_insights.title")}</h1>
+          <h1 className="text-xl font-black t1">{t("ai_insights.title")}</h1>
           <p className="text-sm t2 mt-0.5">
             {t("ai_insights.subtitle")}
             {lastUpdated && (

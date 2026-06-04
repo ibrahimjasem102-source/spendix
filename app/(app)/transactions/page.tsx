@@ -440,7 +440,7 @@ function TransactionsHub() {
   }
 
   return (
-    <div className="space-y-5 pb-32">
+    <div className="space-y-5">
 
       {/* ── Header ──────────────────────────────────────── */}
       <div className="flex min-w-0 items-center gap-2.5">

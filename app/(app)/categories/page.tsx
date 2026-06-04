@@ -347,10 +347,10 @@ export default function CategoriesPage() {
   }
 
   return (
-    <div className="space-y-5 pb-32">
+    <div className="space-y-5">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold t1">{t("categories.title")}</h1>
+          <h1 className="text-xl font-black t1">{t("categories.title")}</h1>
           <p className="mt-0.5 text-xs t3">{t("categories.subtitle")}</p>
         </div>
         <button

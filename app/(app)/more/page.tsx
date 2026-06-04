@@ -206,12 +206,17 @@ export default function MorePage() {
   const unread = notifData?.unreadCount ?? 0;
 
   return (
-    <div className="space-y-6 pb-32">
+    <div className="space-y-5">
 
       {/* Header */}
-      <div>
-        <h1 className="text-xl font-bold t1">{t("nav.more")}</h1>
-        <p className="text-xs t3 mt-0.5">{t("more.subtitle")}</p>
+      <div className="flex min-w-0 items-center gap-2.5">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-slate-400/10">
+          <Layers3 className="h-4 w-4 text-slate-400" />
+        </div>
+        <div className="min-w-0">
+          <h1 className="truncate text-xl font-black t1">{t("nav.more")}</h1>
+          <p className="mt-0.5 text-xs font-medium t3">{t("more.subtitle")}</p>
+        </div>
       </div>
 
       {/* Section groups */}

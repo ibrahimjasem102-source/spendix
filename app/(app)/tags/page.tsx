@@ -253,7 +253,7 @@ export default function TagsPage() {
             <TagIcon className="w-4 h-4 text-pink-400" />
           </div>
           <div>
-            <h1 className="text-xl font-bold t1">{t("tags.title")}</h1>
+            <h1 className="text-xl font-black t1">{t("tags.title")}</h1>
             <p className="text-xs t3 mt-0.5">{t("tags.subtitle")}</p>
           </div>
         </div>

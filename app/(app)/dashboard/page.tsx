@@ -238,14 +238,14 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="space-y-3 pb-28">
+    <div className="space-y-3">
 
       {/* ── Greeting ──────────────────────────────────────── */}
       <div className="pt-1">
         <p className="text-[10px] font-semibold t3 uppercase tracking-[0.12em] mb-0.5">
           {new Date().toLocaleDateString(dateLocale, { weekday: "long", month: "long", day: "numeric" })}
         </p>
-        <h1 className="text-2xl font-bold t1">{greeting}</h1>
+        <h1 className="text-xl font-black t1">{greeting}</h1>
       </div>
 
       {/* ── NET WORTH HERO — the BIG number ──────────────── */}

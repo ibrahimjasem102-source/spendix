@@ -233,7 +233,7 @@ export default function AIAssistantPage() {
   const totalInsights = localInsights.length + aiInsights.length;
 
   return (
-    <div className="space-y-5 pb-32">
+    <div className="space-y-5">
 
       {/* ── Page header ──────────────────────────────────── */}
       <div className="flex items-start justify-between gap-3">

@@ -115,15 +115,15 @@ export default function ExportPage() {
   }
 
   return (
-    <div className="space-y-6 pb-24">
+    <div className="space-y-5">
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-2xl bg-cyan-400/10 flex items-center justify-center shrink-0">
-          <Download className="w-5 h-5 text-cyan-400" />
+      <div className="flex min-w-0 items-center gap-2.5">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-cyan-400/10">
+          <Download className="h-4 w-4 text-cyan-400" />
         </div>
-        <div>
-          <h1 className="text-xl font-bold t1">{t("export.title")}</h1>
-          <p className="text-xs t3 mt-0.5">{t("export.subtitle")}</p>
+        <div className="min-w-0">
+          <h1 className="truncate text-xl font-black t1">{t("export.title")}</h1>
+          <p className="mt-0.5 text-xs font-medium t3">{t("export.subtitle")}</p>
         </div>
       </div>
 
