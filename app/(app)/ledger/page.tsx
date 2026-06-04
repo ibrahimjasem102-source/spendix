@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeftRight,
@@ -76,6 +76,7 @@ export default function LedgerPage() {
   const [search,     setSearch]     = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [page,       setPage]       = useState(1);
+  const sentinelRef  = useRef<HTMLDivElement>(null);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [deletingEntry,      setDeletingEntry]      = useState<UnifiedLedgerEntry | null>(null);
   const [deleteLoading,      setDeleteLoading]      = useState(false);
@@ -97,6 +98,18 @@ export default function LedgerPage() {
   // Paginated slice
   const visible = useMemo(() => allVisible.slice(0, page * PAGE), [allVisible, page]);
   const hasMore = visible.length < allVisible.length;
+
+  // Infinite scroll — load next page when sentinel enters viewport
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => { if (entries[0]?.isIntersecting && hasMore) setPage((p) => p + 1); },
+      { rootMargin: "200px" },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasMore]);
 
   const activeFilterCount = [
     filters.type !== "all",
@@ -326,15 +339,19 @@ export default function LedgerPage() {
         onDelete={handleDelete}
       />
 
-      {/* Load more */}
+      {/* Infinite scroll sentinel */}
       {hasMore && (
-        <button
-          type="button"
-          onClick={() => setPage((p) => p + 1)}
-          className="w-full rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--bg-input))] py-3 text-sm font-semibold t2 hover:t1 hover:border-cyan-400/30 hover:bg-cyan-400/5 transition-all"
-        >
-          {t("common.load_more")} · {allVisible.length - visible.length} {t("ledger.remaining_entries")}
-        </button>
+        <div ref={sentinelRef} className="flex items-center justify-center gap-2 py-3 t3">
+          <div className="h-4 w-4 rounded-full border-2 border-cyan-400/30 border-t-cyan-400 animate-spin" />
+          <span className="text-xs">{t("common.loading")}</span>
+        </div>
+      )}
+
+      {/* End of list indicator */}
+      {!hasMore && allVisible.length > PAGE && (
+        <p className="text-center text-xs t3 py-2">
+          {t("ledger.total_entries", { count: allVisible.length })}
+        </p>
       )}
 
       {editingTransaction && (

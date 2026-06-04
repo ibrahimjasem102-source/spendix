@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus, Pencil, Trash2, CreditCard, CheckCircle, AlertTriangle,
@@ -286,6 +286,9 @@ export default function DebtsPage() {
   const [confirmId, setConfirmId]         = useState<string | null>(null);
   const [tab, setTab]                     = useState<DebtTab>("all");
   const [search, setSearch]               = useState("");
+  const [debtPage, setDebtPage]           = useState(1);
+  const debtSentinelRef                   = useRef<HTMLDivElement>(null);
+  const DEBT_PAGE = 15;
   const [contactModal, setContactModal]   = useState<string | null>(null);
   const [expandedIds, setExpandedIds]     = useState<Set<string>>(new Set());
   const [cleaning, setCleaning]           = useState(false);
@@ -352,6 +355,9 @@ export default function DebtsPage() {
 
   const dtiRatio = monthlyIncome > 0 ? avgMonthlyPayable / monthlyIncome : 0;
 
+  // Reset page on tab/search change
+  useEffect(() => { setDebtPage(1); }, [tab, search]);
+
   const filtered = useMemo(() => {
     let list = [...debts];
     if (tab === "payable")    list = list.filter((d) => d.debt_type === "payable"    && d.status !== "paid");
@@ -367,6 +373,21 @@ export default function DebtsPage() {
     const order: Record<DebtStatus, number> = { overdue: 0, active: 1, partially_paid: 2, paid: 3 };
     return list.sort((a, b) => order[a.status] - order[b.status]);
   }, [debts, tab, search]);
+
+  const filteredPage = useMemo(() => filtered.slice(0, debtPage * DEBT_PAGE), [filtered, debtPage]);
+  const debtHasMore  = filteredPage.length < filtered.length;
+
+  // Infinite scroll for debts
+  useEffect(() => {
+    const el = debtSentinelRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => { if (entries[0]?.isIntersecting && debtHasMore) setDebtPage((p) => p + 1); },
+      { rootMargin: "150px" },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [debtHasMore]);
 
   const upcoming = useMemo(() => {
     const now = Date.now();
@@ -608,7 +629,7 @@ export default function DebtsPage() {
         </div>
       ) : (
         <div className="space-y-2">
-          {filtered.map((debt) => {
+          {filteredPage.map((debt) => {
             const cfg       = STATUS_CFG[debt.status as DebtStatus] ?? STATUS_CFG.active;
             const total     = Number(debt.total_amount);
             const paid      = Number(debt.paid_amount ?? 0);
@@ -820,6 +841,13 @@ export default function DebtsPage() {
               </div>
             );
           })}
+          {/* Infinite scroll sentinel for debts */}
+          {debtHasMore && (
+            <div ref={debtSentinelRef} className="flex items-center justify-center gap-2 py-2 t3">
+              <div className="h-3.5 w-3.5 rounded-full border-2 border-orange-400/30 border-t-orange-400 animate-spin" />
+              <span className="text-xs">{t("common.loading")}</span>
+            </div>
+          )}
         </div>
       )}
 

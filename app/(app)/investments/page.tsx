@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import {
   Plus, Pencil, Trash2, TrendingUp, TrendingDown,
   Wallet, Percent, Loader2, Bitcoin, BarChart2, Home, Package, ArrowRight,
@@ -43,6 +43,9 @@ export default function InvestmentsPage() {
   const [editing,    setEditing]    = useState<Investment | undefined>();
   const [confirmId,  setConfirmId]  = useState<string | null>(null);
   const [activeType, setActiveType] = useState<AssetType | "all">("all");
+  const [invPage, setInvPage]       = useState(1);
+  const invSentinelRef              = useRef<HTMLDivElement>(null);
+  const INV_PAGE = 12;
 
   const { data: investments = [], isLoading } = useInvestments(!guestLoading);
   const { data: portfolioHistory = [] }       = usePortfolioHistory(!guestLoading);
@@ -112,6 +115,22 @@ export default function InvestmentsPage() {
     () => (activeType === "all" ? investments : investments.filter((i) => i.asset_type === activeType)),
     [investments, activeType],
   );
+
+  useEffect(() => { setInvPage(1); }, [activeType]);
+
+  const filteredPage = useMemo(() => filtered.slice(0, invPage * INV_PAGE), [filtered, invPage]);
+  const invHasMore   = filteredPage.length < filtered.length;
+
+  useEffect(() => {
+    const el = invSentinelRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      (entries) => { if (entries[0]?.isIntersecting && invHasMore) setInvPage((p) => p + 1); },
+      { rootMargin: "150px" },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [invHasMore]);
 
   const deletingId = deleteMut.isPending ? (deleteMut.variables as string) : null;
 
@@ -305,7 +324,7 @@ export default function InvestmentsPage() {
         ) : (
           <div className="divide-y divide-[hsl(var(--border))]">
             <AnimatePresence initial={false}>
-              {filtered.map((inv) => {
+              {filteredPage.map((inv) => {
                 const cfg      = ASSET_CONFIG[inv.asset_type as AssetType] ?? ASSET_CONFIG.other;
                 const cv       = Number(inv.current_value ?? inv.amount_invested);
                 const ai       = Number(inv.amount_invested);
@@ -383,6 +402,11 @@ export default function InvestmentsPage() {
                 );
               })}
             </AnimatePresence>
+          {invHasMore && (
+            <div ref={invSentinelRef} className="flex items-center justify-center gap-2 py-3 t3">
+              <div className="h-3.5 w-3.5 rounded-full border-2 border-purple-400/30 border-t-purple-400 animate-spin" />
+            </div>
+          )}
           </div>
         )}
       </div>
