@@ -1,4 +1,4 @@
-import { getAuthToken, setAuthToken } from "@/lib/auth/token-store";
+import { getAuthToken } from "@/lib/auth/token-store";
 
 function sanitizeValue(value: string): string {
   // eslint-disable-next-line no-control-regex
@@ -35,27 +35,11 @@ function isSameOrigin(input: RequestInfo | URL): boolean {
   return url.startsWith(window.location.origin);
 }
 
-async function resolveToken(): Promise<string | null> {
-  // 1. Try in-memory / localStorage (fast, synchronous via token-store)
-  const cached = getAuthToken();
-  if (cached) return cached;
-
-  // 2. Ask Supabase client directly — handles expired token refresh too
-  try {
-    const { createClient } = await import("@/lib/supabase/client");
-    const supabase = createClient();
-    const { data: { session } } = await supabase.auth.getSession();
-    const token = session?.access_token ?? null;
-    if (token) setAuthToken(token);
-    return token;
-  } catch {
-    return null;
-  }
-}
-
-export async function safeFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+export function safeFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
   if (isSameOrigin(input)) {
-    const token = await resolveToken();
+    // getAuthToken() reads from memory first, then localStorage fallback —
+    // no Supabase client needed (avoids circular: fetch-safe ↔ supabase/client)
+    const token = getAuthToken();
     const authHeader: Record<string, string> = token
       ? { Authorization: `Bearer ${token}` }
       : {};
