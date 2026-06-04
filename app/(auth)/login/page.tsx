@@ -59,14 +59,22 @@ export default function LoginPage() {
 
     if (data.session) {
       setAuthToken(data.session.access_token);
-      await fetch("/api/auth/set-session", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          access_token: data.session.access_token,
-          refresh_token: data.session.refresh_token,
-        }),
-      }).catch(() => undefined);
+      try {
+        const sessionRes = await fetch("/api/auth/set-session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            access_token: data.session.access_token,
+            refresh_token: data.session.refresh_token,
+          }),
+        });
+        if (!sessionRes.ok) {
+          const body = await sessionRes.json().catch(() => ({})) as { error?: string };
+          console.warn("[login] set-session failed:", body.error);
+        }
+      } catch (err) {
+        console.warn("[login] set-session error:", err);
+      }
     }
 
     // Pass current locale so categories are seeded in the right language

@@ -1,5 +1,33 @@
 let _token: string | null = null;
 
+// Auto-initialize synchronously on module load — eliminates the race condition
+// where API calls fire before GuestContext.getSession() resolves
+if (typeof window !== "undefined") {
+  try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    if (supabaseUrl) {
+      const projectRef = new URL(supabaseUrl).hostname.split(".")[0];
+      const baseKey = `sb-${projectRef}-auth-token`;
+      const raw = localStorage.getItem(baseKey);
+      if (raw && raw !== "chunked") {
+        const parsed = JSON.parse(raw) as { access_token?: string };
+        if (parsed.access_token) _token = parsed.access_token;
+      } else if (raw === "chunked") {
+        let assembled = "";
+        for (let i = 0; ; i++) {
+          const chunk = localStorage.getItem(`${baseKey}.${i}`);
+          if (chunk === null) break;
+          assembled += chunk;
+        }
+        if (assembled) {
+          const parsed = JSON.parse(assembled) as { access_token?: string };
+          if (parsed.access_token) _token = parsed.access_token;
+        }
+      }
+    }
+  } catch {}
+}
+
 export function setAuthToken(token: string | null) {
   _token = token;
 }

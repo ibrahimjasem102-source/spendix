@@ -12,7 +12,8 @@ export async function POST(request: Request) {
   const { error } = await supabase.auth.setSession({ access_token, refresh_token });
 
   if (error) {
-    return apiJson({ ok: false }, { status: 401 });
+    console.error("[set-session] failed:", error.message);
+    return apiJson({ ok: false, error: error.message }, { status: 401 });
   }
 
   return apiJson({ ok: true });

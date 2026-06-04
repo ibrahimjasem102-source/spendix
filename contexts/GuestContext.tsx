@@ -11,9 +11,23 @@ interface GuestContextType {
 
 const GuestContext = createContext<GuestContextType>({ isGuest: true, isLoading: true });
 
+function detectSessionSync(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    if (!supabaseUrl) return false;
+    const projectRef = new URL(supabaseUrl).hostname.split(".")[0];
+    const raw = localStorage.getItem(`sb-${projectRef}-auth-token`);
+    if (!raw) return false;
+    const parsed = raw === "chunked" ? null : JSON.parse(raw) as { access_token?: string };
+    return !!(parsed?.access_token);
+  } catch { return false; }
+}
+
 export function GuestProvider({ children }: { children: React.ReactNode }) {
-  const [isGuest, setIsGuest] = useState(true);
-  const [isLoading, setIsLoading] = useState(true);
+  const hasSession = detectSessionSync();
+  const [isGuest, setIsGuest] = useState(!hasSession);
+  const [isLoading, setIsLoading] = useState(!hasSession);
 
   useEffect(() => {
     const supabase = createClient();
