@@ -1083,7 +1083,11 @@
     "delete_confirm": "Dieses Konto löschen? Verknüpfte Transaktionen werden nicht gelöscht.",
     "delete_hint": "Diese Aktion kann nicht rückgängig gemacht werden.",
     "empty_title": "Noch keine Konten",
-    "empty_subtitle": "Fügen Sie Ihr erstes Konto hinzu, um zu verfolgen, wo Ihr Geld liegt."
+    "empty_subtitle": "Fügen Sie Ihr erstes Konto hinzu, um zu verfolgen, wo Ihr Geld liegt.",
+    "transfer": "Zwischen Konten übertragen",
+    "transfer_confirm": "Übertragung bestätigen",
+    "from": "Von Konto",
+    "to": "Zu Konto"
   },
   "subscriptions": {
     "title": "Abonnements",

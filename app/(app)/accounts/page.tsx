@@ -5,12 +5,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Banknote, Building2, CreditCard, Wallet, PiggyBank,
   Plus, Pencil, Trash2, X, Check, ChevronDown, Star,
-  TrendingUp, TrendingDown, AlertCircle,
+  TrendingUp, TrendingDown, AlertCircle, ArrowLeftRight, Loader2,
 } from "lucide-react";
 import { useAccounts, useCreateAccount, useUpdateAccount, useDeleteAccount } from "@/lib/query/hooks";
+import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "@/lib/i18n";
 import { useCurrency } from "@/lib/currency";
 import { spring, tapTransition } from "@/lib/motion";
+import { safeFetch } from "@/lib/fetch-safe";
 import SheetDragHandle from "@/components/ui/SheetDragHandle";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 import type { Account, AccountFormData, AccountType } from "@/types";
@@ -347,16 +349,25 @@ function AccountCard({ account, onEdit, onDelete }: AccountCardProps) {
 
 export default function AccountsPage() {
   const { t } = useTranslation();
-  const { format } = useCurrency();
+  const { format, symbol } = useCurrency();
+  const qc = useQueryClient();
   const { data: accounts = [], isLoading } = useAccounts();
   const createAccount = useCreateAccount();
   const updateAccount = useUpdateAccount();
   const deleteAccount = useDeleteAccount();
 
-  const [showForm, setShowForm] = useState(false);
+  const [showForm,       setShowForm]       = useState(false);
+  const [showTransfer,   setShowTransfer]   = useState(false);
   const [editingAccount, setEditingAccount] = useState<Account | null>(null);
   const [deletingAccount, setDeletingAccount] = useState<Account | null>(null);
   const [sortBy, setSortBy] = useState<"name" | "balance">("balance");
+
+  // Transfer state
+  const [transferFrom,   setTransferFrom]   = useState("");
+  const [transferTo,     setTransferTo]     = useState("");
+  const [transferAmount, setTransferAmount] = useState("");
+  const [transferNotes,  setTransferNotes]  = useState("");
+  const [transferring,   setTransferring]   = useState(false);
 
   const totalBalance = accounts.reduce((s, a) => s + (a.balance ?? a.initial_balance), 0);
   const totalTransactions = accounts.reduce((s, a) => s + (a.transaction_count ?? 0), 0);
@@ -383,6 +394,31 @@ export default function AccountsPage() {
     await deleteAccount.mutateAsync(id);
   }
 
+  async function handleTransfer(e: React.FormEvent) {
+    e.preventDefault();
+    if (!transferFrom || !transferTo || !transferAmount) return;
+    setTransferring(true);
+    try {
+      await safeFetch("/api/accounts/transfer", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          from_account_id: transferFrom,
+          to_account_id:   transferTo,
+          amount:          parseFloat(transferAmount),
+          date:            new Date().toISOString().slice(0, 10),
+          notes:           transferNotes || null,
+        }),
+      });
+      await qc.invalidateQueries({ queryKey: ["accounts"] });
+      await qc.invalidateQueries({ queryKey: ["transactions"] });
+      setShowTransfer(false);
+      setTransferFrom(""); setTransferTo(""); setTransferAmount(""); setTransferNotes("");
+    } finally {
+      setTransferring(false);
+    }
+  }
+
   return (
     <div className="space-y-5">
       {/* Page header */}
@@ -396,15 +432,27 @@ export default function AccountsPage() {
             <p className="mt-0.5 text-xs font-medium t3">{t("accounts.subtitle")}</p>
           </div>
         </div>
-        <motion.button
-          onClick={() => setShowForm(true)}
-          whileTap={{ scale: 0.93 }} transition={tapTransition}
-          className="flex shrink-0 items-center gap-2 px-4 py-2.5 rounded-2xl text-sm font-bold text-white"
-          style={{ background: "linear-gradient(135deg, #3B82F6, #2563EB)", boxShadow: "0 4px 16px #3B82F640" }}
-        >
-          <Plus className="w-4 h-4" />
-          {t("accounts.add")}
-        </motion.button>
+        <div className="flex items-center gap-2 shrink-0">
+          {accounts.length >= 2 && (
+            <motion.button
+              onClick={() => setShowTransfer(true)}
+              whileTap={{ scale: 0.93 }} transition={tapTransition}
+              className="flex h-10 w-10 items-center justify-center rounded-2xl bg-teal-400/10 text-teal-400 hover:bg-teal-400/20 transition-all"
+              title={t("accounts.transfer")}
+            >
+              <ArrowLeftRight className="w-4 h-4" />
+            </motion.button>
+          )}
+          <motion.button
+            onClick={() => setShowForm(true)}
+            whileTap={{ scale: 0.93 }} transition={tapTransition}
+            className="flex shrink-0 items-center gap-2 px-4 py-2.5 rounded-2xl text-sm font-bold text-white"
+            style={{ background: "linear-gradient(135deg, #3B82F6, #2563EB)", boxShadow: "0 4px 16px #3B82F640" }}
+          >
+            <Plus className="w-4 h-4" />
+            {t("accounts.add")}
+          </motion.button>
+        </div>
       </div>
 
       {/* Summary card */}
@@ -531,6 +579,81 @@ export default function AccountsPage() {
             onConfirm={handleDelete}
             onCancel={() => setDeletingAccount(null)}
           />
+        )}
+
+        {/* Transfer modal */}
+        {showTransfer && (
+          <motion.div key="transfer"
+            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+            style={{ backgroundColor: "rgba(11,15,20,0.8)", backdropFilter: "blur(8px)" }}
+            onClick={(e) => e.target === e.currentTarget && setShowTransfer(false)}
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+          >
+            <motion.div
+              initial={{ y: 60, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 60, opacity: 0 }}
+              transition={spring}
+              className="w-full sm:max-w-md rounded-t-[2rem] sm:rounded-[1.75rem] overflow-hidden flex flex-col"
+              style={{ backgroundColor: "hsl(var(--bg-card))", border: "1px solid hsl(var(--border))", maxHeight: "85dvh" }}
+            >
+              <SheetDragHandle onClose={() => setShowTransfer(false)} />
+              <div className="px-5 pt-2 pb-4 border-b border-[hsl(var(--border-2))]">
+                <div className="flex items-center gap-2.5 mb-1">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-teal-400/10">
+                    <ArrowLeftRight className="h-4 w-4 text-teal-400" />
+                  </div>
+                  <p className="text-base font-black t1">{t("accounts.transfer")}</p>
+                </div>
+              </div>
+
+              <form onSubmit={handleTransfer} className="flex flex-1 flex-col min-h-0">
+                <div className="flex-1 overflow-y-auto px-5 py-5 space-y-4 overscroll-contain">
+                  <div className="space-y-1.5">
+                    <label className="block text-[10px] font-semibold uppercase tracking-wide t3">{t("accounts.from")}</label>
+                    <select value={transferFrom} onChange={(e) => setTransferFrom(e.target.value)} required className="field text-sm">
+                      <option value="">{t("common.select")}</option>
+                      {accounts.filter((a) => a.id !== transferTo).map((a) => (
+                        <option key={a.id} value={a.id}>{a.name} — {format(a.balance ?? a.initial_balance)}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="block text-[10px] font-semibold uppercase tracking-wide t3">{t("accounts.to")}</label>
+                    <select value={transferTo} onChange={(e) => setTransferTo(e.target.value)} required className="field text-sm">
+                      <option value="">{t("common.select")}</option>
+                      {accounts.filter((a) => a.id !== transferFrom).map((a) => (
+                        <option key={a.id} value={a.id}>{a.name} — {format(a.balance ?? a.initial_balance)}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="block text-[10px] font-semibold uppercase tracking-wide t3">{t("transactions.amount")}</label>
+                    <div className="relative">
+                      <span className="absolute start-3.5 top-1/2 -translate-y-1/2 text-sm font-bold t3">{symbol}</span>
+                      <input type="number" inputMode="decimal" min="0.01" step="0.01"
+                        value={transferAmount} onChange={(e) => setTransferAmount(e.target.value)}
+                        required className="field ps-8 text-sm" placeholder="0.00" />
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="block text-[10px] font-semibold uppercase tracking-wide t3">
+                      {t("transactions.notes")} <span className="font-normal opacity-50 normal-case">({t("transactions.notes_optional")})</span>
+                    </label>
+                    <input value={transferNotes} onChange={(e) => setTransferNotes(e.target.value)}
+                      className="field text-sm" placeholder={t("transactions.notes_placeholder")} />
+                  </div>
+                </div>
+                <div className="shrink-0 px-5 pt-2" style={{ paddingBottom: "max(80px, calc(env(safe-area-inset-bottom,0px) + 72px))" }}>
+                  <motion.button type="submit" disabled={transferring || !transferFrom || !transferTo || !transferAmount}
+                    whileTap={{ scale: 0.97 }} transition={tapTransition}
+                    className="flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-bold text-white disabled:opacity-40"
+                    style={{ background: "linear-gradient(135deg, #2dd4bf, #0d9488)" }}>
+                    {transferring ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowLeftRight className="h-4 w-4" />}
+                    {transferring ? t("common.saving") : t("accounts.transfer_confirm")}
+                  </motion.button>
+                </div>
+              </form>
+            </motion.div>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>

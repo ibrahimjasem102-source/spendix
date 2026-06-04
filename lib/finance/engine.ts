@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { useTransactions, useDebts, useInvestments, useWorkPayments, useWorkSessions, useSubscriptions, useGoals } from "@/lib/query/hooks";
+import { useTransactions, useDebts, useInvestments, useWorkPayments, useWorkSessions, useSubscriptions, useGoals, useAccounts } from "@/lib/query/hooks";
 import { useGuest } from "@/contexts/GuestContext";
 import { transactionToLedgerEntry } from "@/lib/ledger/sync";
 import {
@@ -11,7 +11,7 @@ import {
   sortByDate,
 } from "@/lib/ledger/engine";
 import type { UnifiedLedgerEntry } from "@/lib/ledger/types";
-import type { Investment, Debt, Goal, Subscription, Transaction, WorkSession, WorkPayment } from "@/types";
+import type { Account, Investment, Debt, Goal, Subscription, Transaction, WorkSession, WorkPayment } from "@/types";
 
 // ── Real-type converters ───────────────────────────────────────
 
@@ -197,11 +197,15 @@ export interface FinancialSnapshot {
   /** All financial events as a unified, date-sorted ledger */
   ledgerEntries: UnifiedLedgerEntry[];
 
+  /** Sum of all account balances (initial + transactions) */
+  accountsTotal: number;
+
   /** Raw arrays — single source of truth for all pages */
   transactions: Transaction[];
   debts: Debt[];
   investments: Investment[];
   goals: Goal[];
+  accounts: Account[];
   /** Work sessions with computed status (for ledger + analytics) */
   workSessions: WorkSession[];
 
@@ -236,6 +240,7 @@ export function useFinancialEngine(): FinancialSnapshot {
 
   const { data: subscriptions = [] } = useSubscriptions(authenticated);
   const { data: goals        = [] } = useGoals(ready);
+  const { data: accounts     = [] } = useAccounts(authenticated);
 
   const debts       = debtsResult?.debts   ?? [];
   const debtSummary = debtsResult?.summary;
@@ -351,6 +356,12 @@ export function useFinancialEngine(): FinancialSnapshot {
     [workPayments]
   );
 
+  // ── Accounts total ───────────────────────────────────────────
+  const accountsTotal = useMemo(
+    () => accounts.reduce((s, a) => s + (Number(a.balance) || 0), 0),
+    [accounts]
+  );
+
   return {
     balance,
     income,
@@ -369,11 +380,13 @@ export function useFinancialEngine(): FinancialSnapshot {
     overdueDebtsCount,
     debtRecoveryRate,
     workIncome,
+    accountsTotal,
     ledgerEntries,
     transactions,
     debts,
     investments,
     goals,
+    accounts,
     workSessions,
     isLoading: authLoading || txLoading || (!isGuest && (debtLoading || invLoading || workLoading)),
     isError:   txError   || (!isGuest && (debtError || invError || workError)),

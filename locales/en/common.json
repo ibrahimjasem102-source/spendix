@@ -1105,7 +1105,11 @@
     "delete_confirm": "Delete this account? Linked transactions will not be deleted.",
     "delete_hint": "This action cannot be undone.",
     "empty_title": "No accounts yet",
-    "empty_subtitle": "Add your first account to start tracking where your money lives."
+    "empty_subtitle": "Add your first account to start tracking where your money lives.",
+    "transfer": "Transfer Between Accounts",
+    "transfer_confirm": "Confirm Transfer",
+    "from": "From Account",
+    "to": "To Account"
   },
   "subscriptions": {
     "title": "Subscriptions",
