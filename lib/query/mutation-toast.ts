@@ -17,7 +17,7 @@ export function notifyMutationError(err: unknown) {
   const message =
     err instanceof Error
       ? err.message === "errors.unauthorized"
-        ? "يجب تسجيل الدخول أولاً"
+        ? "انتهت الجلسة — سيتم تحويلك لتسجيل الدخول"
         : err.message.startsWith("HTTP 4")
           ? "فشل الحفظ. تحقق من الاتصال."
           : err.message

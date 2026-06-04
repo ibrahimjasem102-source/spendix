@@ -43,6 +43,9 @@ export async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> 
       // Token might be expired — refresh and retry once
       const newToken = await refreshSessionToken();
       if (newToken) return attempt(true);
+      // Refresh also failed → session is truly invalid, force re-login
+      const { signedOut } = await import("@/lib/auth/session-manager");
+      signedOut();
     }
 
     if (!res.ok) {
