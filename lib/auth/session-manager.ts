@@ -44,5 +44,6 @@ export function signedIn(token: string) {
 
 export function signedOut() {
   setAuthToken(null);
+  try { if (typeof window !== "undefined") localStorage.removeItem("spendix_refresh_token"); } catch {}
   notify(false);
 }

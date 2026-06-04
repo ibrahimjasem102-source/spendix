@@ -59,6 +59,10 @@ export default function LoginPage() {
 
     if (data.session) {
       signedIn(data.session.access_token);
+      // Also store refresh token so Supabase can auto-refresh when access token expires
+      try {
+        localStorage.setItem("spendix_refresh_token", data.session.refresh_token);
+      } catch {}
       // Set server-side cookies (best-effort — Bearer token is the primary auth mechanism)
       fetch("/api/auth/set-session", {
         method: "POST",

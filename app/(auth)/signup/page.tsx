@@ -49,6 +49,7 @@ export default function SignupPage() {
 
     if (data.session) {
       signedIn(data.session.access_token);
+      try { localStorage.setItem("spendix_refresh_token", data.session.refresh_token); } catch {}
 
       // Set server-side session cookie
       await fetch("/api/auth/set-session", {

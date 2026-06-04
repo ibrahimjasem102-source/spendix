@@ -18,14 +18,37 @@ export class HttpError extends Error {
 // Refresh session and retry once on 401
 async function refreshSessionToken(): Promise<string | null> {
   try {
-    // Dynamically import to avoid circular deps
     const { createClient } = await import("@/lib/supabase/client");
     const supabase = createClient();
+
+    // Try 1: let Supabase use its internal refresh token
     const { data, error } = await supabase.auth.refreshSession();
-    if (error || !data.session) return null;
-    const token = data.session.access_token;
-    setAuthToken(token);
-    return token;
+    if (!error && data.session?.access_token) {
+      setAuthToken(data.session.access_token);
+      return data.session.access_token;
+    }
+
+    // Try 2: use our stored refresh token explicitly
+    const storedRefresh = typeof window !== "undefined"
+      ? localStorage.getItem("spendix_refresh_token")
+      : null;
+    if (storedRefresh) {
+      const { data: d2 } = await supabase.auth.refreshSession({ refresh_token: storedRefresh });
+      if (d2.session?.access_token) {
+        setAuthToken(d2.session.access_token);
+        if (d2.session.refresh_token) localStorage.setItem("spendix_refresh_token", d2.session.refresh_token);
+        return d2.session.access_token;
+      }
+    }
+
+    // Try 3: getSession (auto-refresh fallback)
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (sessionData.session?.access_token) {
+      setAuthToken(sessionData.session.access_token);
+      return sessionData.session.access_token;
+    }
+
+    return null;
   } catch {
     return null;
   }
@@ -46,6 +69,8 @@ export async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> 
       // Refresh also failed → session is truly invalid, force re-login
       const { signedOut } = await import("@/lib/auth/session-manager");
       signedOut();
+      // Redirect to login after 2s (gives time to read the toast)
+      setTimeout(() => { window.location.replace("/login"); }, 2000);
     }
 
     if (!res.ok) {
