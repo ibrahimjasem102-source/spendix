@@ -1,70 +1,31 @@
+const SPENDIX_TOKEN_KEY = "spendix_access_token";
+
 let _token: string | null = null;
 
-// Auto-initialize synchronously on module load — eliminates the race condition
-// where API calls fire before GuestContext.getSession() resolves
+// Auto-initialize synchronously from our own key (set on login/logout)
 if (typeof window !== "undefined") {
   try {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    if (supabaseUrl) {
-      const projectRef = new URL(supabaseUrl).hostname.split(".")[0];
-      const baseKey = `sb-${projectRef}-auth-token`;
-      const raw = localStorage.getItem(baseKey);
-      if (raw && raw !== "chunked") {
-        const parsed = JSON.parse(raw) as { access_token?: string };
-        if (parsed.access_token) _token = parsed.access_token;
-      } else if (raw === "chunked") {
-        let assembled = "";
-        for (let i = 0; ; i++) {
-          const chunk = localStorage.getItem(`${baseKey}.${i}`);
-          if (chunk === null) break;
-          assembled += chunk;
-        }
-        if (assembled) {
-          const parsed = JSON.parse(assembled) as { access_token?: string };
-          if (parsed.access_token) _token = parsed.access_token;
-        }
-      }
-    }
+    const stored = localStorage.getItem(SPENDIX_TOKEN_KEY);
+    if (stored) _token = stored;
   } catch {}
 }
 
 export function setAuthToken(token: string | null) {
   _token = token;
+  // Persist to our own key so it survives page reloads
+  try {
+    if (token) localStorage.setItem(SPENDIX_TOKEN_KEY, token);
+    else       localStorage.removeItem(SPENDIX_TOKEN_KEY);
+  } catch {}
 }
 
 export function getAuthToken(): string | null {
   if (_token) return _token;
-
-  // Fallback: read directly from localStorage (where @supabase/ssr stores the session)
+  // Try reading from our persisted key (survives page reloads)
   if (typeof window === "undefined") return null;
   try {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    if (!supabaseUrl) return null;
-    const projectRef = new URL(supabaseUrl).hostname.split(".")[0];
-    const baseKey = `sb-${projectRef}-auth-token`;
-    const raw = localStorage.getItem(baseKey);
-    if (!raw) return null;
-
-    let parsed: { access_token?: string };
-
-    // @supabase/supabase-js v2.49+ may chunk large tokens across multiple keys
-    if (raw === "chunked") {
-      let assembled = "";
-      for (let i = 0; ; i++) {
-        const chunk = localStorage.getItem(`${baseKey}.${i}`);
-        if (chunk === null) break;
-        assembled += chunk;
-      }
-      if (!assembled) return null;
-      parsed = JSON.parse(assembled) as { access_token?: string };
-    } else {
-      parsed = JSON.parse(raw) as { access_token?: string };
-    }
-
-    const token = parsed.access_token ?? null;
-    if (token) _token = token; // cache it
-    return token;
-  } catch {
-    return null;
-  }
+    const stored = localStorage.getItem(SPENDIX_TOKEN_KEY);
+    if (stored) { _token = stored; return stored; }
+  } catch {}
+  return null;
 }
