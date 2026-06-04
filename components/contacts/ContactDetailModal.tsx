@@ -10,7 +10,8 @@ import { FinancialContact, ContactSummary, Debt, DebtStatus, ContactType } from 
 import { useTranslation } from "@/lib/i18n";
 import { useCurrency } from "@/lib/currency";
 import { useGuest } from "@/contexts/GuestContext";
-import { useContacts } from "@/lib/query/hooks";
+import { useContacts, useDebts } from "@/lib/query/hooks";
+import { safeFetch } from "@/lib/fetch-safe";
 
 interface Props {
   contactId: string;
@@ -40,54 +41,62 @@ export default function ContactDetailModal({ contactId, onClose }: Props) {
   const { t, formatDate } = useTranslation();
   const { format }        = useCurrency();
   const { isGuest, isLoading: guestLoading } = useGuest();
-  const { data: contacts = [] } = useContacts(!guestLoading);
+  const { data: contacts = [] }          = useContacts(!guestLoading);
+  const { data: debtsResult }            = useDebts(!guestLoading);
+  const allDebts                         = debtsResult?.debts ?? [];
 
-  const [loading, setLoading]     = useState(true);
-  const [summary, setSummary]     = useState<ContactSummary | null>(null);
-  const [error, setError]         = useState("");
+  const [loading, setLoading] = useState(true);
+  const [summary, setSummary] = useState<ContactSummary | null>(null);
+  const [error,   setError]   = useState("");
 
   useEffect(() => {
     if (guestLoading) return;
+
     if (isGuest) {
+      // Build summary from local guest data
       const contact = contacts.find((item) => item.id === contactId);
-      if (!contact) {
-        setError(t("contacts.fetch_error"));
-        setLoading(false);
-        return;
+      if (!contact) { setError(t("contacts.fetch_error")); setLoading(false); return; }
+
+      const contactDebts = allDebts.filter((d) => d.contact_id === contactId);
+      let totalPayable = 0, totalReceivable = 0, totalPaid = 0;
+      let activeDebts = 0, paidDebts = 0, overdueDebts = 0;
+
+      for (const d of contactDebts) {
+        const total = Number(d.total_amount) || 0;
+        const paid  = Number(d.paid_amount)  || 0;
+        if (d.debt_type === "payable") totalPayable += total;
+        else totalReceivable += total;
+        totalPaid += paid;
+        if (d.status === "paid") paidDebts++;
+        else if (d.status === "overdue") overdueDebts++;
+        else activeDebts++;
       }
+
+      const netBalance = (totalReceivable) - (totalPayable);
       setSummary({
-        contact,
-        debts: [],
-        totalPayable: 0,
-        totalReceivable: 0,
-        totalPaid: 0,
-        totalRemaining: 0,
-        netBalance: 0,
-        direction: "settled",
-        health: "settled",
-        activeDebts: 0,
-        paidDebts: 0,
-        overdueDebts: 0,
-        totalDebts: 0,
-        recoveryRate: 0,
-        repaymentRate: 0,
-        paymentVelocity: 0,
-        averagePaymentDays: 0,
-        largestDebt: 0,
-        mostRecentDebtDate: null,
-        insights: [],
-        timeline: [],
-        lastPaymentDate: null,
+        contact, debts: contactDebts,
+        totalPayable, totalReceivable, totalPaid,
+        totalRemaining: Math.max(0, totalPayable + totalReceivable - totalPaid),
+        netBalance,
+        direction: netBalance > 0 ? "contact_owes_you" : netBalance < 0 ? "you_owe_contact" : "settled",
+        health: overdueDebts > 0 ? "overdue" : activeDebts > 0 ? "healthy" : "settled",
+        truthKey: netBalance > 0 ? "contacts.they_owe" : netBalance < 0 ? "contacts.i_owe" : "contacts.no_balance",
+        activeDebts, paidDebts, overdueDebts, totalDebts: contactDebts.length,
+        recoveryRate: 0, repaymentRate: 0, paymentVelocity: 0,
+        averagePaymentDays: 0, largestDebt: 0, mostRecentDebtDate: null,
+        insights: [], timeline: [], lastPaymentDate: null,
       });
       setLoading(false);
       return;
     }
 
-    fetch(`/api/contacts/${contactId}/summary`)
+    // Authenticated: use API
+    safeFetch(`/api/contacts/${contactId}/summary`)
       .then((r) => r.json())
-      .then((data) => { setSummary(data); setLoading(false); })
+      .then((data: ContactSummary) => { setSummary(data); setLoading(false); })
       .catch(() => { setError(t("contacts.fetch_error")); setLoading(false); });
-  }, [contactId, contacts, guestLoading, isGuest, t]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [contactId, guestLoading, isGuest]);
 
   if (loading) {
     return (
