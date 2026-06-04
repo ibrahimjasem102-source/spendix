@@ -84,7 +84,10 @@ export default function LoginPage() {
 
     await fetch("/api/auth/bootstrap", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...(data.session ? { "Authorization": `Bearer ${data.session.access_token}` } : {}),
+      },
       body: JSON.stringify({ locale: currentLocale }),
     }).catch((err) => { console.warn("[login] bootstrap failed:", err); });
 

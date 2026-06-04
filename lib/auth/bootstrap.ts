@@ -46,20 +46,22 @@ export async function bootstrapAuthenticatedUser(
     (existingSettings?.language as Locale | undefined) ??
     "ar";
 
-  await supabase.from("profiles").upsert({
+  const { error: profileErr } = await supabase.from("profiles").upsert({
     id: user.id,
     full_name: fullName || null,
     avatar_url: avatarUrl,
-  }, { onConflict: "id" }).throwOnError();
+  }, { onConflict: "id" });
+  if (profileErr) console.warn("[bootstrap] profile upsert:", profileErr.message);
 
-  await supabase.from("profile_settings").upsert({
+  const { error: settingsErr } = await supabase.from("profile_settings").upsert({
     user_id:   user.id,
     full_name: existingSettings?.full_name || fullName || null,
     language:  existingSettings?.language  || resolvedLocale,
     currency:  existingSettings?.currency  || "EUR",
     theme:     existingSettings?.theme     || "dark",
     updated_at: now,
-  }, { onConflict: "user_id" }).throwOnError();
+  }, { onConflict: "user_id" });
+  if (settingsErr) console.warn("[bootstrap] profile_settings upsert:", settingsErr.message);
 
   const { count, error: countError } = await supabase
     .from("categories")

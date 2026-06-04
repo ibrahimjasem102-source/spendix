@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Wallet, Eye, EyeOff, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { setAuthToken } from "@/lib/auth/token-store";
 import { migrateGuestData } from "@/lib/guest/migrate";
 import { useTranslation } from "@/lib/i18n";
 import OAuthButtons from "@/components/auth/OAuthButtons";
@@ -47,12 +48,27 @@ export default function SignupPage() {
     }
 
     if (data.session) {
+      setAuthToken(data.session.access_token);
+
+      // Set server-side session cookie
+      await fetch("/api/auth/set-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token,
+        }),
+      }).catch((err) => { console.warn("[signup] set-session failed:", err); });
+
       const currentLocale = typeof window !== "undefined"
         ? (window.localStorage.getItem("spendix_locale") ?? "ar")
         : "ar";
       await fetch("/api/auth/bootstrap", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${data.session.access_token}`,
+        },
         body: JSON.stringify({ locale: currentLocale }),
       }).catch((err) => { console.warn("[signup] bootstrap failed:", err); });
       await migrateGuestData({ saveSettings: true }).catch((err) => {
