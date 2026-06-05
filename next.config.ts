@@ -18,7 +18,7 @@ const nextConfig: NextConfig = {
     return [
       {
         // HTML pages — never cache so phone always gets latest after vercel --prod
-        source: "/((?!_next/static|_next/image|favicon|icons|images|manifest).*)",
+        source: "/((?!_next/static|_next/image|favicon|icons|images).*)",
         headers: [
           { key: "Cache-Control", value: "no-store, no-cache, must-revalidate" },
           { key: "Pragma", value: "no-cache" },
