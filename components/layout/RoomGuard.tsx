@@ -51,7 +51,7 @@ export default function RoomGuard({ children }: { children: React.ReactNode }) {
       >
         <div className="mb-5 flex items-start gap-3">
           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-cyan-400/10 text-cyan-300">
-            <LockKeyhole className="h-5 w-5" />
+            <LockKeyhole className="h-4 w-4" />
           </div>
           <div className="min-w-0">
             <p className="text-base font-black t1">{t("rooms.locked_title")}</p>

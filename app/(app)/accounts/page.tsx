@@ -319,7 +319,7 @@ function AccountCard({ account, onEdit, onDelete }: AccountCardProps) {
       <div>
         <p className="text-[10px] font-semibold t3 uppercase tracking-[0.1em] mb-0.5">{t("accounts.balance")}</p>
         <div className="flex items-baseline gap-1.5">
-          <p className="text-2xl font-bold" style={{ color: meta.color }}>
+          <p className="text-xl font-black number-display" style={{ color: meta.color }}>
             {format(Math.abs(balance))}
           </p>
           {!isPositive && (

@@ -483,7 +483,7 @@ function SubscriptionCard({ sub, onEdit, onDelete, onToggleStatus }: CardProps) 
       {/* Amount */}
       <div className="flex items-end justify-between">
         <div>
-          <p className="text-2xl font-bold" style={{ color: isPaused || isCancelled ? "hsl(var(--text-2))" : color }}>
+          <p className="text-xl font-black number-display" style={{ color: isPaused || isCancelled ? "hsl(var(--text-2))" : color }}>
             {format(sub.amount)}
           </p>
           {sub.billing_cycle !== "monthly" && (

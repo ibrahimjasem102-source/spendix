@@ -170,7 +170,7 @@ export default function TopBar() {
                 {/* User header */}
                 <div className="flex items-center gap-3 px-4 py-4 border-b border-[hsl(var(--border))]">
                   <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 via-blue-500 to-violet-500 text-sm font-bold text-white shadow-lg shadow-cyan-500/15">
-                    {isGuest ? <User className="h-5 w-5" /> : userInitial}
+                    {isGuest ? <User className="h-4 w-4" /> : userInitial}
                   </div>
                   <div className="min-w-0">
                     {isGuest ? (

@@ -64,7 +64,7 @@ export default function Sidebar() {
         <div className={cn("flex h-[68px] shrink-0 items-center border-b border-[hsl(var(--border))]", collapsed ? "justify-center" : "px-4")}>
           <Link href={ROUTES.dashboard} className="flex min-w-0 items-center gap-3">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 to-violet-500 shadow-lg shadow-cyan-950/30">
-              <Wallet className="h-5 w-5 text-white" />
+              <Wallet className="h-4 w-4 text-white" />
             </div>
             {!collapsed && (
               <div className="min-w-0">

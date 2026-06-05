@@ -283,7 +283,7 @@ export default function AIInsightsPage() {
             return (
               <div key={sev} className={`card p-4 ${cfg.border} ${cfg.bg}`}>
                 <p className="text-xs t3 uppercase tracking-wide mb-1.5">{t(`ai_insights.severity.${sev}`)}</p>
-                <p className={`text-2xl font-bold ${cfg.iconColor}`}>{counts[sev]}</p>
+                <p className={`text-xl font-black number-display ${cfg.iconColor}`}>{counts[sev]}</p>
               </div>
             );
           })}
