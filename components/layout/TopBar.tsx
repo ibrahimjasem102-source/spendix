@@ -184,7 +184,33 @@ export default function TopBar() {
                   </div>
                 </div>
 
-                {/* Appearance */}
+                {/* ── Quick navigation ────────────────────────── */}
+                <div className="px-2 pt-2 pb-2 border-b border-[hsl(var(--border))]">
+                  <p className={sectionLabel}>{t("topbar.quick_links")}</p>
+                  <Link href={ROUTES.profile} onClick={closeMenus} className={itemCls}>
+                    <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-violet-400/10">
+                      <User className="h-4 w-4 text-violet-300" />
+                    </span>
+                    <span className="flex-1">{t("nav.profile")}</span>
+                    <ChevronRight className="h-3.5 w-3.5 t3" />
+                  </Link>
+                  <Link href={ROUTES.settings} onClick={closeMenus} className={itemCls}>
+                    <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-400/10">
+                      <Settings className="h-4 w-4 text-slate-300" />
+                    </span>
+                    <span className="flex-1">{t("nav.settings")}</span>
+                    <ChevronRight className="h-3.5 w-3.5 t3" />
+                  </Link>
+                  <Link href={ROUTES.notifications} onClick={closeMenus} className={itemCls}>
+                    <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-cyan-400/10">
+                      <Bell className="h-4 w-4 text-cyan-300" />
+                    </span>
+                    <span className="flex-1">{t("topbar.notifications")}</span>
+                    <ChevronRight className="h-3.5 w-3.5 t3" />
+                  </Link>
+                </div>
+
+                {/* ── Appearance ──────────────────────────────── */}
                 <div className="px-2 pt-2 pb-2 border-b border-[hsl(var(--border))]">
                   <p className={sectionLabel}>{t("topbar.appearance")}</p>
                   <button onClick={toggleTheme} className={itemCls}>
@@ -196,8 +222,6 @@ export default function TopBar() {
                       {theme === "dark" ? t("topbar.dark") : t("topbar.light")}
                     </span>
                   </button>
-
-                  {/* Language accordion */}
                   <button onClick={() => setShowLang((v) => !v)} className={itemCls}>
                     <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-cyan-400/10">
                       <Globe className="h-4 w-4 text-cyan-400" />
@@ -208,19 +232,14 @@ export default function TopBar() {
                     </span>
                     <ChevronRight className={`h-3.5 w-3.5 t3 transition-transform duration-200 ${showLang ? "rotate-90" : ""}`} />
                   </button>
-
                   {showLang && (
                     <div className="ms-11 mb-1 space-y-0.5 rounded-2xl bg-black/10 p-1">
                       {LOCALES.map((item) => (
-                        <button
-                          key={item.code}
+                        <button key={item.code}
                           onClick={() => { void setLocale(item.code as Locale); setShowLang(false); }}
                           className={`flex w-full items-center gap-2 rounded-xl px-2.5 py-1.5 text-sm transition-colors ${
-                            locale === item.code
-                              ? "bg-cyan-400/10 text-cyan-300"
-                              : "t3 hover:bg-[hsl(var(--bg-input))] hover:t1"
-                          }`}
-                        >
+                            locale === item.code ? "bg-cyan-400/10 text-cyan-300" : "t3 hover:bg-[hsl(var(--bg-input))] hover:t1"
+                          }`}>
                           <span className="w-6 text-xs font-bold">{item.badge}</span>
                           <span>{item.nativeLabel}</span>
                           {locale === item.code && <span className="ms-auto h-1.5 w-1.5 rounded-full bg-cyan-400" />}
@@ -230,33 +249,7 @@ export default function TopBar() {
                   )}
                 </div>
 
-                {/* Quick links */}
-                <div className="px-2 pt-2 pb-2 border-b border-[hsl(var(--border))]">
-                  <p className={sectionLabel}>{t("topbar.quick_links")}</p>
-                  <Link href={ROUTES.profile} onClick={closeMenus} className={itemCls}>
-                    <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-violet-400/10">
-                      <User className="h-4 w-4 text-violet-300" />
-                    </span>
-                    <span className="flex-1">{t("nav.profile")}</span>
-                    <ChevronRight className="h-3.5 w-3.5 t3 opacity-0 transition-opacity group-hover:opacity-100" />
-                  </Link>
-                  <Link href={ROUTES.notifications} onClick={closeMenus} className={itemCls}>
-                    <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-cyan-400/10">
-                      <Bell className="h-4 w-4 text-cyan-300" />
-                    </span>
-                    <span className="flex-1">{t("topbar.notifications")}</span>
-                    <ChevronRight className="h-3.5 w-3.5 t3 opacity-0 transition-opacity group-hover:opacity-100" />
-                  </Link>
-                  <Link href={ROUTES.settings} onClick={closeMenus} className={itemCls}>
-                    <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-400/10">
-                      <Settings className="h-4 w-4 text-slate-300" />
-                    </span>
-                    <span className="flex-1">{t("nav.settings")}</span>
-                    <ChevronRight className="h-3.5 w-3.5 t3 opacity-0 transition-opacity group-hover:opacity-100" />
-                  </Link>
-                </div>
-
-                {/* Sign out / Sign in */}
+                {/* ── Sign out / Sign in ───────────────────────── */}
                 <div className="px-2 py-2">
                   {isGuest ? (
                     <Link href="/login" onClick={closeMenus} className={`${itemCls} text-cyan-400`}>
