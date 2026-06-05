@@ -715,7 +715,10 @@
     "or_continue_with": "oder fortfahren mit",
     "finishing_login": "Konto wird vorbereitet...",
     "continue_as_guest": "Ohne Konto fortfahren",
-    "confirmation_sent": "Konto erstellt. Öffne die Bestätigungs-E-Mail in deinem Posteingang und melde dich dann an."
+    "confirmation_sent": "Konto erstellt. Öffne die Bestätigungs-E-Mail in deinem Posteingang und melde dich dann an.",
+    "welcome_back": "Willkommen zurück!",
+    "data_synced": "Deine Daten wurden mit deinem Konto synchronisiert",
+    "guest_data_will_sync": "Deine aktuellen Daten werden automatisch übertragen"
   },
   "actions": {
     "transaction": "Transaktion",
