@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Loader2, Wallet } from "lucide-react";
 import { migrateGuestData } from "@/lib/guest/migrate";
 import { useTranslation } from "@/lib/i18n";
@@ -12,6 +13,7 @@ function safeNext(value: string | null) {
 
 export default function AuthFinalizePage() {
   const { t } = useTranslation();
+  const router = useRouter();
 
   useEffect(() => {
     async function finalize() {
@@ -21,15 +23,14 @@ export default function AuthFinalizePage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ locale: currentLocale }),
-      }).catch((err) => { console.warn("[finalize] bootstrap failed:", err); });
-      await migrateGuestData({ saveSettings: true }).catch((err) => {
-        console.warn("[finalize] migration failed:", err);
-      });
-      window.location.replace(safeNext(params.get("next")));
+      }).catch(() => undefined);
+      await migrateGuestData({ saveSettings: true }).catch(() => undefined);
+      // Use router.replace to preserve client state
+      router.replace(safeNext(params.get("next")));
     }
 
     void finalize();
-  }, []);
+  }, [router]);
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4" style={{ backgroundColor: "hsl(214 28% 5%)" }}>

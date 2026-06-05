@@ -3,7 +3,7 @@
 import { Component, type ErrorInfo, type ReactNode, useEffect, useMemo, useState } from "react";
 import {
   AlertTriangle, ArrowDownRight, ArrowUpRight,
-  ChevronRight, Landmark, Plus, CreditCard, PiggyBank,
+  ChevronRight, Landmark, CreditCard,
   TrendingUp, TrendingDown, Zap,
   Wallet, Target, BrainCircuit,
 } from "lucide-react";

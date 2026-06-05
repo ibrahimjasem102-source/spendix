@@ -59,7 +59,7 @@ export default function SignupPage() {
           access_token: data.session.access_token,
           refresh_token: data.session.refresh_token,
         }),
-      }).catch((err) => { console.warn("[signup] set-session failed:", err); });
+      }).catch(() => undefined);
 
       const currentLocale = typeof window !== "undefined"
         ? (window.localStorage.getItem("spendix_locale") ?? "ar")
@@ -71,7 +71,7 @@ export default function SignupPage() {
           "Authorization": `Bearer ${data.session.access_token}`,
         },
         body: JSON.stringify({ locale: currentLocale }),
-      }).catch((err) => { console.warn("[signup] bootstrap failed:", err); });
+      }).catch(() => undefined);
       await migrateGuestData({ saveSettings: true }).catch(() => undefined);
       // Use router.replace (no reload) to keep _token in memory
       router.replace("/dashboard");

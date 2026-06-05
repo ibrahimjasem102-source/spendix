@@ -41,7 +41,7 @@ export default function KPICard({
       </div>
 
       <p className="text-[10px] font-semibold t3 uppercase tracking-wide mb-1">{title}</p>
-      <p className="text-xl sm:text-2xl font-bold t1 tracking-tight number-display mb-2">{value}</p>
+      <p className="text-xl font-black t1 tracking-tight number-display mb-2">{value}</p>
 
       <div className="flex items-center gap-1.5">
         {isUp

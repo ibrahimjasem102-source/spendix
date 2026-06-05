@@ -53,7 +53,7 @@ export default function StatsCards({ stats }: Props) {
               <card.icon className={`w-4 h-4 ${card.color}`} />
             </div>
           </div>
-          <p className={`text-2xl font-bold ${card.color}`}>{card.value}</p>
+          <p className={`text-xl font-black ${card.color}`}>{card.value}</p>
         </div>
       ))}
     </div>
