@@ -77,7 +77,9 @@ export async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> 
         (payload?.error ?? payload?.errorKey ?? `HTTP ${res.status}`) as string,
         res.status,
       );
-      notifyMutationError(err);
+      // Only show toast for mutations (POST/PUT/PATCH/DELETE), not background GET queries
+      const method = (init?.method ?? "GET").toUpperCase();
+      if (method !== "GET") notifyMutationError(err);
       throw err;
     }
     return payload as T;
