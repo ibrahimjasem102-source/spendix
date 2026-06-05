@@ -29,9 +29,8 @@ async function refreshSessionToken(): Promise<string | null> {
     }
 
     // Try 2: use our stored refresh token explicitly
-    const storedRefresh = typeof window !== "undefined"
-      ? localStorage.getItem("spendix_refresh_token")
-      : null;
+    const { getRefreshToken } = await import("@/lib/auth/token-store");
+    const storedRefresh = getRefreshToken();
     if (storedRefresh) {
       const { data: d2 } = await supabase.auth.refreshSession({ refresh_token: storedRefresh });
       if (d2.session?.access_token) {

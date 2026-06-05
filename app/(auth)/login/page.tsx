@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Wallet, Eye, EyeOff, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { signedIn } from "@/lib/auth/session-manager";
+import { storeRefreshToken } from "@/lib/auth/token-store";
 import { migrateGuestData } from "@/lib/guest/migrate";
 import { useTranslation } from "@/lib/i18n";
 import OAuthButtons from "@/components/auth/OAuthButtons";
@@ -64,11 +65,8 @@ export default function LoginPage() {
     // ── Session established ───────────────────────────────────────
     const { access_token, refresh_token } = data.session;
 
-    // 1. Store tokens in our own keys (primary auth mechanism)
-    signedIn(access_token);
-    try {
-      localStorage.setItem("spendix_refresh_token", refresh_token);
-    } catch {}
+    // 1. Store tokens — Supabase's own storage + our refresh key
+    signedIn(access_token, refresh_token);
 
     // 2. Set server-side cookies in background (secondary — best effort)
     fetch("/api/auth/set-session", {

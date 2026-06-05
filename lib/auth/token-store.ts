@@ -1,53 +1,88 @@
-const SPENDIX_TOKEN_KEY = "spendix_access_token";
+/**
+ * Token store — reads the access token directly from Supabase's own storage.
+ * No custom keys. No duplication. Single source of truth = Supabase.
+ */
+
+const REFRESH_KEY = "spendix_refresh_token";
 
 let _token: string | null = null;
 
-// Auto-initialize synchronously from our own key (set on login/logout)
+// Module-level sync init: read from Supabase's own localStorage key
 if (typeof window !== "undefined") {
   try {
-    const stored = localStorage.getItem(SPENDIX_TOKEN_KEY);
-    if (stored) _token = stored;
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    if (url) {
+      const ref = new URL(url).hostname.split(".")[0];
+      const key = `sb-${ref}-auth-token`;
+      const raw = localStorage.getItem(key);
+      if (raw && raw !== "chunked") {
+        const parsed = JSON.parse(raw) as { access_token?: string };
+        if (parsed?.access_token) _token = parsed.access_token;
+      } else if (raw === "chunked") {
+        let joined = "";
+        for (let i = 0; ; i++) {
+          const chunk = localStorage.getItem(`${key}.${i}`);
+          if (!chunk) break;
+          joined += chunk;
+        }
+        if (joined) {
+          const parsed = JSON.parse(joined) as { access_token?: string };
+          if (parsed?.access_token) _token = parsed.access_token;
+        }
+      }
+    }
   } catch {}
 }
 
 export function setAuthToken(token: string | null) {
   _token = token;
-  // Persist to our own key so it survives page reloads
-  try {
-    if (token) localStorage.setItem(SPENDIX_TOKEN_KEY, token);
-    else       localStorage.removeItem(SPENDIX_TOKEN_KEY);
-  } catch {}
-}
-
-/** Decode JWT exp claim without cryptographic verification */
-function jwtExpiresAt(token: string): number | null {
-  try {
-    const payload = JSON.parse(atob(token.split(".")[1]));
-    return typeof payload.exp === "number" ? payload.exp * 1000 : null;
-  } catch { return null; }
-}
-
-export function isTokenExpired(token: string): boolean {
-  const exp = jwtExpiresAt(token);
-  if (!exp) return false; // can't tell → assume valid
-  return Date.now() > exp - 30_000; // 30s buffer
 }
 
 export function getAuthToken(): string | null {
-  if (_token) {
-    // If cached token is expired, clear it so we force a refresh
-    if (isTokenExpired(_token)) { _token = null; }
-    else return _token;
-  }
-  // Try reading from our persisted key (survives page reloads)
+  if (_token) return _token;
   if (typeof window === "undefined") return null;
+  // Re-read from Supabase storage (always fresh)
   try {
-    const stored = localStorage.getItem(SPENDIX_TOKEN_KEY);
-    if (stored && !isTokenExpired(stored)) { _token = stored; return stored; }
-    if (stored && isTokenExpired(stored)) {
-      // Remove expired token from storage
-      localStorage.removeItem(SPENDIX_TOKEN_KEY);
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    if (!url) return null;
+    const ref = new URL(url).hostname.split(".")[0];
+    const key = `sb-${ref}-auth-token`;
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+    if (raw === "chunked") {
+      let joined = "";
+      for (let i = 0; ; i++) {
+        const chunk = localStorage.getItem(`${key}.${i}`);
+        if (!chunk) break;
+        joined += chunk;
+      }
+      const parsed = JSON.parse(joined) as { access_token?: string };
+      if (parsed?.access_token) { _token = parsed.access_token; return _token; }
+      return null;
     }
+    const parsed = JSON.parse(raw) as { access_token?: string };
+    if (parsed?.access_token) { _token = parsed.access_token; return _token; }
   } catch {}
   return null;
+}
+
+export function isTokenExpired(token: string): boolean {
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    if (typeof payload.exp !== "number") return false;
+    return Date.now() > payload.exp * 1000 - 30_000;
+  } catch { return false; }
+}
+
+export function storeRefreshToken(token: string) {
+  try { localStorage.setItem(REFRESH_KEY, token); } catch {}
+}
+
+export function getRefreshToken(): string | null {
+  try { return localStorage.getItem(REFRESH_KEY); } catch { return null; }
+}
+
+export function clearTokens() {
+  _token = null;
+  try { localStorage.removeItem(REFRESH_KEY); } catch {}
 }
