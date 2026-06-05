@@ -9,6 +9,7 @@ import LastPageTracker from "@/components/navigation/LastPageTracker";
 import SchedulerTrigger from "@/components/layout/SchedulerTrigger";
 import { FinancialEventBridge } from "@/components/system/FinancialEventBridge";
 import MutationErrorToast from "@/components/system/MutationErrorToast";
+import AuthStatusBadge from "@/components/system/AuthStatusBadge";
 import LiveBackground from "@/components/layout/LiveBackground";
 import RoomGuard from "@/components/layout/RoomGuard";
 import { GuestProvider } from "@/contexts/GuestContext";
@@ -73,6 +74,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 <SchedulerTrigger />
                 <FinancialEventBridge />
                 <MutationErrorToast />
+                <AuthStatusBadge />
               </SidebarProvider>
             </RoomLockProvider>
           </GlobalActionsProvider>
