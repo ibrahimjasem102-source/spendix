@@ -94,7 +94,7 @@ export function useTransactions(enabled = true) {
   const { isGuest, isLoading } = useGuest();
   return useQuery({
     queryKey: transactionListKey(isGuest),
-    enabled: enabled && !isLoading,
+    enabled,
     queryFn: async () => {
       if (isGuest) return getGuestTransactions();
       const data = await fetchJson<{ transactions: Transaction[] }>("/api/transactions");
@@ -415,7 +415,7 @@ export function useDebts(enabled = true) {
   const listKey = debtListKey(isGuest);
   return useQuery({
     queryKey: listKey,
-    enabled: enabled && !guestLoading,
+    enabled,
     queryFn: async (): Promise<DebtsQueryResult> => {
       if (isGuest) {
         const debts = getGuestDebts();
@@ -603,7 +603,7 @@ export function useInvestments(enabled = true) {
   const listKey = investmentListKey(isGuest);
   return useQuery({
     queryKey: listKey,
-    enabled: enabled && !guestLoading,
+    enabled,
     queryFn: async () => {
       if (isGuest) return getGuestInvestments();
       const data = await fetchJson<{ investments: Investment[] }>("/api/investments");
@@ -617,7 +617,7 @@ export function usePortfolioHistory(enabled = true) {
   const { isGuest, isLoading: guestLoading } = useGuest();
   return useQuery({
     queryKey: queryKeys.investments.portfolioHistory(),
-    enabled: enabled && !guestLoading && !isGuest,
+    enabled: enabled && !isGuest,
     queryFn: async () => {
       const data = await fetchJson<{ history: { month: string; value: number }[] }>(
         "/api/investments/portfolio-history"
@@ -735,7 +735,7 @@ export function useWorkSessions(enabled = true) {
   const listKey = workSessionListKey(isGuest);
   return useQuery({
     queryKey: listKey,
-    enabled: enabled && !guestLoading,
+    enabled,
     queryFn: async () => {
       if (isGuest) return getGuestWorkSessions();
       const data = await fetchJson<{ sessions: WorkSession[] }>("/api/work/sessions");
@@ -750,7 +750,7 @@ export function useWorkPayments(enabled = true) {
   const listKey = workPaymentListKey(isGuest);
   return useQuery({
     queryKey: listKey,
-    enabled: enabled && !guestLoading,
+    enabled,
     queryFn: async () => {
       if (isGuest) return getGuestWorkPayments();
       const data = await fetchJson<{ payments: WorkPayment[] }>("/api/work/payments");
@@ -1013,7 +1013,7 @@ export function useSubscriptions(enabled = true) {
   const listKey = subscriptionListKey(isGuest);
   return useQuery({
     queryKey: listKey,
-    enabled: enabled && !guestLoading,
+    enabled,
     queryFn: async () => {
       if (isGuest) return getGuestSubscriptions();
       const data = await fetchJson<{ subscriptions: Subscription[] }>("/api/subscriptions");
@@ -1122,7 +1122,7 @@ export function useCalendar(year: number, month: number, enabled = true) {
   const { isGuest, isLoading } = useGuest();
   return useQuery({
     queryKey: [...queryKeys.calendar.byMonth(year, month), isGuest ? "guest" : "user"] as const,
-    enabled: enabled && !isLoading,
+    enabled,
     queryFn: async () => {
       if (isGuest) {
         return getGuestTransactions()
@@ -1164,7 +1164,7 @@ export function useNotifications(enabled = true) {
   const { isGuest, isLoading } = useGuest();
   return useQuery({
     queryKey: queryKeys.notifications.list(),
-    enabled: enabled && !isLoading && !isGuest,
+    enabled: enabled && !isGuest,
     queryFn: async () => {
       const data = await fetchJson<{ notifications: AppNotification[]; unreadCount: number }>("/api/notifications");
       return data;
@@ -1181,7 +1181,7 @@ export function useGoals(enabled = true) {
   const { isGuest, isLoading } = useGuest();
   return useQuery({
     queryKey: goalListKey(isGuest),
-    enabled: enabled && !isLoading,
+    enabled,
     queryFn: async () => {
       if (isGuest) return getGuestGoals();
       const data = await fetchJson<{ goals: Goal[] }>("/api/goals");
@@ -1335,7 +1335,7 @@ export function useCategories(enabled = true) {
   const { isGuest, isLoading } = useGuest();
   return useQuery({
     queryKey: categoryListKey(isGuest),
-    enabled: enabled && !isLoading,
+    enabled,
     queryFn: async () => {
       if (isGuest) return getGuestCategories();
       const data = await fetchJson<{ categories: Category[] }>("/api/categories");
@@ -1427,7 +1427,7 @@ export function useContacts(enabled = true) {
   const { isGuest, isLoading } = useGuest();
   return useQuery({
     queryKey: contactListKey(isGuest),
-    enabled: enabled && !isLoading,
+    enabled,
     queryFn: async () => {
       if (isGuest) return getGuestContacts();
       const data = await fetchJson<{ contacts: FinancialContact[] }>("/api/contacts");
@@ -1522,7 +1522,7 @@ export function useTags(enabled = true) {
   const { isGuest, isLoading } = useGuest();
   return useQuery({
     queryKey: tagListKey(isGuest),
-    enabled: enabled && !isLoading,
+    enabled,
     queryFn: async () => {
       if (isGuest) return getGuestTags();
       try {

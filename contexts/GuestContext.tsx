@@ -13,117 +13,102 @@ interface GuestContextType {
 const GuestContext = createContext<GuestContextType>({ isGuest: true, isLoading: true });
 
 export function GuestProvider({ children }: { children: React.ReactNode }) {
-  const hasSession   = initSession(); // reads spendix_access_token (non-expired)
-  const [isGuest,   setIsGuest]   = useState(!hasSession);
-  const [isLoading, setIsLoading] = useState(true); // always start loading to validate
-  const resolved = useRef(false);
+  // Synchronous: trust local token immediately if it's valid and not expired
+  const hasValidToken = initSession(); // reads spendix_access_token, skips expired ones
+
+  // If we have a valid token → show as authenticated instantly (no flicker)
+  // If no token → show as guest, isLoading=false immediately
+  const [isGuest,   setIsGuest]   = useState(!hasValidToken);
+  const [isLoading, setIsLoading] = useState(false); // never block UI on auth check
+  const validated = useRef(false);
 
   useEffect(() => {
     const supabase = createClient();
     let active = true;
 
-    async function bootstrap() {
-      const localToken = getAuthToken(); // null if expired or missing
+    // Background validation: silently refresh/validate without blocking UI
+    async function validateInBackground() {
+      const localToken = getAuthToken();
 
-      // Case 1: no local token → guest
       if (!localToken) {
-        if (!active) return;
-        setIsGuest(true);
-        setIsLoading(false);
-        resolved.current = true;
+        // No token → already showing guest state correctly
+        validated.current = true;
         return;
       }
 
-      // Case 2: local token exists → try Supabase session
       try {
-        const { data: { session }, error } = await supabase.auth.getSession();
+        // Try to get a fresh session from Supabase
+        const { data: { session } } = await supabase.auth.getSession();
 
         if (!active) return;
 
         if (session?.access_token && !isTokenExpired(session.access_token)) {
-          // Fresh session from Supabase
+          // Got a fresh valid session — update our token
           signedIn(session.access_token);
           setIsGuest(false);
-          setIsLoading(false);
-          resolved.current = true;
+          validated.current = true;
           return;
         }
 
-        // Session missing or expired → try refresh
-        const { data: refreshData } = await supabase.auth.refreshSession();
+        // Session missing or expired — try to refresh
+        const storedRefresh = localStorage.getItem("spendix_refresh_token");
+        const { data: refreshData } = storedRefresh
+          ? await supabase.auth.refreshSession({ refresh_token: storedRefresh })
+          : await supabase.auth.refreshSession();
 
         if (!active) return;
 
         if (refreshData.session?.access_token) {
-          // Successfully refreshed
           signedIn(refreshData.session.access_token);
+          if (refreshData.session.refresh_token) {
+            localStorage.setItem("spendix_refresh_token", refreshData.session.refresh_token);
+          }
           setIsGuest(false);
-          setIsLoading(false);
-          resolved.current = true;
-          return;
-        }
-
-        // Refresh failed — local token might still be valid for Bearer auth
-        // Use it as long as it's not expired
-        const stillValid = getAuthToken(); // re-check after refresh attempt
-        if (stillValid) {
-          setIsGuest(false);
-          setIsLoading(false);
         } else {
-          // Truly expired and can't refresh → force re-login
-          signedOut();
-          setIsGuest(true);
-          setIsLoading(false);
+          // Can't refresh — check if our local token is still usable
+          const stillHaveToken = getAuthToken();
+          if (!stillHaveToken) {
+            // Token is gone → user needs to log in
+            signedOut();
+            setIsGuest(true);
+          }
+          // If we still have a non-expired local token, keep isGuest=false
+          // The API will reject it and crud-factory handles the redirect
         }
-        resolved.current = true;
 
+        validated.current = true;
       } catch {
-        // Network error — trust local token if it exists
+        // Network error — trust existing state
         if (!active) return;
-        const fallback = getAuthToken();
-        setIsGuest(!fallback);
-        setIsLoading(false);
-        resolved.current = true;
+        validated.current = true;
       }
     }
 
-    void bootstrap();
+    void validateInBackground();
 
-    // Also listen for auth state changes (cross-tab logout, fresh login)
+    // React to auth events (cross-tab login/logout, token refresh)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!active) return;
 
       if (session?.access_token && !isTokenExpired(session.access_token)) {
         signedIn(session.access_token);
         setIsGuest(false);
-        setIsLoading(false);
         return;
       }
 
-      // For SIGNED_OUT: only sign out if we also have no local token
+      // SIGNED_OUT event: only clear if we have no local token
       if (event === "SIGNED_OUT") {
         const local = getAuthToken();
         if (!local) {
           signedOut();
           setIsGuest(true);
-          setIsLoading(false);
         }
       }
-      // For other null-session events: don't touch state — bootstrap() handles it
     });
-
-    // Safety fallback: resolve after 4s no matter what
-    const timer = setTimeout(() => {
-      if (!active || resolved.current) return;
-      const fallback = getAuthToken();
-      setIsGuest(!fallback);
-      setIsLoading(false);
-    }, 4000);
 
     return () => {
       active = false;
       subscription.unsubscribe();
-      clearTimeout(timer);
     };
   }, []);
 
