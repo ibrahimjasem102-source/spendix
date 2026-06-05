@@ -82,7 +82,7 @@ function MonthlyCard({
   return (
     <div className="card-elevated p-4 flex flex-col">
       <p className="text-[10px] t3 uppercase tracking-wide font-semibold mb-2">{t("debts.monthly_rate")}</p>
-      <p className="text-xl font-bold t1 number-display">{format(avgPayment)}</p>
+      <p className="text-xl font-black t1 number-display">{format(avgPayment)}</p>
       <p className="text-[10px] t3 mt-1">{activeDebts} {t("debts.active")}</p>
       <div className="mt-auto pt-2">
         <div className="h-1.5 bg-[hsl(var(--bg-input))] rounded-full overflow-hidden">

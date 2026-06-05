@@ -287,14 +287,14 @@ export default function ProfilePage() {
         <div className="relative z-10 flex flex-col sm:flex-row items-center sm:items-start gap-6">
           {/* Avatar + info */}
           <div className="flex flex-col items-center sm:items-start gap-3 flex-1 min-w-0 text-center sm:text-start">
-            <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 to-violet-500 text-2xl font-bold text-white shrink-0">
+            <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 to-violet-500 text-2xl font-black text-white shrink-0">
               {isGuest ? <User className="h-8 w-8" /> : userInitial}
             </div>
             <div className="min-w-0">
               <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/40 mb-1">
                 {t("profile.financial_profile")}
               </p>
-              <h1 className="text-2xl font-bold text-white truncate">{displayName}</h1>
+              <h1 className="text-2xl font-black text-white truncate">{displayName}</h1>
               {userEmail && <p className="text-sm text-white/40 mt-0.5 truncate">{userEmail}</p>}
             </div>
             <div className="flex items-center gap-2">
@@ -384,7 +384,7 @@ export default function ProfilePage() {
             <h3 className="text-sm font-semibold t1">{t("profile.net_worth")}</h3>
             <p className="text-xs t3 mt-0.5">{t("profile.net_worth_sub")}</p>
           </div>
-          <div className={`text-2xl font-bold number-display ${netWorth >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
+          <div className={`text-2xl font-black number-display ${netWorth >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
             {netWorth < 0 ? "−" : "+"}{format(Math.abs(netWorth))}
           </div>
         </div>
