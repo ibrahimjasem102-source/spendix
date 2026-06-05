@@ -1,78 +1,51 @@
 /**
- * Token store — reads the access token directly from Supabase's own storage.
- * No custom keys. No duplication. Single source of truth = Supabase.
+ * Single source of truth for the auth token.
+ * Uses spendix_access_token as the primary localStorage key.
  */
 
-const REFRESH_KEY = "spendix_refresh_token";
+export const TOKEN_KEY   = "spendix_access_token";
+export const REFRESH_KEY = "spendix_refresh_token";
 
 let _token: string | null = null;
 
-// Module-level sync init: read from Supabase's own localStorage key
+// Synchronous module-level init (runs when bundle is executed in browser)
 if (typeof window !== "undefined") {
   try {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    if (url) {
-      const ref = new URL(url).hostname.split(".")[0];
-      const key = `sb-${ref}-auth-token`;
-      const raw = localStorage.getItem(key);
-      if (raw && raw !== "chunked") {
-        const parsed = JSON.parse(raw) as { access_token?: string };
-        if (parsed?.access_token) _token = parsed.access_token;
-      } else if (raw === "chunked") {
-        let joined = "";
-        for (let i = 0; ; i++) {
-          const chunk = localStorage.getItem(`${key}.${i}`);
-          if (!chunk) break;
-          joined += chunk;
-        }
-        if (joined) {
-          const parsed = JSON.parse(joined) as { access_token?: string };
-          if (parsed?.access_token) _token = parsed.access_token;
-        }
-      }
+    const t = localStorage.getItem(TOKEN_KEY);
+    if (t) {
+      _token = t;
+      console.log("[auth] module init — token found:", t.slice(0, 20) + "…");
+    } else {
+      console.log("[auth] module init — no token in localStorage");
     }
   } catch {}
 }
 
 export function setAuthToken(token: string | null) {
   _token = token;
+  try {
+    if (token) {
+      localStorage.setItem(TOKEN_KEY, token);
+      console.log("[auth] setAuthToken — stored:", token.slice(0, 20) + "…");
+    } else {
+      localStorage.removeItem(TOKEN_KEY);
+      console.log("[auth] setAuthToken — cleared");
+    }
+  } catch {}
 }
 
 export function getAuthToken(): string | null {
+  // Always prefer in-memory; fall back to localStorage
   if (_token) return _token;
   if (typeof window === "undefined") return null;
-  // Re-read from Supabase storage (always fresh)
   try {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    if (!url) return null;
-    const ref = new URL(url).hostname.split(".")[0];
-    const key = `sb-${ref}-auth-token`;
-    const raw = localStorage.getItem(key);
-    if (!raw) return null;
-    if (raw === "chunked") {
-      let joined = "";
-      for (let i = 0; ; i++) {
-        const chunk = localStorage.getItem(`${key}.${i}`);
-        if (!chunk) break;
-        joined += chunk;
-      }
-      const parsed = JSON.parse(joined) as { access_token?: string };
-      if (parsed?.access_token) { _token = parsed.access_token; return _token; }
-      return null;
+    const stored = localStorage.getItem(TOKEN_KEY);
+    if (stored) {
+      _token = stored; // cache it
+      return stored;
     }
-    const parsed = JSON.parse(raw) as { access_token?: string };
-    const tok = parsed?.access_token ?? null;
-    if (tok && !isTokenExpired(tok)) { _token = tok; return _token; }
   } catch {}
   return null;
-}
-
-export function isTokenExpired(token: string): boolean {
-  try {
-    const payload = JSON.parse(atob(token.split(".")[1]));
-    if (typeof payload.exp !== "number") return false;
-    return Date.now() > payload.exp * 1000 - 30_000;
-  } catch { return false; }
 }
 
 export function storeRefreshToken(token: string) {
@@ -85,5 +58,17 @@ export function getRefreshToken(): string | null {
 
 export function clearTokens() {
   _token = null;
-  try { localStorage.removeItem(REFRESH_KEY); } catch {}
+  try {
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(REFRESH_KEY);
+    console.log("[auth] tokens cleared (explicit logout)");
+  } catch {}
+}
+
+export function isTokenExpired(token: string): boolean {
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    if (typeof payload.exp !== "number") return false;
+    return Date.now() > payload.exp * 1000 - 30_000;
+  } catch { return false; }
 }

@@ -7,17 +7,14 @@ function sanitizeValue(value: string): string {
 
 function sanitizeHeaders(headers: HeadersInit | undefined): HeadersInit | undefined {
   if (!headers) return headers;
-
   if (headers instanceof Headers) {
     const safe = new Headers();
     headers.forEach((value, key) => safe.set(key, sanitizeValue(value)));
     return safe;
   }
-
   if (Array.isArray(headers)) {
     return headers.map(([key, value]) => [key, sanitizeValue(value)] as [string, string]);
   }
-
   const result: Record<string, string> = {};
   for (const [key, value] of Object.entries(headers as Record<string, string>)) {
     result[key] = sanitizeValue(String(value));
@@ -37,12 +34,21 @@ function isSameOrigin(input: RequestInfo | URL): boolean {
 
 export function safeFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
   if (isSameOrigin(input)) {
-    // getAuthToken() reads from memory first, then localStorage fallback —
-    // no Supabase client needed (avoids circular: fetch-safe ↔ supabase/client)
+    // ── Requirement 6: always attach token if it exists ─────────
     const token = getAuthToken();
+
+    // ── Requirement 7: log whether header is attached ────────────
+    const url = typeof input === "string" ? input : (input instanceof URL ? input.href : (input as Request).url);
+    if (token) {
+      console.log("[safeFetch] attaching Authorization header for:", url);
+    } else {
+      console.warn("[safeFetch] NO token — request will be unauthenticated:", url);
+    }
+
     const authHeader: Record<string, string> = token
       ? { Authorization: `Bearer ${token}` }
       : {};
+
     init = {
       credentials: "include",
       ...init,

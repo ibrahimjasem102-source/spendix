@@ -9,6 +9,7 @@ import LastPageTracker from "@/components/navigation/LastPageTracker";
 import SchedulerTrigger from "@/components/layout/SchedulerTrigger";
 import { FinancialEventBridge } from "@/components/system/FinancialEventBridge";
 import MutationErrorToast from "@/components/system/MutationErrorToast";
+import AuthGate from "@/components/system/AuthGate";
 import AuthStatusBadge from "@/components/system/AuthStatusBadge";
 import PullToRefreshWrapper from "@/components/layout/PullToRefreshWrapper";
 import LiveBackground from "@/components/layout/LiveBackground";
@@ -55,9 +56,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                           max-w-none 2xl:max-w-[1500px]
                         ">
                           <Breadcrumbs />
-                          <RoomGuard>
-                            {children}
-                          </RoomGuard>
+                          <AuthGate>
+                            <RoomGuard>
+                              {children}
+                            </RoomGuard>
+                          </AuthGate>
                         </div>
                       </PageTransition>
                     </main>
