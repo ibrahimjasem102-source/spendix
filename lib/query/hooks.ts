@@ -91,7 +91,7 @@ function subscriptionListKey(isGuest: boolean) {
 // ══════════════════════════════════════════════════════════════
 
 export function useTransactions(enabled = true) {
-  const { isGuest, isLoading } = useGuest();
+  const { isGuest } = useGuest();
   return useQuery({
     queryKey: transactionListKey(isGuest),
     enabled,
@@ -107,10 +107,10 @@ export function useTransactions(enabled = true) {
 const PAGE_SIZE = 25;
 
 export function useInfiniteTransactions(enabled = true) {
-  const { isGuest, isLoading } = useGuest();
+  const { isGuest } = useGuest();
   return useInfiniteQuery({
     queryKey: [...transactionListKey(isGuest), "infinite"],
-    enabled:  enabled && !isLoading,
+    enabled,
     initialPageParam: 0,
     queryFn: async ({ pageParam = 0 }) => {
       if (isGuest) {
@@ -411,7 +411,7 @@ const EMPTY_DEBT_SUMMARY: DebtsSummary = {
 
 
 export function useDebts(enabled = true) {
-  const { isGuest, isLoading: guestLoading } = useGuest();
+  const { isGuest } = useGuest();
   const listKey = debtListKey(isGuest);
   return useQuery({
     queryKey: listKey,
@@ -599,7 +599,7 @@ export function useCreateDebtPayment() {
 // ══════════════════════════════════════════════════════════════
 
 export function useInvestments(enabled = true) {
-  const { isGuest, isLoading: guestLoading } = useGuest();
+  const { isGuest } = useGuest();
   const listKey = investmentListKey(isGuest);
   return useQuery({
     queryKey: listKey,
@@ -614,7 +614,7 @@ export function useInvestments(enabled = true) {
 }
 
 export function usePortfolioHistory(enabled = true) {
-  const { isGuest, isLoading: guestLoading } = useGuest();
+  const { isGuest } = useGuest();
   return useQuery({
     queryKey: queryKeys.investments.portfolioHistory(),
     enabled: enabled && !isGuest,
@@ -731,7 +731,7 @@ export function useDeleteInvestment() {
 // ══════════════════════════════════════════════════════════════
 
 export function useWorkSessions(enabled = true) {
-  const { isGuest, isLoading: guestLoading } = useGuest();
+  const { isGuest } = useGuest();
   const listKey = workSessionListKey(isGuest);
   return useQuery({
     queryKey: listKey,
@@ -746,7 +746,7 @@ export function useWorkSessions(enabled = true) {
 }
 
 export function useWorkPayments(enabled = true) {
-  const { isGuest, isLoading: guestLoading } = useGuest();
+  const { isGuest } = useGuest();
   const listKey = workPaymentListKey(isGuest);
   return useQuery({
     queryKey: listKey,
@@ -1009,7 +1009,7 @@ export const useDeleteAccount = _accountCrud.useDelete;
 // ══════════════════════════════════════════════════════════════
 
 export function useSubscriptions(enabled = true) {
-  const { isGuest, isLoading: guestLoading } = useGuest();
+  const { isGuest } = useGuest();
   const listKey = subscriptionListKey(isGuest);
   return useQuery({
     queryKey: listKey,
@@ -1119,7 +1119,7 @@ export function useDeleteSubscription() {
 // ══════════════════════════════════════════════════════════════
 
 export function useCalendar(year: number, month: number, enabled = true) {
-  const { isGuest, isLoading } = useGuest();
+  const { isGuest } = useGuest();
   return useQuery({
     queryKey: [...queryKeys.calendar.byMonth(year, month), isGuest ? "guest" : "user"] as const,
     enabled,
@@ -1161,7 +1161,7 @@ export function useCalendar(year: number, month: number, enabled = true) {
 // ══════════════════════════════════════════════════════════════
 
 export function useNotifications(enabled = true) {
-  const { isGuest, isLoading } = useGuest();
+  const { isGuest } = useGuest();
   return useQuery({
     queryKey: queryKeys.notifications.list(),
     enabled: enabled && !isGuest,
@@ -1178,7 +1178,7 @@ export function useNotifications(enabled = true) {
 // ══════════════════════════════════════════════════════════════
 
 export function useGoals(enabled = true) {
-  const { isGuest, isLoading } = useGuest();
+  const { isGuest } = useGuest();
   return useQuery({
     queryKey: goalListKey(isGuest),
     enabled,
@@ -1332,7 +1332,7 @@ function sortCategories(items: Category[]) {
 }
 
 export function useCategories(enabled = true) {
-  const { isGuest, isLoading } = useGuest();
+  const { isGuest } = useGuest();
   return useQuery({
     queryKey: categoryListKey(isGuest),
     enabled,
@@ -1424,7 +1424,7 @@ export function useDeleteCategory() {
 // ══════════════════════════════════════════════════════════════
 
 export function useContacts(enabled = true) {
-  const { isGuest, isLoading } = useGuest();
+  const { isGuest } = useGuest();
   return useQuery({
     queryKey: contactListKey(isGuest),
     enabled,
@@ -1519,7 +1519,7 @@ function tagListKey(isGuest: boolean) {
 }
 
 export function useTags(enabled = true) {
-  const { isGuest, isLoading } = useGuest();
+  const { isGuest } = useGuest();
   return useQuery({
     queryKey: tagListKey(isGuest),
     enabled,

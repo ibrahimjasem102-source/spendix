@@ -6,6 +6,9 @@ import { getAuthToken } from "@/lib/auth/token-store";
 import { safeFetch } from "@/lib/fetch-safe";
 
 export default function AuthStatusBadge() {
+  // Only show in development — never in production
+  if (process.env.NODE_ENV !== "development") return null;
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   const { isGuest } = useGuest();
   const [token, setToken]   = useState<string | null>(null);
   const [apiOk, setApiOk]   = useState<boolean | null>(null);
