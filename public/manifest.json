@@ -1,14 +1,13 @@
 {
   "name": "Spendix",
   "short_name": "Spendix",
-  "description": "Personal Finance Tracker",
+  "description": "Spendix is a modern personal finance app for tracking expenses, income, budgets, debts, investments, goals and work hours.",
   "start_url": "/dashboard",
   "scope": "/",
   "display": "standalone",
-  "orientation": "portrait",
   "background_color": "#0B0F17",
   "theme_color": "#0B0F17",
-  "categories": ["finance", "productivity"],
+  "orientation": "portrait",
   "icons": [
     {
       "src": "/icon-192.png",
