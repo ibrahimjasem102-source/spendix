@@ -4,13 +4,14 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ArrowDownRight, ArrowUpRight, Check, ChevronLeft, ChevronRight, Banknote, Building2, CreditCard, Wallet, PiggyBank, Hash, Bookmark, Trash2 } from "lucide-react";
-import { Account, AccountType, Category, Tag, Transaction, TransactionFormData, TransactionType } from "@/types";
+import { Account, AccountType, Category, FinancialContact, Tag, Transaction, TransactionFormData, TransactionType } from "@/types";
 import { useTranslation } from "@/lib/i18n";
 import { useCurrency } from "@/lib/currency";
 import { spring, tapTransition } from "@/lib/motion";
 import { useGuest } from "@/contexts/GuestContext";
 import CategoryIcon from "@/components/categories/CategoryIcon";
 import SheetDragHandle from "@/components/ui/SheetDragHandle";
+import ContactSelector from "@/components/contacts/ContactSelector";
 import { safeFetch } from "@/lib/fetch-safe";
 import { COLOR_PALETTE, ICON_MAP, type CategorySection } from "@/lib/categories";
 import { useCategories, useCreateCategory, type CategoryFormData } from "@/lib/query/hooks";
@@ -92,7 +93,9 @@ export default function TransactionForm({ initial, initialType, onSubmit, onClos
   const [showTemplates, setShowTemplates] = useState(false);
   const [savedTemplate,  setSavedTemplate]  = useState(false);
   const hasSavedDraft = !!draft && !isEdit;
-  const [allTags,  setAllTags]  = useState<Tag[]>([]);
+  const [allTags,      setAllTags]      = useState<Tag[]>([]);
+  const [contacts,     setContacts]     = useState<FinancialContact[]>([]);
+  const [contactsReady, setContactsReady] = useState(false);
   const [categorySheetOpen, setCategorySheetOpen] = useState(false);
   const [newCategory, setNewCategory] = useState<CategoryFormData>({
     name: "",
@@ -188,6 +191,11 @@ export default function TransactionForm({ initial, initialType, onSubmit, onClos
         }
       })
       .catch(() => setAccounts([]));
+    // Load contacts for linking
+    safeFetch("/api/contacts")
+      .then((r) => r.json())
+      .then(({ contacts: c }) => { setContacts(c ?? []); setContactsReady(true); })
+      .catch(() => setContactsReady(true));
   }, [guestLoading, isGuest, isEdit]);
 
   useEffect(() => {
@@ -684,6 +692,16 @@ export default function TransactionForm({ initial, initialType, onSubmit, onClos
                 placeholder={t("transactions.notes_placeholder")}
               />
             </div>
+
+            {/* ── Contact ───────────────────────────────── */}
+            {contactsReady && !isGuest && (
+              <ContactSelector
+                value={form.contact_id ?? null}
+                onChange={(id) => set("contact_id", id ?? null)}
+                contacts={contacts}
+                onContactCreated={(c) => setContacts((prev) => [c, ...prev])}
+              />
+            )}
 
             {/* ── Tags ──────────────────────────────────── */}
             {allTags.length > 0 && (
