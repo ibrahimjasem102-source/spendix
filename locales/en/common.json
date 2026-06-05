@@ -621,6 +621,8 @@
     "export_title": "Export Data",
     "change_password": "Change Password",
     "password_changed": "Password changed successfully",
+    "preferences": "Preferences",
+    "data": "Data",
     "export_hint": "Download your data as CSV",
     "export_transactions": "Transactions",
     "export_goals": "Goals",

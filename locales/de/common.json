@@ -607,6 +607,8 @@
     "export_title": "Daten exportieren",
     "change_password": "Passwort ändern",
     "password_changed": "Passwort erfolgreich geändert",
+    "preferences": "Einstellungen",
+    "data": "Daten",
     "export_hint": "Daten als CSV herunterladen",
     "export_transactions": "Transaktionen",
     "export_goals": "Ziele",

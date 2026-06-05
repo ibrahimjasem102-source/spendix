@@ -620,6 +620,8 @@
     "delete_skip_export": "تخطي وحذف",
     "change_password": "تغيير كلمة المرور",
     "password_changed": "تم تغيير كلمة المرور بنجاح",
+    "preferences": "التفضيلات",
+    "data": "البيانات",
     "export_title": "تصدير البيانات",
     "export_hint": "تنزيل بياناتك بصيغة CSV",
     "export_transactions": "المعاملات",
