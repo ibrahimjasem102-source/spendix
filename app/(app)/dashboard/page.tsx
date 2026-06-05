@@ -3,7 +3,7 @@
 import { Component, type ErrorInfo, type ReactNode, useEffect, useMemo, useState } from "react";
 import {
   AlertTriangle, ArrowDownRight, ArrowUpRight,
-  ChevronRight, Landmark,
+  ChevronRight, Landmark, Plus, CreditCard, PiggyBank,
   TrendingUp, TrendingDown, Zap,
   Wallet, Target, BrainCircuit,
 } from "lucide-react";
@@ -246,6 +246,34 @@ export default function DashboardPage() {
           {new Date().toLocaleDateString(dateLocale, { weekday: "long", month: "long", day: "numeric" })}
         </p>
         <h1 className="text-xl font-black t1">{greeting}</h1>
+      </div>
+
+      {/* ── Quick Actions ─────────────────────────────────── */}
+      <div className="grid grid-cols-4 gap-2">
+        {[
+          { icon: ArrowDownRight, label: t("transactions.expense"), color: "text-rose-400",    bg: "bg-rose-400/10",    action: () => window.dispatchEvent(new CustomEvent("spendix:toggle-fab")) },
+          { icon: ArrowUpRight,   label: t("transactions.income"),  color: "text-emerald-400", bg: "bg-emerald-400/10", action: () => window.dispatchEvent(new CustomEvent("spendix:toggle-fab")) },
+          { icon: Target,         label: t("nav.goals"),            color: "text-indigo-400",  bg: "bg-indigo-400/10",  href: "/goals" },
+          { icon: CreditCard,     label: t("nav.debts"),            color: "text-orange-400",  bg: "bg-orange-400/10",  href: "/debts" },
+        ].map(({ icon: Icon, label, color, bg, action, href }) => (
+          href ? (
+            <Link key={label} href={href}
+              className="card flex flex-col items-center gap-1.5 py-3 hover:scale-[1.03] transition-transform active:scale-95">
+              <div className={`flex h-9 w-9 items-center justify-center rounded-2xl ${bg}`}>
+                <Icon className={`h-4 w-4 ${color}`} />
+              </div>
+              <span className="text-[10px] font-semibold t3 text-center leading-tight">{label}</span>
+            </Link>
+          ) : (
+            <button key={label} type="button" onClick={action}
+              className="card flex flex-col items-center gap-1.5 py-3 hover:scale-[1.03] transition-transform active:scale-95">
+              <div className={`flex h-9 w-9 items-center justify-center rounded-2xl ${bg}`}>
+                <Icon className={`h-4 w-4 ${color}`} />
+              </div>
+              <span className="text-[10px] font-semibold t3 text-center leading-tight">{label}</span>
+            </button>
+          )
+        ))}
       </div>
 
       {/* ── NET WORTH HERO — the BIG number ──────────────── */}

@@ -900,4 +900,13 @@ label {
   :root.light .bg-black\/70 {
     background-color: rgba(241, 245, 249, 0.8) !important;
   }
+
+  /* Light theme: gradient hero cards keep their dark appearance for readability */
+  :root.light [style*="linear-gradient(135deg, #0"] {
+    filter: brightness(1.08) saturate(0.95);
+  }
+
+  /* Ensure white text on gradient banners stays readable in light mode */
+  :root.light .text-white\/50 { color: rgba(255,255,255,0.65) !important; }
+  :root.light .text-white\/40 { color: rgba(255,255,255,0.55) !important; }
 }

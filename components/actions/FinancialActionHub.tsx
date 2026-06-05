@@ -33,7 +33,10 @@ export default function FinancialActionHub() {
   const router = useRouter();
   const [fabOpen, setFabOpen] = useState(false);
 
-  const toggleFAB = useCallback(() => setFabOpen((open) => !open), []);
+  const toggleFAB = useCallback(() => {
+    setFabOpen((open) => !open);
+    import("@/lib/haptics").then(({ haptic }) => haptic("medium")).catch(() => undefined);
+  }, []);
   const closeFAB  = useCallback(() => setFabOpen(false), []);
 
   useEffect(() => {

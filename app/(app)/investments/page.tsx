@@ -306,9 +306,19 @@ export default function InvestmentsPage() {
 
         {/* Content */}
         {guestLoading || isLoading ? (
-          <div className="py-16 flex items-center justify-center gap-2 t3">
-            <Loader2 className="w-4 h-4 animate-spin" />
-            <span className="text-sm">{t("common.loading")}</span>
+          <div className="space-y-2.5 p-4">
+            {[1,2,3].map((i) => (
+              <div key={i} className="animate-pulse rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--bg-card-2))] p-4 space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-2xl bg-[hsl(var(--bg-input))]" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 w-3/4 rounded-lg bg-[hsl(var(--bg-input))]" />
+                    <div className="h-3 w-1/2 rounded-lg bg-[hsl(var(--bg-input))]" />
+                  </div>
+                  <div className="h-5 w-16 rounded-lg bg-[hsl(var(--bg-input))]" />
+                </div>
+              </div>
+            ))}
           </div>
         ) : filtered.length === 0 ? (
           <div className="py-16 text-center px-5">

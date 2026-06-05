@@ -271,7 +271,8 @@ export default function TransactionForm({ initial, initialType, onSubmit, onClos
     setLoading(true); setError("");
     try {
       await onSubmit({ ...form, type, tag_ids: selectedTagIds });
-      clearDraft(DRAFT_KEY);  // clear saved draft on success
+      clearDraft(DRAFT_KEY);
+      import("@/lib/haptics").then(({ haptic }) => haptic("success")).catch(() => undefined);
       onClose();
     } catch (err) {
       const msg = err instanceof Error ? err.message : "";
