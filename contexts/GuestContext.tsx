@@ -1,56 +1,57 @@
 "use client";
 
-import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { signedIn, signedOut, initSession } from "@/lib/auth/session-manager";
-import { getAuthToken, isTokenExpired } from "@/lib/auth/token-store";
+import { getAuthToken } from "@/lib/auth/token-store";
 
 interface GuestContextType {
   isGuest:   boolean;
   isLoading: boolean;
 }
 
-const GuestContext = createContext<GuestContextType>({ isGuest: true, isLoading: true });
+const GuestContext = createContext<GuestContextType>({ isGuest: true, isLoading: false });
 
 export function GuestProvider({ children }: { children: React.ReactNode }) {
-  // Synchronous: trust local token immediately if it's valid and not expired
-  const hasValidToken = initSession(); // reads spendix_access_token, skips expired ones
-
-  // If we have a valid token → show as authenticated instantly (no flicker)
-  // If no token → show as guest, isLoading=false immediately
-  const [isGuest,   setIsGuest]   = useState(!hasValidToken);
-  const [isLoading, setIsLoading] = useState(false); // never block UI on auth check
+  // Start as guest=true on BOTH server and client to avoid hydration mismatch.
+  // useLayoutEffect runs client-side before first paint → sets correct state instantly.
+  const [isGuest,   setIsGuest]   = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const validated = useRef(false);
 
+  // ── Synchronous client-side init (before first paint) ────────
+  useLayoutEffect(() => {
+    const hasToken = initSession(); // reads spendix_access_token from localStorage
+    if (hasToken) setIsGuest(false);
+  }, []);
+
+  // ── Background validation + auth state listener ───────────────
   useEffect(() => {
     const supabase = createClient();
     let active = true;
 
-    // Background validation: silently refresh/validate without blocking UI
     async function validateInBackground() {
       const localToken = getAuthToken();
-
       if (!localToken) {
-        // No token → already showing guest state correctly
+        // No token at all → guest confirmed
+        setIsGuest(true);
         validated.current = true;
         return;
       }
 
       try {
-        // Try to get a fresh session from Supabase
+        // Try to get Supabase session (reads from its own localStorage key)
         const { data: { session } } = await supabase.auth.getSession();
-
         if (!active) return;
 
-        if (session?.access_token && !isTokenExpired(session.access_token)) {
-          // Got a fresh valid session — update our token
+        if (session?.access_token) {
           signedIn(session.access_token);
           setIsGuest(false);
           validated.current = true;
           return;
         }
 
-        // Session missing or expired — try to refresh
+        // No Supabase session — try refresh
         const storedRefresh = localStorage.getItem("spendix_refresh_token");
         const { data: refreshData } = storedRefresh
           ? await supabase.auth.refreshSession({ refresh_token: storedRefresh })
@@ -65,17 +66,14 @@ export function GuestProvider({ children }: { children: React.ReactNode }) {
           }
           setIsGuest(false);
         } else {
-          // Can't refresh — check if our local token is still usable
-          const stillHaveToken = getAuthToken();
-          if (!stillHaveToken) {
-            // Token is gone → user needs to log in
+          // Refresh failed — keep using our Bearer token if still valid
+          const stillValid = getAuthToken();
+          if (!stillValid) {
             signedOut();
             setIsGuest(true);
           }
-          // If we still have a non-expired local token, keep isGuest=false
-          // The API will reject it and crud-factory handles the redirect
+          // If stillValid → keep isGuest=false, API will validate the Bearer token
         }
-
         validated.current = true;
       } catch {
         // Network error — trust existing state
@@ -86,29 +84,38 @@ export function GuestProvider({ children }: { children: React.ReactNode }) {
 
     void validateInBackground();
 
-    // React to auth events (cross-tab login/logout, token refresh)
+    // Auth event listener (cross-tab, token refresh, explicit logout)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!active) return;
 
-      if (session?.access_token && !isTokenExpired(session.access_token)) {
+      if (session?.access_token) {
         signedIn(session.access_token);
         setIsGuest(false);
         return;
       }
 
-      // SIGNED_OUT event: only clear if we have no local token
+      // SIGNED_OUT: only honour if we also have no local token
       if (event === "SIGNED_OUT") {
         const local = getAuthToken();
         if (!local) {
           signedOut();
           setIsGuest(true);
         }
+        // If we still have a local token, let the Bearer token carry auth
       }
     });
+
+    // Safety: resolve after 4s if background validation hangs
+    const fallback = setTimeout(() => {
+      if (!active || validated.current) return;
+      const local = getAuthToken();
+      setIsGuest(!local);
+    }, 4000);
 
     return () => {
       active = false;
       subscription.unsubscribe();
+      clearTimeout(fallback);
     };
   }, []);
 
