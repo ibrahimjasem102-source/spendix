@@ -54,8 +54,7 @@ export default function InlineLoginModal({ onClose, onSuccess }: Props) {
     const { access_token, refresh_token } = data.session;
 
     // 1. Store tokens
-    signedIn(access_token);
-    try { localStorage.setItem("spendix_refresh_token", refresh_token); } catch {}
+    signedIn(access_token, refresh_token);
 
     // 2. Server cookies + bootstrap in background
     const bHeaders = { "Content-Type": "application/json", Authorization: `Bearer ${access_token}` };

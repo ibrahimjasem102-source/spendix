@@ -124,7 +124,7 @@ export default function LoginPage() {
             style={{ background: "linear-gradient(135deg, #06B6D4, #7C3AED)" }}>
             <Wallet className="w-7 h-7 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">Spendix</h1>
+          <h1 className="text-2xl font-black text-white tracking-tight">Spendix</h1>
           <p className="text-sm mt-1" style={{ color: "hsl(215 18% 55%)" }}>
             {t("auth.login_title")}
           </p>

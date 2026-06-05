@@ -61,7 +61,8 @@ export function getAuthToken(): string | null {
       return null;
     }
     const parsed = JSON.parse(raw) as { access_token?: string };
-    if (parsed?.access_token) { _token = parsed.access_token; return _token; }
+    const tok = parsed?.access_token ?? null;
+    if (tok && !isTokenExpired(tok)) { _token = tok; return _token; }
   } catch {}
   return null;
 }

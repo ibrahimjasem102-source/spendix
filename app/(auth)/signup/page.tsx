@@ -48,8 +48,7 @@ export default function SignupPage() {
     }
 
     if (data.session) {
-      signedIn(data.session.access_token);
-      try { localStorage.setItem("spendix_refresh_token", data.session.refresh_token); } catch {}
+      signedIn(data.session.access_token, data.session.refresh_token);
 
       // Set server-side session cookie
       await fetch("/api/auth/set-session", {
@@ -93,7 +92,7 @@ export default function SignupPage() {
             style={{ background: "linear-gradient(135deg, #7C3AED, #06B6D4)" }}>
             <Wallet className="w-7 h-7 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">Spendix</h1>
+          <h1 className="text-2xl font-black text-white tracking-tight">Spendix</h1>
           <p className="text-sm mt-1" style={{ color: "hsl(215 18% 55%)" }}>
             {t("auth.signup_title")}
           </p>
