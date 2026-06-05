@@ -31,6 +31,7 @@ import { fadeIn, spring, tapTransition } from "@/lib/motion";
 import { createClient } from "@/lib/supabase/client";
 import { migrateGuestData } from "@/lib/guest/migrate";
 import { useTheme } from "@/lib/theme";
+import { safeFetch } from "@/lib/fetch-safe";
 
 function Toggle({ checked, onChange, disabled = false }: {
   checked: boolean;
@@ -254,17 +255,35 @@ export default function SettingsPage() {
     try { return JSON.parse(localStorage.getItem("spendix_ai_settings") ?? "null") ?? { enabled: true, auto: false, model: "claude-haiku" }; } catch { return { enabled: true, auto: false, model: "claude-haiku" }; }
   });
   const [activePanel, setActivePanel] = useState<SettingsPanel>("account");
-  const [roomPin, setRoomPin] = useState("");
-  const [pinSaved, setPinSaved] = useState(false);
-  const [pinError, setPinError] = useState("");
+  const [roomPin,     setRoomPin]     = useState("");
+  const [pinSaved,    setPinSaved]    = useState(false);
+  const [pinError,    setPinError]    = useState("");
+  // Password change
+  const [showPwChange,  setShowPwChange]  = useState(false);
+  const [newPassword,   setNewPassword]   = useState("");
+  const [pwChangeMsg,   setPwChangeMsg]   = useState<{ ok: boolean; text: string } | null>(null);
+  const [changingPw,    setChangingPw]    = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) return;
       const email = user.email ?? "";
       setUserEmail(email);
       setProfile({ name: user.user_metadata?.full_name ?? "", email });
+
+      // Load preferences from Supabase
+      const { data: prefs } = await supabase
+        .from("profile_settings")
+        .select("preferences")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (prefs?.preferences) {
+        const p = prefs.preferences as Record<string, unknown>;
+        if (p.notifs)      setNotifs(p.notifs as NotificationState);
+        if (p.ai_settings) setAI(p.ai_settings as AIState);
+      }
     });
   }, []);
 
@@ -371,22 +390,43 @@ export default function SettingsPage() {
       if (fullName) {
         await supabase.auth.updateUser({ data: { full_name: fullName } });
       }
-
       await supabase.from("profile_settings").upsert({
-        user_id: user.id,
-        full_name: fullName || null,
-        language: locale,
+        user_id:    user.id,
+        full_name:  fullName || null,
+        language:   locale,
         currency,
         theme,
+        preferences: { notifs, ai_settings: ai },
         updated_at: new Date().toISOString(),
       }, { onConflict: "user_id" });
     }
-    // Save notification and AI preferences to localStorage
-    localStorage.setItem("spendix_notifs",      JSON.stringify(notifs));
-    localStorage.setItem("spendix_ai_settings", JSON.stringify(ai));
+    // Also keep localStorage as offline fallback
+    try {
+      localStorage.setItem("spendix_notifs",      JSON.stringify(notifs));
+      localStorage.setItem("spendix_ai_settings", JSON.stringify(ai));
+    } catch {}
     setSaving(false);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
+  }
+
+  async function handlePasswordChange() {
+    if (!newPassword || newPassword.length < 6) {
+      setPwChangeMsg({ ok: false, text: t("auth.password_min") });
+      return;
+    }
+    setChangingPw(true);
+    const supabase = createClient();
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    setChangingPw(false);
+    if (error) {
+      setPwChangeMsg({ ok: false, text: error.message });
+    } else {
+      setPwChangeMsg({ ok: true, text: t("settings.password_changed") });
+      setNewPassword("");
+      setShowPwChange(false);
+      setTimeout(() => setPwChangeMsg(null), 3000);
+    }
   }
 
   function handleRoomPinSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -508,15 +548,56 @@ export default function SettingsPage() {
                 </label>
               </div>
               {!isGuest && (
-                <button
-                  type="button"
-                  onClick={handleSignOut}
-                  disabled={signingOut}
-                  className="mt-3 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl border border-rose-400/25 bg-rose-400/10 px-3 text-xs font-bold text-rose-300 disabled:opacity-50 sm:w-auto"
-                >
-                  {signingOut ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <LogOut className="h-3.5 w-3.5" />}
-                  {t("nav.sign_out")}
-                </button>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {/* Password change */}
+                  <button
+                    type="button"
+                    onClick={() => setShowPwChange((v) => !v)}
+                    className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-cyan-400/25 bg-cyan-400/10 px-3 text-xs font-bold text-cyan-300"
+                  >
+                    <KeyRound className="h-3.5 w-3.5" />
+                    {t("settings.change_password")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSignOut}
+                    disabled={signingOut}
+                    className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-rose-400/25 bg-rose-400/10 px-3 text-xs font-bold text-rose-300 disabled:opacity-50"
+                  >
+                    {signingOut ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <LogOut className="h-3.5 w-3.5" />}
+                    {t("nav.sign_out")}
+                  </button>
+                </div>
+              )}
+
+              {/* Password change form */}
+              {showPwChange && !isGuest && (
+                <div className="mt-3 space-y-2 rounded-2xl border border-cyan-400/20 bg-cyan-400/5 p-3">
+                  <p className="text-xs font-semibold text-cyan-300">{t("settings.change_password")}</p>
+                  <div className="flex gap-2">
+                    <input
+                      type="password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder={t("auth.password_min")}
+                      minLength={6}
+                      className="field flex-1 text-sm"
+                    />
+                    <button
+                      type="button"
+                      onClick={handlePasswordChange}
+                      disabled={changingPw || newPassword.length < 6}
+                      className="min-h-10 rounded-xl bg-cyan-400 px-4 text-xs font-bold text-[#071018] disabled:opacity-50"
+                    >
+                      {changingPw ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : t("common.save")}
+                    </button>
+                  </div>
+                  {pwChangeMsg && (
+                    <p className={`text-xs ${pwChangeMsg.ok ? "text-emerald-400" : "text-rose-400"}`}>
+                      {pwChangeMsg.text}
+                    </p>
+                  )}
+                </div>
               )}
             </SectionShell>
 

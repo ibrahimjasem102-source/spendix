@@ -605,6 +605,8 @@
     "delete_export_btn": "Sicherung herunterladen",
     "delete_skip_export": "Ueberspringen und loeschen",
     "export_title": "Daten exportieren",
+    "change_password": "Passwort ändern",
+    "password_changed": "Passwort erfolgreich geändert",
     "export_hint": "Daten als CSV herunterladen",
     "export_transactions": "Transaktionen",
     "export_goals": "Ziele",

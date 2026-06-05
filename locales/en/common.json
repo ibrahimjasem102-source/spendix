@@ -619,6 +619,8 @@
     "delete_export_btn": "Download backup",
     "delete_skip_export": "Skip and delete",
     "export_title": "Export Data",
+    "change_password": "Change Password",
+    "password_changed": "Password changed successfully",
     "export_hint": "Download your data as CSV",
     "export_transactions": "Transactions",
     "export_goals": "Goals",
