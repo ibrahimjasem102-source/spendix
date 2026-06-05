@@ -72,10 +72,9 @@ export default function SignupPage() {
         },
         body: JSON.stringify({ locale: currentLocale }),
       }).catch((err) => { console.warn("[signup] bootstrap failed:", err); });
-      await migrateGuestData({ saveSettings: true }).catch((err) => {
-        console.warn("[signup] migration failed:", err);
-      });
-      window.location.replace("/dashboard");
+      await migrateGuestData({ saveSettings: true }).catch(() => undefined);
+      // Use router.replace (no reload) to keep _token in memory
+      router.replace("/dashboard");
     } else {
       setConfirmationSent(true);
       setLoading(false);

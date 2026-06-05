@@ -12,22 +12,21 @@ import OAuthButtons from "@/components/auth/OAuthButtons";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { t, setLocale } = useTranslation();
-  const [email, setEmail] = useState("");
+  const { t } = useTranslation();
+  const [email,    setEmail]    = useState("");
   const [password, setPassword] = useState("");
-  const [showPw, setShowPw] = useState(false);
-  const [error, setError] = useState("");
+  const [showPw,   setShowPw]   = useState(false);
+  const [error,    setError]    = useState("");
   const [needsConfirmation, setNeedsConfirmation] = useState(false);
-  const [resent, setResent] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [resent,   setResent]   = useState(false);
+  const [loading,  setLoading]  = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.get("error") === "oauth_callback") {
-      setError(t("auth.login_failed"));
-    }
+    if (params.get("error") === "oauth_callback") setError(t("auth.login_failed"));
   }, [t]);
 
+  // Redirect if already logged in
   useEffect(() => {
     const supabase = createClient();
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -35,78 +34,76 @@ export default function LoginPage() {
     });
   }, [router]);
 
-  async function handleSubmit(e: { preventDefault(): void }) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError("");
-    setNeedsConfirmation(false);
-    setResent(false);
-    setLoading(true);
+    setError(""); setNeedsConfirmation(false); setResent(false); setLoading(true);
 
     const supabase = createClient();
-    const { data, error } = await supabase.auth.signInWithPassword({
+    const { data, error: signInError } = await supabase.auth.signInWithPassword({
       email: email.trim().toLowerCase(),
       password,
     });
 
-    if (error) {
-      const message = error.message || "";
-      const isUnconfirmed = /confirm|confirmed|verification|not verified/i.test(message);
+    if (signInError) {
+      const msg = signInError.message || "";
+      const isUnconfirmed = /confirm|confirmed|verification|not verified/i.test(msg);
       setNeedsConfirmation(isUnconfirmed);
-      setError(isUnconfirmed ? t("auth.email_not_verified") : (t("auth.login_failed") || message));
+      setError(isUnconfirmed ? t("auth.email_not_verified") : (t("auth.login_failed") || msg));
       setLoading(false);
       return;
     }
 
-    if (data.session) {
-      signedIn(data.session.access_token);
-      // Also store refresh token so Supabase can auto-refresh when access token expires
-      try {
-        localStorage.setItem("spendix_refresh_token", data.session.refresh_token);
-      } catch {}
-      // Set server-side cookies (best-effort — Bearer token is the primary auth mechanism)
-      fetch("/api/auth/set-session", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          access_token: data.session.access_token,
-          refresh_token: data.session.refresh_token,
-        }),
-      }).catch(() => undefined);
+    if (!data.session) {
+      // signIn succeeded but no session — email confirmation required
+      setNeedsConfirmation(true);
+      setError(t("auth.email_not_verified"));
+      setLoading(false);
+      return;
     }
 
-    // Pass current locale so categories are seeded in the right language
-    const currentLocale = typeof window !== "undefined"
-      ? (window.localStorage.getItem("spendix_locale") ?? "ar")
-      : "ar";
+    // ── Session established ───────────────────────────────────────
+    const { access_token, refresh_token } = data.session;
 
-    // Bootstrap: retry once on failure
-    const bootstrapHeaders = {
-      "Content-Type": "application/json",
-      ...(data.session ? { "Authorization": `Bearer ${data.session.access_token}` } : {}),
-    };
-    const bootstrapBody = JSON.stringify({ locale: currentLocale });
+    // 1. Store tokens in our own keys (primary auth mechanism)
+    signedIn(access_token);
     try {
-      const res = await fetch("/api/auth/bootstrap", { method: "POST", headers: bootstrapHeaders, body: bootstrapBody });
+      localStorage.setItem("spendix_refresh_token", refresh_token);
+    } catch {}
+
+    // 2. Set server-side cookies in background (secondary — best effort)
+    fetch("/api/auth/set-session", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ access_token, refresh_token }),
+    }).catch(() => undefined);
+
+    // 3. Bootstrap (seed categories etc.) with Bearer token
+    const locale = localStorage.getItem("spendix_locale") ?? "ar";
+    const bHeaders = { "Content-Type": "application/json", Authorization: `Bearer ${access_token}` };
+    const bBody    = JSON.stringify({ locale });
+    try {
+      const res = await fetch("/api/auth/bootstrap", { method: "POST", headers: bHeaders, body: bBody });
       if (!res.ok) {
-        // retry once after 800ms
-        await new Promise((r) => setTimeout(r, 800));
-        await fetch("/api/auth/bootstrap", { method: "POST", headers: bootstrapHeaders, body: bootstrapBody }).catch(() => undefined);
+        await new Promise((r) => setTimeout(r, 600));
+        fetch("/api/auth/bootstrap", { method: "POST", headers: bHeaders, body: bBody }).catch(() => undefined);
       }
     } catch {
-      await fetch("/api/auth/bootstrap", { method: "POST", headers: bootstrapHeaders, body: bootstrapBody }).catch(() => undefined);
+      fetch("/api/auth/bootstrap", { method: "POST", headers: bHeaders, body: bBody }).catch(() => undefined);
     }
 
+    // 4. Migrate any guest data to the authenticated account
     await migrateGuestData({ saveSettings: true }).catch(() => undefined);
-    window.location.replace("/dashboard");
+
+    // 5. Navigate WITHOUT full page reload — preserves _token in memory
+    //    and isGuest=false from onAuthStateChange that already fired above
+    router.replace("/dashboard");
   }
 
   async function handleResendConfirmation() {
     if (!email.trim()) return;
-    setLoading(true);
-    setError("");
-    setResent(false);
+    setLoading(true); setError(""); setResent(false);
     const supabase = createClient();
-    const { error } = await supabase.auth.resend({
+    const { error: resendError } = await supabase.auth.resend({
       type: "signup",
       email: email.trim().toLowerCase(),
       options: {
@@ -114,24 +111,19 @@ export default function LoginPage() {
       },
     });
     setLoading(false);
-    if (error) {
-      setError(error.message);
-      return;
-    }
+    if (resendError) { setError(resendError.message); return; }
     setResent(true);
   }
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center px-4"
-      style={{ backgroundColor: "hsl(214 28% 5%)" }}
-    >
+    <div className="min-h-screen flex items-center justify-center px-4"
+      style={{ backgroundColor: "hsl(214 28% 5%)" }}>
       <div className="w-full max-w-md relative z-10">
+
+        {/* Logo */}
         <div className="flex flex-col items-center mb-8">
-          <div
-            className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4"
-            style={{ background: "linear-gradient(135deg, #06B6D4, #7C3AED)" }}
-          >
+          <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4"
+            style={{ background: "linear-gradient(135deg, #06B6D4, #7C3AED)" }}>
             <Wallet className="w-7 h-7 text-white" />
           </div>
           <h1 className="text-2xl font-bold text-white tracking-tight">Spendix</h1>
@@ -140,119 +132,72 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <div
-          className="rounded-[1.5rem] p-7 space-y-5"
-          style={{
-            background: "hsl(215 26% 10%)",
-            border: "1px solid hsl(0 0% 100% / 0.08)",
-            boxShadow: "0 25px 50px rgba(0,0,0,0.5)",
-          }}
-        >
+        {/* Card */}
+        <div className="rounded-[1.5rem] p-7 space-y-5"
+          style={{ background: "hsl(215 26% 10%)", border: "1px solid hsl(0 0% 100% / 0.08)", boxShadow: "0 25px 50px rgba(0,0,0,0.5)" }}>
+
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Email */}
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: "hsl(215 18% 55%)" }}>
-                {t("auth.email")}
-              </label>
-              <input
-                type="email"
-                required
-                value={email}
+              <label className="block text-xs font-semibold uppercase tracking-wide mb-2"
+                style={{ color: "hsl(215 18% 55%)" }}>{t("auth.email")}</label>
+              <input type="email" required value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
                 className="w-full px-4 py-3 rounded-xl text-sm transition-all outline-none"
-                style={{
-                  background: "hsl(215 22% 13%)",
-                  border: "1px solid hsl(0 0% 100% / 0.08)",
-                  color: "hsl(210 25% 96%)",
-                }}
+                style={{ background: "hsl(215 22% 13%)", border: "1px solid hsl(0 0% 100% / 0.08)", color: "hsl(210 25% 96%)" }}
                 onFocus={(e) => (e.target.style.borderColor = "rgba(6,182,212,0.5)")}
-                onBlur={(e) => (e.target.style.borderColor = "hsl(0 0% 100% / 0.08)")}
-              />
+                onBlur={(e)  => (e.target.style.borderColor = "hsl(0 0% 100% / 0.08)")} />
             </div>
 
+            {/* Password */}
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: "hsl(215 18% 55%)" }}>
-                {t("auth.password")}
-              </label>
+              <label className="block text-xs font-semibold uppercase tracking-wide mb-2"
+                style={{ color: "hsl(215 18% 55%)" }}>{t("auth.password")}</label>
               <div className="relative">
-                <input
-                  type={showPw ? "text" : "password"}
-                  required
-                  value={password}
+                <input type={showPw ? "text" : "password"} required value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="********"
                   className="w-full px-4 py-3 pe-11 rounded-xl text-sm transition-all outline-none"
-                  style={{
-                    background: "hsl(215 22% 13%)",
-                    border: "1px solid hsl(0 0% 100% / 0.08)",
-                    color: "hsl(210 25% 96%)",
-                  }}
+                  style={{ background: "hsl(215 22% 13%)", border: "1px solid hsl(0 0% 100% / 0.08)", color: "hsl(210 25% 96%)" }}
                   onFocus={(e) => (e.target.style.borderColor = "rgba(6,182,212,0.5)")}
-                  onBlur={(e) => (e.target.style.borderColor = "hsl(0 0% 100% / 0.08)")}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPw(!showPw)}
+                  onBlur={(e)  => (e.target.style.borderColor = "hsl(0 0% 100% / 0.08)")} />
+                <button type="button" onClick={() => setShowPw(!showPw)}
                   className="absolute end-3 top-1/2 -translate-y-1/2 p-1 rounded-lg transition-colors"
-                  style={{ color: "hsl(215 18% 55%)" }}
-                  aria-label={showPw ? "Hide password" : "Show password"}
-                >
+                  style={{ color: "hsl(215 18% 55%)" }}>
                   {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
             </div>
 
+            {/* Error */}
             {error && (
-              <div
-                className="px-4 py-3 rounded-xl text-sm"
-                style={{
-                  background: "hsl(350 89% 60% / 0.1)",
-                  color: "hsl(350 89% 70%)",
-                  border: "1px solid hsl(350 89% 60% / 0.2)",
-                }}
-              >
+              <div className="px-4 py-3 rounded-xl text-sm"
+                style={{ background: "hsl(350 89% 60% / 0.1)", color: "hsl(350 89% 70%)", border: "1px solid hsl(350 89% 60% / 0.2)" }}>
                 {error}
                 {needsConfirmation && (
-                  <button
-                    type="button"
-                    onClick={handleResendConfirmation}
-                    disabled={loading}
+                  <button type="button" onClick={handleResendConfirmation} disabled={loading}
                     className="mt-3 w-full rounded-lg px-3 py-2 text-xs font-semibold text-[#0B0F14] disabled:opacity-60"
-                    style={{ background: "#FBBF24" }}
-                  >
+                    style={{ background: "#FBBF24" }}>
                     {t("auth.resend_verification")}
                   </button>
                 )}
               </div>
             )}
 
+            {/* Resent confirmation */}
             {resent && (
-              <div
-                className="px-4 py-3 rounded-xl text-sm"
-                style={{
-                  background: "hsl(160 84% 39% / 0.1)",
-                  color: "hsl(160 84% 65%)",
-                  border: "1px solid hsl(160 84% 39% / 0.2)",
-                }}
-              >
+              <div className="px-4 py-3 rounded-xl text-sm"
+                style={{ background: "hsl(160 84% 39% / 0.1)", color: "hsl(160 84% 65%)", border: "1px solid hsl(160 84% 39% / 0.2)" }}>
                 {t("auth.verification_sent")}
               </div>
             )}
 
-            <button
-              type="submit"
-              disabled={loading}
+            {/* Submit */}
+            <button type="submit" disabled={loading}
               className="w-full py-3 rounded-xl text-sm font-semibold text-[hsl(214_28%_5%)] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-              style={{ background: loading ? "#0891B2" : "linear-gradient(135deg, #06B6D4, #0891B2)" }}
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  {t("auth.signing_in")}
-                </>
-              ) : (
-                t("auth.sign_in")
-              )}
+              style={{ background: loading ? "#0891B2" : "linear-gradient(135deg, #06B6D4, #0891B2)" }}>
+              {loading ? <><Loader2 className="w-4 h-4 animate-spin" />{t("auth.signing_in")}</> : t("auth.sign_in")}
             </button>
           </form>
 
