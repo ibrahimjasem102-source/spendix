@@ -7,7 +7,6 @@ import { Wallet, Eye, EyeOff, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { signedIn } from "@/lib/auth/session-manager";
 import { storeRefreshToken } from "@/lib/auth/token-store";
-import { migrateGuestData } from "@/lib/guest/migrate";
 import { useTranslation } from "@/lib/i18n";
 import OAuthButtons from "@/components/auth/OAuthButtons";
 
@@ -89,10 +88,7 @@ export default function LoginPage() {
       fetch("/api/auth/bootstrap", { method: "POST", headers: bHeaders, body: bBody }).catch(() => undefined);
     }
 
-    // 4. Migrate any guest data to the authenticated account
-    await migrateGuestData({ saveSettings: true }).catch(() => undefined);
-
-    // 5. Navigate WITHOUT full page reload — preserves _token in memory
+    // 4. Navigate WITHOUT full page reload — preserves _token in memory
     //    and isGuest=false from onAuthStateChange that already fired above
     router.replace("/dashboard");
   }
@@ -208,11 +204,6 @@ export default function LoginPage() {
             </Link>
           </p>
 
-          <p className="text-center text-xs" style={{ color: "hsl(215 18% 38%)" }}>
-            <Link href="/dashboard" className="hover:underline transition-colors" style={{ color: "hsl(215 18% 50%)" }}>
-              {t("auth.continue_as_guest")}
-            </Link>
-          </p>
         </div>
       </div>
     </div>

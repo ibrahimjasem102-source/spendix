@@ -6,7 +6,6 @@ import Link from "next/link";
 import { Wallet, Eye, EyeOff, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { signedIn } from "@/lib/auth/session-manager";
-import { migrateGuestData } from "@/lib/guest/migrate";
 import { useTranslation } from "@/lib/i18n";
 import OAuthButtons from "@/components/auth/OAuthButtons";
 
@@ -71,7 +70,6 @@ export default function SignupPage() {
         },
         body: JSON.stringify({ locale: currentLocale }),
       }).catch(() => undefined);
-      await migrateGuestData({ saveSettings: true }).catch(() => undefined);
       // Use router.replace (no reload) to keep _token in memory
       router.replace("/dashboard");
     } else {
@@ -184,11 +182,6 @@ export default function SignupPage() {
             </Link>
           </p>
 
-          <p className="text-center text-xs" style={{ color: "hsl(215 18% 38%)" }}>
-            <Link href="/dashboard" className="hover:underline transition-colors" style={{ color: "hsl(215 18% 50%)" }}>
-              {t("auth.continue_as_guest")}
-            </Link>
-          </p>
         </div>
 
         {/* Privacy note */}
