@@ -94,13 +94,46 @@ export async function middleware(request: NextRequest) {
 
     const { data: { user } } = await supabase.auth.getUser();
 
-    // Authenticated users are bounced away from login/signup
+    // Authenticated users bounced away from login/signup
     if (user && isAuthRoute) {
       return applySecurityHeaders(NextResponse.redirect(new URL("/dashboard", request.url)));
     }
+
+    // Unauthenticated users blocked from app routes
+    const isAppRoute = pathname.startsWith("/dashboard") ||
+      pathname.startsWith("/transactions") ||
+      pathname.startsWith("/accounts") ||
+      pathname.startsWith("/budgets") ||
+      pathname.startsWith("/goals") ||
+      pathname.startsWith("/analytics") ||
+      pathname.startsWith("/ledger") ||
+      pathname.startsWith("/debts") ||
+      pathname.startsWith("/investments") ||
+      pathname.startsWith("/ai-assistant") ||
+      pathname.startsWith("/ai-insights") ||
+      pathname.startsWith("/work") ||
+      pathname.startsWith("/household") ||
+      pathname.startsWith("/plans") ||
+      pathname.startsWith("/settings") ||
+      pathname.startsWith("/profile") ||
+      pathname.startsWith("/notifications") ||
+      pathname.startsWith("/calendar") ||
+      pathname.startsWith("/tags") ||
+      pathname.startsWith("/recurring") ||
+      pathname.startsWith("/contacts") ||
+      pathname.startsWith("/export") ||
+      pathname.startsWith("/net-worth") ||
+      pathname.startsWith("/subscriptions") ||
+      pathname.startsWith("/more") ||
+      pathname.startsWith("/categories");
+
+    if (!user && isAppRoute) {
+      const loginUrl = new URL("/login", request.url);
+      loginUrl.searchParams.set("next", pathname);
+      return applySecurityHeaders(NextResponse.redirect(loginUrl));
+    }
   }
 
-  // Unauthenticated users can access everything (guest mode)
   return applySecurityHeaders(supabaseResponse);
 }
 
