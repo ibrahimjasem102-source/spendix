@@ -20,10 +20,12 @@ import { GlobalActionsProvider } from "@/contexts/GlobalActionsContext";
 import { LedgerProvider } from "@/contexts/LedgerContext";
 import { RoomLockProvider } from "@/contexts/RoomLockContext";
 import { CurrencyProvider } from "@/lib/currency";
+import { PlanProvider } from "@/contexts/PlanContext";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <CurrencyProvider>
+      <PlanProvider>
       <GuestProvider>
         <LedgerProvider>
           <GlobalActionsProvider>
@@ -85,6 +87,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </GlobalActionsProvider>
         </LedgerProvider>
       </GuestProvider>
+      </PlanProvider>
     </CurrencyProvider>
   );
 }

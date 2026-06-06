@@ -440,52 +440,45 @@ export default function TransactionForm({ initial, initialType, onSubmit, onClos
               </motion.div>
             )}
           </AnimatePresence>
+
+          {/* ── Amount — PINNED, always visible ──────────── */}
+          <div className="mt-4 pb-4 border-b border-[hsl(var(--border-2))] text-center">
+            <div className="relative flex items-center justify-center gap-2">
+              <span className="text-xl font-bold t3 select-none">{symbol}</span>
+              <input
+                ref={amountRef}
+                type="number" inputMode="decimal" min="0.01" step="0.01"
+                value={rawAmount}
+                onChange={(e) => handleAmount(e.target.value)}
+                placeholder="0.00"
+                className="text-5xl font-black bg-transparent border-none outline-none tabular-nums text-center w-48 placeholder:text-[hsl(var(--text-3))]"
+                style={{ color: rawAmount ? accent : "hsl(var(--text-3))" }}
+              />
+              {form.amount > 0 && (
+                <button type="button"
+                  onClick={() => { setRawAmount(""); set("amount", 0); }}
+                  className="absolute -end-1 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-[hsl(var(--bg-input))] flex items-center justify-center t3 hover:t1 transition-all">
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+            {/* Quick amounts */}
+            <div className="flex justify-center gap-2 mt-3 flex-wrap">
+              {QUICK_AMOUNTS.map((n) => (
+                <motion.button key={n} type="button"
+                  onClick={() => addQuick(n)}
+                  whileTap={{ scale: 0.94 }} transition={tapTransition}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold border transition-all ${accentBg} ${accentText} ${accentBorder}`}>
+                  +{n}
+                </motion.button>
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* ── Scrollable body ───────────────────────────── */}
         <form onSubmit={handleSubmit} className="flex-1 min-h-0 flex flex-col">
           <div className="flex-1 overflow-y-auto px-5 py-5 space-y-5">
-
-            {/* ── Amount (centered big display) ─────────── */}
-            <div className="text-center">
-              <p className="text-[10px] font-semibold t3 uppercase tracking-[0.14em] mb-3">
-                {t("transactions.amount")}
-              </p>
-              <div className="relative flex items-center justify-center gap-2">
-                <span className="text-xl font-bold t3 select-none">{symbol}</span>
-                <input
-                  ref={amountRef}
-                  type="number" inputMode="decimal" min="0.01" step="0.01"
-                  value={rawAmount}
-                  onChange={(e) => handleAmount(e.target.value)}
-                  placeholder="0.00"
-                  className="text-5xl font-bold bg-transparent border-none outline-none tabular-nums text-center w-48 placeholder:text-[hsl(var(--text-3))]"
-                  style={{ color: rawAmount ? accent : undefined }}
-                />
-                {form.amount > 0 && (
-                  <button type="button"
-                    onClick={() => { setRawAmount(""); set("amount", 0); }}
-                    className="absolute -end-1 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-[hsl(var(--bg-input))] flex items-center justify-center t3 hover:t1 transition-all">
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                )}
-              </div>
-
-              {/* Quick amounts */}
-              <div className="flex justify-center gap-2 mt-4 flex-wrap">
-                {QUICK_AMOUNTS.map((n) => (
-                  <motion.button key={n} type="button"
-                    onClick={() => addQuick(n)}
-                    whileTap={{ scale: 0.94 }} transition={tapTransition}
-                    className={`px-3.5 py-1.5 rounded-xl text-xs font-bold border transition-all ${accentBg} ${accentText} ${accentBorder}`}>
-                    +{n}
-                  </motion.button>
-                ))}
-              </div>
-            </div>
-
-            {/* Separator */}
-            <div className="h-px bg-[hsl(var(--border-2))]" />
 
             {/* ── Title ─────────────────────────────────── */}
             <div>

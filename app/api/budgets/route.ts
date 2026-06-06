@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { checkCountLimit } from "@/lib/api/plan-guard";
 import type { Budget, BudgetFormData, BudgetStatus, BudgetSummary, Category } from "@/types";
 
 const BUDGET_SELECT =
@@ -225,6 +226,9 @@ export async function POST(request: Request) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ errorKey: "errors.unauthorized" }, { status: 401 });
+
+  const limitErr = await checkCountLimit(supabase, user.id, "budgets", "budgets");
+  if (limitErr) return limitErr;
 
   const body = await request.json() as BudgetFormData;
   const month = clampMonth(String(body.month));

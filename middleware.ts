@@ -3,9 +3,17 @@ import { NextResponse, type NextRequest } from "next/server";
 import { validateServerEnv } from "@/lib/env";
 
 // ── Global API rate limiter (100 req/min per IP) ─────────────────────────────
+// Per-instance only in serverless — sufficient for Vercel's single warm instance per region
 const _rl = new Map<string, { n: number; t: number }>();
+let _rlLastClean = Date.now();
+
 function apiAllowed(ip: string): boolean {
   const now = Date.now();
+  // Purge expired entries every 5 min to prevent unbounded memory growth
+  if (now - _rlLastClean > 300_000) {
+    for (const [k, v] of _rl) { if (v.t <= now) _rl.delete(k); }
+    _rlLastClean = now;
+  }
   const b = _rl.get(ip);
   if (!b || b.t <= now) { _rl.set(ip, { n: 1, t: now + 60_000 }); return true; }
   b.n += 1;

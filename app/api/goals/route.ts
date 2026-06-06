@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { readJson } from "@/lib/api/request";
+import { checkCountLimit } from "@/lib/api/plan-guard";
 import type { Goal, GoalCategory, GoalFormData, GoalMilestone, GoalStatus, GoalTrackingType } from "@/types";
 
 const GOAL_CATEGORIES: GoalCategory[] = ["emergency","home","travel","education","car","retirement","other"];
@@ -218,6 +219,9 @@ export async function POST(request: Request) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ errorKey: "errors.unauthorized" }, { status: 401 });
+
+  const limitErr = await checkCountLimit(supabase, user.id, "goals", "goals");
+  if (limitErr) return limitErr;
 
   const body = await readJson<GoalFormData>(request);
   if (!body?.title?.trim()) return NextResponse.json({ error: "Title required" }, { status: 400 });

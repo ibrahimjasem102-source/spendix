@@ -15,6 +15,13 @@ export async function PUT(request: Request, { params }: Params) {
 
   const body: Partial<WorkSessionFormData> = await request.json();
 
+  if (body.hourly_rate !== undefined && body.hourly_rate <= 0) {
+    return NextResponse.json({ error: "hourly_rate must be greater than 0" }, { status: 400 });
+  }
+  if (body.hours_worked !== undefined && body.hours_worked <= 0) {
+    return NextResponse.json({ error: "hours_worked must be greater than 0" }, { status: 400 });
+  }
+
   const { data: session, error } = await supabase
     .from("work_sessions")
     .update({ ...body, updated_at: new Date().toISOString() })

@@ -56,6 +56,10 @@ export async function DELETE(request: Request) {
 
   const { invitation_id } = await request.json();
 
+  if (!invitation_id) {
+    return NextResponse.json({ error: "invitation_id is required" }, { status: 400 });
+  }
+
   const { error } = await supabase
     .from("household_invitations")
     .delete()

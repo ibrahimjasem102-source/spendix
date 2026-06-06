@@ -39,6 +39,7 @@ import { tags }       from "./tags/config";
 import { household }           from "./household/config";
 import { recurringTransactions } from "./recurring/config";
 import { exportData }            from "./export/config";
+import { plans }                 from "./plans/config";
 
 export const FEATURE_REGISTRY: FeatureModule[] = [
   // ── Primary ──────────────────────────────────────────────
@@ -65,6 +66,7 @@ export const FEATURE_REGISTRY: FeatureModule[] = [
   aiAssistant,
 
   // ── System ───────────────────────────────────────────────
+  plans,
   notifications,
   settings,
   more,

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { checkFeatureAccess } from "@/lib/api/plan-guard";
 
 // GET  — fetch current user's household (the one they're a member of)
 // POST — create a new household (user becomes owner + first member)
@@ -30,6 +31,9 @@ export async function POST(request: Request) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const accessErr = await checkFeatureAccess(supabase, user.id, "household", "Household");
+  if (accessErr) return accessErr;
 
   const body = await request.json();
   const name = (body.name ?? "").trim();

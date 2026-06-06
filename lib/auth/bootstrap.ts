@@ -82,5 +82,11 @@ export async function bootstrapAuthenticatedUser(
 
   const { data, error } = await supabase.from("categories").insert(rows).select("id");
   if (error) throw error;
+
+  // Ensure free subscription row exists for new users (ignore errors)
+  try {
+    await supabase.rpc("upsert_free_subscription", { p_user_id: user.id });
+  } catch { /* non-critical */ }
+
   return { seeded: data?.length ?? 0 };
 }

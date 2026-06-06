@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getRequestId } from "@/lib/api/responses";
 import { rateLimit } from "@/lib/api/rate-limit";
 import { boundedInt, readJson } from "@/lib/api/request";
+import { checkMonthlyTransactionLimit } from "@/lib/api/plan-guard";
 import { TransactionFormData } from "@/types";
 
 const TRANSACTION_SELECT =
@@ -97,6 +98,9 @@ export async function POST(request: Request) {
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) return NextResponse.json({ errorKey: "errors.unauthorized" }, { status: 401 });
+
+  const limitErr = await checkMonthlyTransactionLimit(supabase, user.id);
+  if (limitErr) return limitErr;
 
   const body = await readJson<TransactionFormData>(request);
   const payload = {

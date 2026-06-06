@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { checkFeatureAccess } from "@/lib/api/plan-guard";
 import { WorkSessionFormData } from "@/types";
 
 const WORK_SESSION_SELECT =
@@ -25,7 +26,20 @@ export async function POST(request: Request) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
+  const accessErr = await checkFeatureAccess(supabase, user.id, "workTracking", "Work Tracking");
+  if (accessErr) return accessErr;
+
   const body: WorkSessionFormData = await request.json();
+
+  if (!body.title?.trim()) {
+    return NextResponse.json({ error: "Title is required" }, { status: 400 });
+  }
+  if (!body.hourly_rate || body.hourly_rate <= 0) {
+    return NextResponse.json({ error: "hourly_rate must be greater than 0" }, { status: 400 });
+  }
+  if (!body.hours_worked || body.hours_worked <= 0) {
+    return NextResponse.json({ error: "hours_worked must be greater than 0" }, { status: 400 });
+  }
 
   const { data: session, error: sessionErr } = await supabase
     .from("work_sessions")

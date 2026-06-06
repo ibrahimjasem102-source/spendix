@@ -8,12 +8,15 @@ export async function GET() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { data: membership } = await supabase
+  const { data: membership, error: membershipErr } = await supabase
     .from("household_members")
     .select("household_id")
     .eq("user_id", user.id)
     .single();
 
+  if (membershipErr && membershipErr.code !== "PGRST116") {
+    return NextResponse.json({ error: membershipErr.message }, { status: 500 });
+  }
   if (!membership) return NextResponse.json({ members: [] });
 
   const { data: members, error } = await supabase
@@ -38,12 +41,15 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Invalid role" }, { status: 400 });
   }
 
-  const { data: callerMembership } = await supabase
+  const { data: callerMembership, error: callerErr } = await supabase
     .from("household_members")
     .select("household_id, role")
     .eq("user_id", user.id)
     .single();
 
+  if (callerErr && callerErr.code !== "PGRST116") {
+    return NextResponse.json({ error: callerErr.message }, { status: 500 });
+  }
   if (!callerMembership) return NextResponse.json({ error: "Not in a household" }, { status: 404 });
   if (callerMembership.role !== "owner") {
     return NextResponse.json({ error: "Only the owner can update permissions" }, { status: 403 });
@@ -84,12 +90,15 @@ export async function DELETE(request: Request) {
   const { target_user_id } = await request.json();
 
   // Determine caller's role
-  const { data: callerMembership } = await supabase
+  const { data: callerMembership, error: callerDelErr } = await supabase
     .from("household_members")
     .select("household_id, role")
     .eq("user_id", user.id)
     .single();
 
+  if (callerDelErr && callerDelErr.code !== "PGRST116") {
+    return NextResponse.json({ error: callerDelErr.message }, { status: 500 });
+  }
   if (!callerMembership) return NextResponse.json({ error: "Not in a household" }, { status: 404 });
 
   const targetId = target_user_id ?? user.id;

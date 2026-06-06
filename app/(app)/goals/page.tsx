@@ -732,10 +732,17 @@ export default function GoalsPage() {
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-indigo-400/10">
           <Target className="h-4 w-4 text-indigo-400" />
         </div>
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <h1 className="truncate text-xl font-black t1">{t("goals.title")}</h1>
           <p className="mt-0.5 text-xs font-medium t3">{t("goals.subtitle")}</p>
         </div>
+        <button
+          onClick={() => { setEditing(undefined); setShowForm(true); }}
+          className="flex shrink-0 items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-[#0B0F17] rounded-xl text-sm font-semibold transition-all"
+        >
+          <Plus className="w-3.5 h-3.5" />
+          {t("goals.new_goal")}
+        </button>
       </div>
 
       {/* ── Overall banner ───────────────────────────────── */}
@@ -802,6 +809,13 @@ export default function GoalsPage() {
             </div>
             <p className="font-bold t1 text-sm">{t("goals.empty_title")}</p>
             <p className="text-xs t3 max-w-xs mx-auto">{t("goals.empty_body")}</p>
+            <button
+              onClick={() => { setEditing(undefined); setShowForm(true); }}
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-[#0B0F17] rounded-xl text-sm font-semibold transition-all"
+            >
+              <Plus className="w-4 h-4" />
+              {t("goals.new_goal")}
+            </button>
           </div>
         ) : (
           <div className="card overflow-hidden">

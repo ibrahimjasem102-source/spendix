@@ -59,7 +59,12 @@ export default function OAuthRedirectHandler() {
       }
 
       await import("@capacitor/browser").then(({ Browser }) => Browser.close()).catch(() => undefined);
-      await fetch("/api/auth/bootstrap", { method: "POST" }).catch(() => undefined);
+      const locale = typeof window !== "undefined" ? (localStorage.getItem("spendix_locale") ?? "ar") : "ar";
+      await fetch("/api/auth/bootstrap", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ locale }),
+      }).catch(() => undefined);
       await migrateGuestData().catch(() => undefined);
       router.replace("/dashboard");
       router.refresh();

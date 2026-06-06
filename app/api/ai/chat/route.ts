@@ -2,6 +2,7 @@ import { requireUser } from "@/lib/api/auth";
 import { apiJson, badRequest, getRequestId } from "@/lib/api/responses";
 import { rateLimit } from "@/lib/api/rate-limit";
 import { readJson } from "@/lib/api/request";
+import { checkFeatureAccess } from "@/lib/api/plan-guard";
 import { orchestrateChat } from "@/lib/ai/aiOrchestrator";
 import type { ChatRequest } from "@/lib/ai/aiTypes";
 
@@ -12,6 +13,9 @@ export async function POST(request: Request) {
 
   const { supabase, user, response } = await requireUser(requestId);
   if (response || !user) return response;
+
+  const accessErr = await checkFeatureAccess(supabase, user.id, "ai", "AI Assistant");
+  if (accessErr) return accessErr;
 
   const body = await readJson<ChatRequest>(request);
   const { messages, language = "en" } = body;
