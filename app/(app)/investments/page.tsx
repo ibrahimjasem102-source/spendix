@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/useToast";
 import ToastList from "@/components/ui/Toast";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 import InvestmentForm from "@/components/investments/InvestmentForm";
+import PlanGate from "@/components/plans/PlanGate";
 import PortfolioChart from "@/components/investments/PortfolioChart";
 import {
   useInvestments, usePortfolioHistory,
@@ -142,6 +143,7 @@ export default function InvestmentsPage() {
   ];
 
   return (
+    <PlanGate require="pro" featureName="الاستثمارات" overlay>
     <div className="space-y-5">
 
       {/* ── Header ───────────────────────────────────────────── */}
@@ -443,5 +445,6 @@ export default function InvestmentsPage() {
 
       <ToastList toasts={toasts} dismiss={dismiss} />
     </div>
+    </PlanGate>
   );
 }

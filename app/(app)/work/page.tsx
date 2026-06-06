@@ -23,6 +23,7 @@ import { useTheme } from "@/lib/theme";
 import { useToast } from "@/hooks/useToast";
 import { spring, tapTransition } from "@/lib/motion";
 import ToastList from "@/components/ui/Toast";
+import PlanGate from "@/components/plans/PlanGate";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 import WorkForm from "@/components/work/WorkForm";
 import Link from "next/link";
@@ -178,6 +179,7 @@ export default function WorkPage() {
   const deletingPayment = deletePaymentM.isPending ? (deletePaymentM.variables as string) : null;
 
   return (
+    <PlanGate require="elite" featureName="تتبع العمل والدخل" overlay>
     <div className="space-y-5">
 
       {/* ── Header ─────────────────────────────────────────────── */}
@@ -664,5 +666,6 @@ export default function WorkPage() {
       )}
       <ToastList toasts={toasts} dismiss={dismiss} />
     </div>
+    </PlanGate>
   );
 }

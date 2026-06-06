@@ -20,6 +20,7 @@ import { useCurrency } from "@/lib/currency";
 import { useGuest } from "@/contexts/GuestContext";
 import { spring, tapTransition } from "@/lib/motion";
 import type { HouseholdRole, HouseholdSummary } from "@/types";
+import PlanGate from "@/components/plans/PlanGate";
 
 // ── Helpers ────────────────────────────────────────────────────
 
@@ -218,7 +219,7 @@ function InsightCard({ icon: Icon, text, tone }: {
 
 // ── Main page ──────────────────────────────────────────────────
 
-export default function HouseholdPage() {
+function HouseholdPageInner() {
   const { t } = useTranslation();
   const { format } = useCurrency();
   const { isGuest, isLoading: guestLoading } = useGuest();
@@ -740,5 +741,13 @@ export default function HouseholdPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function HouseholdPage() {
+  return (
+    <PlanGate require="elite" featureName="الحسابات العائلية" overlay>
+      <HouseholdPageInner />
+    </PlanGate>
   );
 }

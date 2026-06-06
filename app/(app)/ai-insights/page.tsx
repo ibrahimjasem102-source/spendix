@@ -12,6 +12,7 @@ import { useTranslation } from "@/lib/i18n";
 import { fadeBlur, spring, staggerContainer, staggerItem } from "@/lib/motion";
 import type { AIInsightRecord, InsightCategory, InsightSeverity } from "@/lib/ai/aiTypes";
 import { useLocalInsights, type LocalInsight } from "@/lib/ai/localInsights";
+import PlanGate from "@/components/plans/PlanGate";
 
 // ── Config maps ───────────────────────────────────────────────
 const SEVERITY_CONFIG: Record<InsightSeverity, {
@@ -197,6 +198,7 @@ export default function AIInsightsPage() {
   const isBusy = loading || generating;
 
   return (
+    <PlanGate require="pro" featureName="رؤى الذكاء الاصطناعي" overlay>
     <div className="space-y-5">
 
       {/* ── Live Analysis (local engines) ── */}
@@ -424,5 +426,6 @@ export default function AIInsightsPage() {
         </motion.div>
       )}
     </div>
+    </PlanGate>
   );
 }

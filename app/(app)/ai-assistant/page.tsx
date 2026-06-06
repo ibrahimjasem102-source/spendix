@@ -11,6 +11,7 @@ import {
 import { safeFetch } from "@/lib/fetch-safe";
 import { useTranslation, LOCALES } from "@/lib/i18n";
 import { fadeBlur, spring, staggerContainer, staggerItem } from "@/lib/motion";
+import PlanGate from "@/components/plans/PlanGate";
 import type { AIInsightRecord, InsightCategory, InsightSeverity } from "@/lib/ai/aiTypes";
 import { useLocalInsights, type LocalInsight } from "@/lib/ai/localInsights";
 
@@ -233,6 +234,7 @@ export default function AIAssistantPage() {
   const totalInsights = localInsights.length + aiInsights.length;
 
   return (
+    <PlanGate require="pro" featureName="مساعد الذكاء الاصطناعي" overlay>
     <div className="space-y-5">
 
       {/* ── Page header ──────────────────────────────────── */}
@@ -488,5 +490,6 @@ export default function AIAssistantPage() {
         )}
       </section>
     </div>
+    </PlanGate>
   );
 }
