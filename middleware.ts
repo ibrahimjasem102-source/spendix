@@ -48,8 +48,11 @@ function applySecurityHeaders(response: NextResponse) {
 export async function middleware(request: NextRequest) {
   validateServerEnv();
 
-  // Global rate limit for API routes
-  if (request.nextUrl.pathname.startsWith("/api/")) {
+  // Global rate limit for API routes — exempt Stripe webhook (Stripe calls it, not users)
+  if (
+    request.nextUrl.pathname.startsWith("/api/") &&
+    !request.nextUrl.pathname.startsWith("/api/stripe/webhook")
+  ) {
     const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "local";
     if (!apiAllowed(ip)) {
       return new NextResponse(JSON.stringify({ error: "Too many requests" }), {

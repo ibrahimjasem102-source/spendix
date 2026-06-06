@@ -129,9 +129,10 @@ export function getPlanLimits(plan: PlanId): PlanLimits {
   return PLAN_MAP[plan]?.limits ?? FREE_LIMITS;
 }
 
-// Stripe price IDs (set these in your Stripe dashboard, then add to env vars)
+// Stripe price IDs — use STRIPE_PLUS_PRICE_ID / STRIPE_PRO_PRICE_ID / STRIPE_ELITE_PRICE_ID
+// Old names (STRIPE_PRICE_PLUS etc.) are accepted as fallback during migration.
 export const STRIPE_PRICES: Partial<Record<PlanId, string>> = {
-  plus:  process.env.STRIPE_PRICE_PLUS  ?? "",
-  pro:   process.env.STRIPE_PRICE_PRO   ?? "",
-  elite: process.env.STRIPE_PRICE_ELITE ?? "",
+  plus:  process.env.STRIPE_PLUS_PRICE_ID  ?? process.env.STRIPE_PRICE_PLUS  ?? "",
+  pro:   process.env.STRIPE_PRO_PRICE_ID   ?? process.env.STRIPE_PRICE_PRO   ?? "",
+  elite: process.env.STRIPE_ELITE_PRICE_ID ?? process.env.STRIPE_PRICE_ELITE ?? "",
 };

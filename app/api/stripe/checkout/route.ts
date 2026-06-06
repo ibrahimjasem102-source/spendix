@@ -1,56 +1,115 @@
 import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/api/auth";
 import { getRequestId } from "@/lib/api/responses";
-import { getStripe } from "@/lib/stripe";
-import { STRIPE_PRICES, type PlanId } from "@/lib/plans";
+import { stripe } from "@/lib/stripe";
+import { getStripePriceId } from "@/lib/stripe-prices";
+import type { PlanId } from "@/lib/plans";
+
+export const dynamic = "force-dynamic";
+
+// Simple per-user rate limit: max 5 checkout attempts per minute (serverless-safe via request scoping)
+const _checkoutAttempts = new Map<string, { n: number; t: number }>();
+
+function checkoutAllowed(userId: string): boolean {
+  const now = Date.now();
+  const entry = _checkoutAttempts.get(userId);
+  if (!entry || entry.t <= now) {
+    _checkoutAttempts.set(userId, { n: 1, t: now + 60_000 });
+    return true;
+  }
+  entry.n += 1;
+  return entry.n <= 5;
+}
 
 export async function POST(request: Request) {
   const requestId = getRequestId(request);
   const { supabase, user, response } = await requireUser(requestId);
-  if (response || !user) return response;
+  if (response || !user) return response!;
 
-  const { plan } = (await request.json()) as { plan: PlanId };
-  const priceId = STRIPE_PRICES[plan];
-  if (!priceId) {
-    return NextResponse.json({ error: "Invalid plan or price not configured" }, { status: 400 });
+  // Rate limit per user
+  if (!checkoutAllowed(user.id)) {
+    return NextResponse.json(
+      { ok: false, error: "Too many checkout attempts. Try again in a minute." },
+      { status: 429 }
+    );
   }
 
-  const stripe = getStripe();
-  const origin = request.headers.get("origin") ?? "https://spendix-app.vercel.app";
+  // Parse and validate plan
+  let plan: PlanId;
+  try {
+    const body = await request.json();
+    plan = body?.plan;
+  } catch {
+    return NextResponse.json({ ok: false, error: "Invalid request body" }, { status: 400 });
+  }
 
-  // Get or create Stripe customer
-  const { data: sub } = await supabase
+  if (!plan || !["plus", "pro", "elite"].includes(plan)) {
+    return NextResponse.json(
+      { ok: false, error: "Invalid plan. Must be one of: plus, pro, elite" },
+      { status: 400 }
+    );
+  }
+
+  // Validate and get Price ID (throws if missing or invalid)
+  let priceId: string;
+  try {
+    priceId = getStripePriceId(plan as Exclude<PlanId, "free">);
+  } catch (err) {
+    console.error("[checkout] Price ID error:", (err as Error).message);
+    return NextResponse.json(
+      { ok: false, error: "Stripe is not configured correctly. Contact support." },
+      { status: 500 }
+    );
+  }
+
+  // Check if already on this plan
+  const { data: existingSub } = await supabase
     .from("subscriptions")
-    .select("stripe_customer_id")
+    .select("plan, status, stripe_customer_id")
     .eq("user_id", user.id)
     .single();
 
-  let customerId = sub?.stripe_customer_id ?? undefined;
+  if (existingSub?.plan === plan && existingSub?.status === "active") {
+    return NextResponse.json(
+      { ok: false, error: "You are already subscribed to this plan." },
+      { status: 400 }
+    );
+  }
+
+  const origin =
+    request.headers.get("origin") ??
+    process.env.NEXT_PUBLIC_APP_URL ??
+    "https://spendix-app.vercel.app";
+
+  // Get or create Stripe customer
+  let customerId = existingSub?.stripe_customer_id ?? undefined;
   if (!customerId) {
     const customer = await stripe.customers.create({
       email: user.email ?? undefined,
       metadata: { user_id: user.id },
     });
     customerId = customer.id;
-    // Store customer ID
-    await supabase.from("subscriptions").upsert({
-      user_id: user.id,
-      plan: "free",
-      status: "active",
-      stripe_customer_id: customerId,
-    }, { onConflict: "user_id" });
+
+    await supabase.from("subscriptions").upsert(
+      { user_id: user.id, plan: "free", status: "active", stripe_customer_id: customerId },
+      { onConflict: "user_id" }
+    );
   }
 
+  // Create Checkout Session
   const session = await stripe.checkout.sessions.create({
     customer: customerId,
     mode: "subscription",
     line_items: [{ price: priceId, quantity: 1 }],
     success_url: `${origin}/plans?success=1`,
     cancel_url:  `${origin}/plans?canceled=1`,
+    client_reference_id: user.id,
+    customer_email: !customerId ? (user.email ?? undefined) : undefined,
     metadata: { user_id: user.id, plan },
     subscription_data: { metadata: { user_id: user.id, plan } },
     allow_promotion_codes: true,
   });
 
-  return NextResponse.json({ url: session.url });
+  console.log("[checkout] Created session for user:", user.id, "plan:", plan);
+  return NextResponse.json({ ok: true, url: session.url });
 }

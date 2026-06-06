@@ -34,14 +34,18 @@ const FEATURES_AR: { key: string; label: string; plans: PlanId[] }[] = [
 ];
 
 export default function PlansPage() {
-  const { plan: currentPlan, hasStripe, isLoading: planLoading, refetch } = usePlan();
+  const { plan: currentPlan, hasStripe, isLoading: planLoading, refetch, syncFromStripe } = usePlan();
   const [loadingPlan, setLoadingPlan] = useState<PlanId | null>(null);
   const [portalLoading, setPortalLoading] = useState(false);
+  const [syncing, setSyncing] = useState(false);
   const params = useSearchParams();
 
   useEffect(() => {
-    if (params.get("success") === "1") refetch();
-  }, [params, refetch]);
+    if (params.get("success") === "1") {
+      setSyncing(true);
+      syncFromStripe().finally(() => setSyncing(false));
+    }
+  }, [params, syncFromStripe]);
 
   async function handleSubscribe(planId: PlanId) {
     if (planId === "free" || planId === currentPlan) return;
@@ -90,7 +94,7 @@ export default function PlansPage() {
         {params.get("success") === "1" && (
           <div className="inline-flex items-center gap-2 rounded-xl bg-emerald-400/10 border border-emerald-400/20 px-4 py-2 text-sm font-semibold text-emerald-400">
             <CheckCircle2 className="h-4 w-4" />
-            تم الاشتراك بنجاح!
+            {syncing ? "جاري تحديث الاشتراك..." : "تم الاشتراك بنجاح!"}
           </div>
         )}
       </div>

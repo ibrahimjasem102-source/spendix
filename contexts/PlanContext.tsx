@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { getPlanLimits, type PlanId, type PlanLimits } from "@/lib/plans";
 import { getAuthToken } from "@/lib/auth/token-store";
 
@@ -12,6 +12,7 @@ interface PlanState {
   currentPeriodEnd: string | null;
   hasStripe: boolean;
   refetch: () => void;
+  syncFromStripe: () => Promise<void>;
 }
 
 const PlanContext = createContext<PlanState>({
@@ -22,22 +23,23 @@ const PlanContext = createContext<PlanState>({
   currentPeriodEnd: null,
   hasStripe: false,
   refetch: () => undefined,
+  syncFromStripe: async () => undefined,
 });
 
 export function PlanProvider({ children }: { children: React.ReactNode }) {
-  const [plan, setPlan] = useState<PlanId>("free");
-  const [isLoading, setIsLoading] = useState(true);
-  const [cancelAtPeriodEnd, setCancelAtPeriodEnd] = useState(false);
-  const [currentPeriodEnd, setCurrentPeriodEnd] = useState<string | null>(null);
-  const [hasStripe, setHasStripe] = useState(false);
-  const [tick, setTick] = useState(0);
+  const [plan,               setPlan]               = useState<PlanId>("free");
+  const [isLoading,          setIsLoading]          = useState(true);
+  const [cancelAtPeriodEnd,  setCancelAtPeriodEnd]  = useState(false);
+  const [currentPeriodEnd,   setCurrentPeriodEnd]   = useState<string | null>(null);
+  const [hasStripe,          setHasStripe]          = useState(false);
+  const [tick,               setTick]               = useState(0);
 
-  const refetch = () => setTick((t) => t + 1);
+  const refetch = useCallback(() => setTick((t) => t + 1), []);
 
+  // Fetch plan from Supabase via our API
   useEffect(() => {
     const token = getAuthToken();
     if (!token) {
-      // Guest → free forever
       setPlan("free");
       setIsLoading(false);
       return;
@@ -58,6 +60,29 @@ export function PlanProvider({ children }: { children: React.ReactNode }) {
       .finally(() => setIsLoading(false));
   }, [tick]);
 
+  // Called after returning from Stripe Checkout — syncs subscription directly from Stripe
+  const syncFromStripe = useCallback(async () => {
+    const token = getAuthToken();
+    if (!token) return;
+
+    try {
+      const res  = await fetch("/api/stripe/sync", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (data.ok) {
+        setPlan(data.plan ?? "free");
+        setCancelAtPeriodEnd(data.cancel_at_period_end ?? false);
+        setCurrentPeriodEnd(data.current_period_end ?? null);
+        setHasStripe(!!data.current_period_end);
+      }
+    } catch {
+      // Non-critical — refetch from DB as fallback
+      refetch();
+    }
+  }, [refetch]);
+
   return (
     <PlanContext.Provider value={{
       plan,
@@ -67,6 +92,7 @@ export function PlanProvider({ children }: { children: React.ReactNode }) {
       currentPeriodEnd,
       hasStripe,
       refetch,
+      syncFromStripe,
     }}>
       {children}
     </PlanContext.Provider>
