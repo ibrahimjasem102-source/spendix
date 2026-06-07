@@ -7,7 +7,7 @@ export const tags: FeatureModule = {
   title:     "nav.tags",
   icon:      createElement(Tag, { size: 18 }),
   route:     "/tags",
-  showInNav: true,
+  showInNav: false,
   group:     "finance",
   tone:      "info",
 };

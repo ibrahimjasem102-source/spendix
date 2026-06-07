@@ -408,6 +408,8 @@ export default function AccountsPage() {
           amount:          parseFloat(transferAmount),
           date:            new Date().toISOString().slice(0, 10),
           notes:           transferNotes || null,
+          title_out: `${t("accounts.transfer_to")} ${accounts.find((a) => a.id === transferTo)?.name ?? ""}`.trim(),
+          title_in:  `${t("accounts.transfer_from")} ${accounts.find((a) => a.id === transferFrom)?.name ?? ""}`.trim(),
         }),
       });
       await qc.invalidateQueries({ queryKey: ["accounts"] });

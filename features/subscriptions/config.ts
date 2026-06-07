@@ -7,7 +7,7 @@ export const subscriptions: FeatureModule = {
   title:     "nav.subscriptions",
   icon:      createElement(RefreshCw),
   route:     "/subscriptions",
-  showInNav: true,
+  showInNav: false,
   group:     "finance",
   tone:      "neutral",
 };

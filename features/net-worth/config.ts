@@ -7,7 +7,7 @@ export const netWorth: FeatureModule = {
   title:     "nav.net_worth",
   icon:      createElement(Scale),
   route:     "/net-worth",
-  showInNav: true,
+  showInNav: false,
   group:     "finance",
   tone:      "info",
 };

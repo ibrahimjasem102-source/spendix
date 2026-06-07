@@ -5,11 +5,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Bell, ChevronDown, ChevronRight, Globe,
-  LogIn, LogOut, Moon, Settings, Sun, User, Wallet,
+  LogOut, Moon, Settings, Sun, User, Wallet,
 } from "lucide-react";
 import GlobalSearch from "@/components/search/GlobalSearch";
 import NotificationBell from "@/components/notifications/NotificationBell";
-import { useGuest } from "@/contexts/GuestContext";
 import { createClient } from "@/lib/supabase/client";
 import { getNavItem, ROUTES } from "@/lib/routes";
 import { LOCALES, type Locale, useTranslation } from "@/lib/i18n";
@@ -18,33 +17,27 @@ import { NAV_ICON_MAP, NAV_HEX_MAP } from "@/lib/nav-colors";
 
 export default function TopBar() {
   const pathname = usePathname();
-  const { isGuest } = useGuest();
   const { t, locale, setLocale } = useTranslation();
   const { theme, toggleTheme } = useTheme();
 
   const [showUser, setShowUser] = useState(false);
   const [showLang, setShowLang] = useState(false);
-  const [userEmail, setUserEmail]   = useState<string | null>(null);
+  const [userEmail, setUserEmail]           = useState<string | null>(null);
   const [userDisplayName, setUserDisplayName] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (isGuest) { setUserEmail(null); setUserDisplayName(null); return; }
     const supabase = createClient();
     supabase.auth.getUser().then(({ data: { user } }) => {
       setUserEmail(user?.email ?? null);
-      // Try full_name from metadata first
       const metaName = (user?.user_metadata?.full_name || user?.user_metadata?.name) as string | undefined;
       if (metaName) { setUserDisplayName(metaName); return; }
-      // Fallback: read from profile_settings
       if (user) {
         supabase.from("profile_settings").select("full_name").eq("user_id", user.id).maybeSingle()
-          .then(({ data }) => {
-            if (data?.full_name) setUserDisplayName(data.full_name);
-          });
+          .then(({ data }) => { if (data?.full_name) setUserDisplayName(data.full_name); });
       }
     });
-  }, [isGuest]);
+  }, []);
 
   useEffect(() => {
     if (!showUser) return;
@@ -58,11 +51,10 @@ export default function TopBar() {
     return () => document.removeEventListener("mousedown", onDown);
   }, [showUser]);
 
-  const page         = useMemo(() => getNavItem(pathname), [pathname]);
+  const page          = useMemo(() => getNavItem(pathname), [pathname]);
   const currentLocale = LOCALES.find((item) => item.code === locale);
-  const userInitial  = (userDisplayName?.[0] ?? userEmail?.[0] ?? "S").toUpperCase();
+  const userInitial   = (userDisplayName?.[0] ?? userEmail?.[0] ?? "S").toUpperCase();
 
-  // Current page accent
   const pageHex    = NAV_HEX_MAP[page?.href ?? ""] ?? "#22d3ee";
   const PageIcon   = NAV_ICON_MAP[page?.href ?? ""];
   const isDashboard = pathname === "/dashboard" || !page;
@@ -131,7 +123,6 @@ export default function TopBar() {
 
         {/* Right controls */}
         <div className="ms-auto flex shrink-0 items-center gap-1.5">
-          {/* Theme toggle — desktop */}
           <button
             onClick={toggleTheme}
             className="icon-button hidden sm:flex"
@@ -153,7 +144,7 @@ export default function TopBar() {
               }`}
             >
               <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-400 via-blue-500 to-violet-500 text-xs font-bold text-white shadow-lg shadow-cyan-500/15">
-                {isGuest ? <User className="h-4 w-4" /> : userInitial}
+                {userInitial}
               </div>
               <ChevronDown className={`hidden h-3.5 w-3.5 t3 sm:block transition-transform duration-200 ${showUser ? "rotate-180" : ""}`} />
             </button>
@@ -170,21 +161,15 @@ export default function TopBar() {
                 {/* User header */}
                 <div className="flex items-center gap-3 px-4 py-4 border-b border-[hsl(var(--border))]">
                   <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 via-blue-500 to-violet-500 text-sm font-bold text-white shadow-lg shadow-cyan-500/15">
-                    {isGuest ? <User className="h-4 w-4" /> : userInitial}
+                    {userInitial}
                   </div>
                   <div className="min-w-0">
-                    {isGuest ? (
-                      <p className="text-sm font-semibold t1">{t("topbar.guest_mode")}</p>
-                    ) : (
-                      <>
-                        <p className="text-[10px] t3">{t("topbar.signed_in")}</p>
-                        <p className="truncate text-sm font-semibold t1">{userDisplayName ?? userEmail ?? "—"}</p>
-                      </>
-                    )}
+                    <p className="text-[10px] t3">{t("topbar.signed_in")}</p>
+                    <p className="truncate text-sm font-semibold t1">{userDisplayName ?? userEmail ?? "—"}</p>
                   </div>
                 </div>
 
-                {/* ── Quick navigation ────────────────────────── */}
+                {/* Quick navigation */}
                 <div className="px-2 pt-2 pb-2 border-b border-[hsl(var(--border))]">
                   <p className={sectionLabel}>{t("topbar.quick_links")}</p>
                   <Link href={ROUTES.profile} onClick={closeMenus} className={itemCls}>
@@ -210,7 +195,7 @@ export default function TopBar() {
                   </Link>
                 </div>
 
-                {/* ── Appearance ──────────────────────────────── */}
+                {/* Appearance */}
                 <div className="px-2 pt-2 pb-2 border-b border-[hsl(var(--border))]">
                   <p className={sectionLabel}>{t("topbar.appearance")}</p>
                   <button onClick={toggleTheme} className={itemCls}>
@@ -249,23 +234,14 @@ export default function TopBar() {
                   )}
                 </div>
 
-                {/* ── Sign out / Sign in ───────────────────────── */}
+                {/* Sign out */}
                 <div className="px-2 py-2">
-                  {isGuest ? (
-                    <Link href="/login" onClick={closeMenus} className={`${itemCls} text-cyan-400`}>
-                      <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-cyan-400/10">
-                        <LogIn className="h-4 w-4" />
-                      </span>
-                      <span className="flex-1">{t("nav.sign_in")}</span>
-                    </Link>
-                  ) : (
-                    <button onClick={handleSignOut} className={`${itemCls} text-rose-400`}>
-                      <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-rose-400/10">
-                        <LogOut className="h-4 w-4" />
-                      </span>
-                      <span className="flex-1">{t("nav.sign_out")}</span>
-                    </button>
-                  )}
+                  <button onClick={handleSignOut} className={`${itemCls} text-rose-400`}>
+                    <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-rose-400/10">
+                      <LogOut className="h-4 w-4" />
+                    </span>
+                    <span className="flex-1">{t("nav.sign_out")}</span>
+                  </button>
                 </div>
               </div>
             )}

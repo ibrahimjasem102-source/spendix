@@ -6,6 +6,8 @@ import { CheckCircle2, Crown, Loader2, Shield, Sparkles, Zap, ExternalLink } fro
 import { PLANS, type PlanId } from "@/lib/plans";
 import { usePlan } from "@/contexts/PlanContext";
 import { getAuthToken } from "@/lib/auth/token-store";
+import { useToast } from "@/hooks/useToast";
+import ToastList from "@/components/ui/Toast";
 
 const PLAN_ICONS: Record<PlanId, React.ElementType> = {
   free:  Sparkles,
@@ -39,6 +41,7 @@ export default function PlansPage() {
   const [portalLoading, setPortalLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const params = useSearchParams();
+  const { toasts, addToast, dismiss } = useToast();
 
   useEffect(() => {
     if (params.get("success") === "1") {
@@ -61,10 +64,10 @@ export default function PlansPage() {
       if (data.url) {
         window.location.href = data.url;
       } else {
-        alert(data.error ?? "حدث خطأ، حاول مرة أخرى");
+        addToast(data.error ?? "حدث خطأ، حاول مرة أخرى", "error");
       }
     } catch {
-      alert("فشل الاتصال بالخادم، تحقق من اتصالك");
+      addToast("فشل الاتصال بالخادم، تحقق من اتصالك", "error");
     } finally {
       setLoadingPlan(null);
     }
@@ -86,6 +89,7 @@ export default function PlansPage() {
   }
 
   return (
+    <>
     <div className="space-y-6 max-w-5xl mx-auto">
       {/* Header */}
       <div className="text-center space-y-2 py-4">
@@ -250,5 +254,7 @@ export default function PlansPage() {
         </div>
       )}
     </div>
+    <ToastList toasts={toasts} dismiss={dismiss} />
+    </>
   );
 }

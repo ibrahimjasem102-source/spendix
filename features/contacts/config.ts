@@ -7,7 +7,7 @@ export const contacts: FeatureModule = {
   title:     "nav.contacts",
   icon:      createElement(Users),
   route:     "/contacts",
-  showInNav: true,
+  showInNav: false,
   group:     "finance",
   tone:      "info",
 };

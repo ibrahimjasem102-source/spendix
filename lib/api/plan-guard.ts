@@ -109,7 +109,7 @@ export async function checkMonthlyTransactionLimit(
     .from("transactions")
     .select("id", { count: "exact", head: true })
     .eq("user_id", userId)
-    .gte("date", startOfMonth.toISOString().slice(0, 10));
+    .gte("transaction_date", startOfMonth.toISOString().slice(0, 10));
 
   if (count !== null && count >= limit) {
     return planError(`Monthly transactions (${limit})`, "plus");

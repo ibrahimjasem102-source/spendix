@@ -11,7 +11,7 @@ export async function GET(request: Request) {
   const status   = searchParams.get("status");
   const type     = searchParams.get("type");
   const source   = searchParams.get("source");
-  const limit    = parseInt(searchParams.get("limit") ?? "50");
+  const limit    = parseInt(searchParams.get("limit") ?? "50", 10);
 
   let query = supabase
     .from("notifications")

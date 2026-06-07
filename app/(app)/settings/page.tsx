@@ -16,6 +16,7 @@ import { useTranslation, LOCALES, type Locale } from "@/lib/i18n";
 import { spring, tapTransition } from "@/lib/motion";
 import { createClient } from "@/lib/supabase/client";
 import { migrateGuestData } from "@/lib/guest/migrate";
+import { getAuthToken } from "@/lib/auth/token-store";
 import { useTheme } from "@/lib/theme";
 
 // ── Reusable components ───────────────────────────────────────
@@ -204,7 +205,10 @@ export default function SettingsPage() {
   async function handleExport(type: "transactions" | "goals" | "debts") {
     setExporting(true);
     try {
-      const res = await fetch(`/api/export?type=${type}`);
+      const token = getAuthToken();
+      const res = await fetch(`/api/export?type=${type}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
       if (!res.ok) return;
       const blob = await res.blob();
       const a = Object.assign(document.createElement("a"), {
@@ -217,7 +221,11 @@ export default function SettingsPage() {
 
   async function handleDeleteAccount() {
     setDeleting(true);
-    const res = await fetch("/api/auth/account", { method: "DELETE" });
+    const token = getAuthToken();
+    const res = await fetch("/api/auth/account", {
+      method: "DELETE",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
     if (!res.ok) { setDeleting(false); setDeleteStep("idle"); return; }
     const supabase = createClient();
     await supabase.auth.signOut();

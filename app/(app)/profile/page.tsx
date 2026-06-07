@@ -178,7 +178,7 @@ export default function ProfilePage() {
   const tier  = scoreTier(score, t);
 
   // ── Net Worth ──────────────────────────────────────────────
-  const netWorth = engine.balance + engine.portfolioValue - engine.debtPayable;
+  const netWorth = engine.balance + engine.portfolioValue + engine.debtReceivable - engine.debtPayable;
 
   // ── Monthly data ───────────────────────────────────────────
   const now   = new Date();

@@ -38,7 +38,7 @@ export default function OAuthRedirectHandler() {
       const supabase = createClient();
       const { data, error } = await supabase.auth.exchangeCodeForSession(code);
       if (data.session) {
-        signedIn(data.session.access_token);
+        signedIn(data.session.access_token, data.session.refresh_token ?? undefined);
       }
       if (error) {
         await import("@capacitor/browser").then(({ Browser }) => Browser.close()).catch(() => undefined);

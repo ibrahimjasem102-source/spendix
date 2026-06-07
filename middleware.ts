@@ -3,13 +3,11 @@ import { NextResponse, type NextRequest } from "next/server";
 import { validateServerEnv } from "@/lib/env";
 
 // ── Global API rate limiter (100 req/min per IP) ─────────────────────────────
-// Per-instance only in serverless — sufficient for Vercel's single warm instance per region
 const _rl = new Map<string, { n: number; t: number }>();
 let _rlLastClean = Date.now();
 
 function apiAllowed(ip: string): boolean {
   const now = Date.now();
-  // Purge expired entries every 5 min to prevent unbounded memory growth
   if (now - _rlLastClean > 300_000) {
     for (const [k, v] of _rl) { if (v.t <= now) _rl.delete(k); }
     _rlLastClean = now;
@@ -45,10 +43,23 @@ function applySecurityHeaders(response: NextResponse) {
   return response;
 }
 
+const APP_ROUTES = [
+  "/dashboard", "/transactions", "/accounts", "/budgets", "/goals",
+  "/analytics", "/ledger", "/debts", "/investments", "/ai-assistant",
+  "/ai-insights", "/work", "/household", "/plans", "/settings",
+  "/profile", "/notifications", "/calendar", "/tags", "/recurring",
+  "/contacts", "/export", "/net-worth", "/subscriptions", "/more",
+  "/categories", "/privacy",
+];
+
+function isAppRoute(pathname: string) {
+  return APP_ROUTES.some(r => pathname === r || pathname.startsWith(r + "/"));
+}
+
 export async function middleware(request: NextRequest) {
   validateServerEnv();
 
-  // Global rate limit for API routes — exempt Stripe webhook (Stripe calls it, not users)
+  // Rate limit API routes (Stripe webhook exempt — Stripe calls it directly)
   if (
     request.nextUrl.pathname.startsWith("/api/") &&
     !request.nextUrl.pathname.startsWith("/api/stripe/webhook")
@@ -65,24 +76,21 @@ export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
   const { pathname } = request.nextUrl;
-  const isAuthRoute = pathname.startsWith("/login") || pathname.startsWith("/signup");
+  const isAuth = pathname.startsWith("/login") || pathname.startsWith("/signup");
 
-  // Skip Supabase cookie-based auth for API routes — they use Bearer token directly
-  // Running getUser() on API routes causes Supabase to set session-clearing cookies
-  // that propagate to the browser and trigger spurious SIGNED_OUT events
+  // API routes authenticate via Bearer token — skip cookie-based auth here to
+  // avoid Supabase writing session-clearing cookies that trigger spurious SIGNED_OUT
   if (!pathname.startsWith("/api/")) {
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
         cookies: {
-          getAll() {
-            return request.cookies.getAll();
-          },
+          getAll() { return request.cookies.getAll(); },
           setAll(cookiesToSet: { name: string; value: string; options?: CookieOptions }[]) {
-            cookiesToSet.forEach(({ name, value }) =>
-              request.cookies.set(name, value)
-            );
+            // Write updated cookies into both the request (for downstream) and the
+            // response (so the browser stores the refreshed session).
+            cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
             supabaseResponse = NextResponse.next({ request });
             cookiesToSet.forEach(({ name, value, options }) =>
               supabaseResponse.cookies.set(name, value, options)
@@ -92,42 +100,31 @@ export async function middleware(request: NextRequest) {
       }
     );
 
-    const { data: { user } } = await supabase.auth.getUser();
+    // getSession() is used instead of getUser() so that:
+    //   1. When the access token expires (every hour) but the refresh token cookie
+    //      is still valid, Supabase refreshes automatically — no redirect to /login.
+    //   2. The refreshed tokens are written back via setAll → browser gets new cookies.
+    // Trade-off: JWT is validated locally (no server round-trip) instead of being
+    // re-checked against Supabase's revocation list. Acceptable for routing decisions;
+    // API routes still use getUser() via requireUser() for data access.
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    const user = session?.user ?? null;
 
-    // Authenticated users bounced away from login/signup
-    if (user && isAuthRoute) {
+    // Logged-in users should not see login / signup pages
+    if (user && isAuth) {
       return applySecurityHeaders(NextResponse.redirect(new URL("/dashboard", request.url)));
     }
 
-    // Unauthenticated users blocked from app routes
-    const isAppRoute = pathname.startsWith("/dashboard") ||
-      pathname.startsWith("/transactions") ||
-      pathname.startsWith("/accounts") ||
-      pathname.startsWith("/budgets") ||
-      pathname.startsWith("/goals") ||
-      pathname.startsWith("/analytics") ||
-      pathname.startsWith("/ledger") ||
-      pathname.startsWith("/debts") ||
-      pathname.startsWith("/investments") ||
-      pathname.startsWith("/ai-assistant") ||
-      pathname.startsWith("/ai-insights") ||
-      pathname.startsWith("/work") ||
-      pathname.startsWith("/household") ||
-      pathname.startsWith("/plans") ||
-      pathname.startsWith("/settings") ||
-      pathname.startsWith("/profile") ||
-      pathname.startsWith("/notifications") ||
-      pathname.startsWith("/calendar") ||
-      pathname.startsWith("/tags") ||
-      pathname.startsWith("/recurring") ||
-      pathname.startsWith("/contacts") ||
-      pathname.startsWith("/export") ||
-      pathname.startsWith("/net-worth") ||
-      pathname.startsWith("/subscriptions") ||
-      pathname.startsWith("/more") ||
-      pathname.startsWith("/categories");
+    if (!user && isAppRoute(pathname)) {
+      // If Supabase itself is unreachable (network error), let the request through —
+      // the client-side SessionRestorer will recover without showing the login page.
+      const isNetworkError = !!sessionError && (
+        sessionError.message?.toLowerCase().includes("fetch") ||
+        sessionError.message?.toLowerCase().includes("network") ||
+        sessionError.status === undefined
+      );
+      if (isNetworkError) return applySecurityHeaders(supabaseResponse);
 
-    if (!user && isAppRoute) {
       const loginUrl = new URL("/login", request.url);
       loginUrl.searchParams.set("next", pathname);
       return applySecurityHeaders(NextResponse.redirect(loginUrl));

@@ -7,7 +7,7 @@ export const calendar: FeatureModule = {
   title:     "nav.calendar",
   icon:      createElement(CalendarDays),
   route:     "/calendar",
-  showInNav: true,
+  showInNav: false,
   group:     "finance",
   tone:      "neutral",
 };

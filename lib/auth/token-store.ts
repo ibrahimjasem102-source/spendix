@@ -8,16 +8,10 @@ export const REFRESH_KEY = "spendix_refresh_token";
 
 let _token: string | null = null;
 
-// Synchronous module-level init (runs when bundle is executed in browser)
 if (typeof window !== "undefined") {
   try {
     const t = localStorage.getItem(TOKEN_KEY);
-    if (t) {
-      _token = t;
-      console.log("[auth] module init — token found:", t.slice(0, 20) + "…");
-    } else {
-      console.log("[auth] module init — no token in localStorage");
-    }
+    if (t) _token = t;
   } catch {}
 }
 
@@ -26,22 +20,19 @@ export function setAuthToken(token: string | null) {
   try {
     if (token) {
       localStorage.setItem(TOKEN_KEY, token);
-      console.log("[auth] setAuthToken — stored:", token.slice(0, 20) + "…");
     } else {
       localStorage.removeItem(TOKEN_KEY);
-      console.log("[auth] setAuthToken — cleared");
     }
   } catch {}
 }
 
 export function getAuthToken(): string | null {
-  // Always prefer in-memory; fall back to localStorage
   if (_token) return _token;
   if (typeof window === "undefined") return null;
   try {
     const stored = localStorage.getItem(TOKEN_KEY);
     if (stored) {
-      _token = stored; // cache it
+      _token = stored;
       return stored;
     }
   } catch {}
@@ -61,7 +52,6 @@ export function clearTokens() {
   try {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(REFRESH_KEY);
-    console.log("[auth] tokens cleared (explicit logout)");
   } catch {}
 }
 

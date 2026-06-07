@@ -21,7 +21,7 @@ function snippet(text: string | null | undefined, maxLen = 70): string {
 }
 
 function matchedOnNotes(field: string, q: string): boolean {
-  return !field.toLowerCase().includes(q.toLowerCase());
+  return field.toLowerCase().includes(q.toLowerCase());
 }
 
 export async function GET(request: Request) {

@@ -1,4 +1,4 @@
-﻿{
+{
     "nav":  {
                 "dashboard":  "Dashboard",
                 "transactions":  "Transaktionen",
@@ -18,7 +18,18 @@
                 "subscriptions":  "Abonnements",
                 "bills":  "Rechnungen",
                 "calendar":  "Kalender",
-                "plans":  "Mein Plan"
+                "plans":  "Mein Plan",
+                "more":  "Mehr",
+                "work":  "Arbeit",
+                "net_worth":  "Nettovermögen",
+                "household":  "Haushalt",
+                "contacts":  "Kontakte",
+                "categories":  "Kategorien",
+                "tags":  "Tags",
+                "recurring":  "Wiederkehrend",
+                "export":  "Exportieren",
+                "notifications":  "Benachrichtigungen",
+                "privacy":  "Datenschutz"
             },
     "common":  {
                    "save":  "Änderungen speichern",
@@ -31,7 +42,10 @@
                    "view_all":  "Alle anzeigen →",
                    "confirm_delete":  "Diesen Eintrag löschen?",
                    "error":  "Etwas ist schiefgelaufen",
-                   "saving":  "Speichern..."
+                   "saving":  "Speichern...",
+                   "close":  "Schließen",
+                   "retry":  "Wiederholen",
+                   "unknown_error":  "Etwas ist schiefgelaufen"
                },
     "dashboard":  {
                       "title":  "Übersicht",
@@ -48,7 +62,9 @@
                       "income_vs_expenses":  "Einnahmen vs. Ausgaben",
                       "last_6_months":  "Letzte 6 Monate",
                       "ai_insights":  "KI-Einblicke",
-                      "vs_last_month":  "vs. letzten Monat"
+                      "vs_last_month":  "vs. letzten Monat",
+                      "avg":  "Durchschn.",
+                      "total_spent":  "Gesamt ausgegeben"
                   },
     "transactions":  {
                          "title":  "Transaktionen",
@@ -67,7 +83,20 @@
                          "expense":  "Ausgaben",
                          "type":  "Typ",
                          "account":  "Konto",
-                         "no_account":  "Kein Konto"
+                         "no_account":  "Kein Konto",
+                         "add_expense":  "Add Expense",
+                         "add_income":  "Add Income",
+                         "edit":  "Edit Transaction",
+                         "save_edit":  "Save Changes",
+                         "today":  "Today",
+                         "yesterday":  "Yesterday",
+                         "title_placeholder":  "e.g. Coffee, Rent, Salary...",
+                         "notes_placeholder":  "Optional note",
+                         "uncategorized":  "No category",
+                         "amount_positive":  "Amount must be greater than zero",
+                         "title_required":  "Title is required",
+                         "form_error":  "Something went wrong, please try again",
+                         "fetch_error":  "Failed to load transactions"
                      },
     "accounts":  {
                      "title":  "Konten",
@@ -104,7 +133,9 @@
                      "delete_confirm":  "Dieses Konto löschen? Verknüpfte Transaktionen werden nicht gelöscht.",
                      "delete_hint":  "Diese Aktion kann nicht rückgängig gemacht werden.",
                      "empty_title":  "Noch keine Konten",
-                     "empty_subtitle":  "Fügen Sie Ihr erstes Konto hinzu, um zu verfolgen, wo Ihr Geld liegt."
+                     "empty_subtitle":  "Fügen Sie Ihr erstes Konto hinzu, um zu verfolgen, wo Ihr Geld liegt.",
+                     "transfer_to":  "Überweisung an",
+                     "transfer_from":  "Überweisung von"
                  },
     "subscriptions":  {
                           "title":  "Abonnements",
@@ -266,7 +297,44 @@
                                  "paid":  "Bezahlt",
                                  "pending":  "Ausstehend",
                                  "overdue":  "Überfällig"
-                             }
+                             },
+                  "payable":  "I owe (expense)",
+                  "receivable":  "Owed to me (income)",
+                  "payable_hint":  "Money I owe to someone → payment = expense",
+                  "receivable_hint":  "Money someone owes me → payment = income",
+                  "debt_type":  "Debt Direction",
+                  "total_amount":  "Total Amount",
+                  "add_payment":  "Add Payment",
+                  "save_edit":  "Save Changes",
+                  "edit":  "Edit Debt",
+                  "creditor_placeholder":  "Person or company name",
+                  "notes_placeholder":  "Optional note",
+                  "due":  "Due: {date}",
+                  "of_total":  "of {amount}",
+                  "paid_amount":  "Paid: {amount}",
+                  "overall_paid":  "{percent}% paid",
+                  "confirm_delete_msg":  "Delete this debt? This cannot be undone.",
+                  "created":  "Debt added",
+                  "updated":  "Debt updated",
+                  "deleted":  "Debt deleted",
+                  "payment_added":  "Payment recorded",
+                  "no_data":  "No debts yet",
+                  "save_failed":  "Failed to save",
+                  "payment_failed":  "Payment failed",
+                  "delete_failed":  "Failed to delete",
+                  "fetch_error":  "Failed to load debts",
+                  "net_balance":  "Net Balance",
+                  "overdue":  "Overdue",
+                  "debts":  "debt(s)",
+                  "active":  "Active",
+                  "payments":  "payment(s)",
+                  "health":  "Debt Health",
+                  "health_good":  "Good",
+                  "no_overdue":  "No overdue debts",
+                  "has_overdue":  "Has overdue",
+                  "fix_balance":  "Fix Balance",
+                  "days_overdue":  "days overdue",
+                  "remaining_of":  "of {total}"
               },
     "analytics":  {
                       "title":  "Analytik",
@@ -358,7 +426,16 @@
                    "last_7_days":  "Letzte 7 Tage",
                    "last_30_days":  "Letzte 30 Tage",
                    "last_3_months":  "Letzte 3 Monate",
-                   "this_year":  "Dieses Jahr"
+                   "this_year":  "Dieses Jahr",
+                   "switch_light":  "Light mode",
+                   "switch_dark":  "Dark mode",
+                   "guest_mode":  "Guest Mode",
+                   "signed_in":  "Signed in as",
+                   "dark":  "Dark",
+                   "light":  "Light",
+                   "appearance":  "Appearance",
+                   "language":  "Language",
+                   "quick_links":  "Quick Links"
                },
     "actions":  {
                     "open":  "Schnell hinzufügen",
@@ -525,5 +602,26 @@
                                     "November",
                                     "Dezember"
                                 ]
-                 }
+                 },
+    "more":  {
+                 "group_finance_tools":  "Finanz-Tools",
+                 "group_people":  "Personen",
+                 "group_data":  "Daten",
+                 "group_account":  "Konto",
+                 "desc_subscriptions":  "Abonnements verwalten",
+                 "desc_net_worth":  "Nettovermögen",
+                 "desc_tags":  "Mit Tags organisieren",
+                 "desc_profile":  "Dein Konto \u0026 Statistiken",
+                 "desc_export":  "Daten exportieren",
+                 "desc_calendar":  "Finanzielle Ereignisse \u0026 Erinnerungen",
+                 "desc_notifications":  "Benachrichtigungen \u0026 Erinnerungen",
+                 "desc_privacy":  "Datenschutz \u0026 Sicherheit",
+                 "desc_recurring":  "Automatische Dauerzahlungen",
+                 "desc_contacts":  "Kunden \u0026 Finanzkontakte",
+                 "subtitle":  "Alle Funktionen und Einstellungen",
+                 "desc_settings":  "Einstellungen \u0026 Konfiguration",
+                 "desc_categories":  "Ausgabenkategorien verwalten",
+                 "desc_ledger":  "Vollständiges Transaktionsjournal",
+                 "desc_household":  "Gemeinsame Familienkonten"
+             }
 }

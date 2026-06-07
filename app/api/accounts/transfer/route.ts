@@ -9,6 +9,8 @@ interface TransferBody {
   amount:          number;
   date:            string;
   notes?:          string | null;
+  title_out?:      string | null;
+  title_in?:       string | null;
 }
 
 export async function POST(request: Request) {
@@ -20,7 +22,7 @@ export async function POST(request: Request) {
   if (!user) return NextResponse.json({ errorKey: "errors.unauthorized" }, { status: 401 });
 
   const body = await readJson<TransferBody>(request);
-  const { from_account_id, to_account_id, amount, date, notes } = body ?? {};
+  const { from_account_id, to_account_id, amount, date, notes, title_out, title_in } = body ?? {};
 
   if (!from_account_id || !to_account_id)
     return NextResponse.json({ error: "Both accounts required" }, { status: 400 });
@@ -49,7 +51,7 @@ export async function POST(request: Request) {
     .from("transactions")
     .insert({
       user_id:          user.id,
-      title:            `تحويل إلى ${toAcc?.name}`,
+      title:            title_out ?? `→ ${toAcc?.name}`,
       amount,
       type:             "expense",
       source:           "manual",
@@ -67,7 +69,7 @@ export async function POST(request: Request) {
     .from("transactions")
     .insert({
       user_id:          user.id,
-      title:            `تحويل من ${fromAcc?.name}`,
+      title:            title_in ?? `← ${fromAcc?.name}`,
       amount,
       type:             "income",
       source:           "manual",
@@ -79,7 +81,11 @@ export async function POST(request: Request) {
     .select("id")
     .single();
 
-  if (errIn) return NextResponse.json({ error: errIn.message }, { status: 500 });
+  if (errIn) {
+    // Roll back the outflow transaction so accounts stay consistent
+    await supabase.from("transactions").delete().eq("id", txOut!.id);
+    return NextResponse.json({ error: errIn.message }, { status: 500 });
+  }
 
   return NextResponse.json({
     ok:       true,

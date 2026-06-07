@@ -11,6 +11,7 @@ import { FinancialEventBridge } from "@/components/system/FinancialEventBridge";
 import MutationErrorToast from "@/components/system/MutationErrorToast";
 import AuthGate from "@/components/system/AuthGate";
 import AuthStatusBadge from "@/components/system/AuthStatusBadge";
+import SessionRestorer from "@/components/system/SessionRestorer";
 import PullToRefreshWrapper from "@/components/layout/PullToRefreshWrapper";
 import LiveBackground from "@/components/layout/LiveBackground";
 import RoomGuard from "@/components/layout/RoomGuard";
@@ -81,6 +82,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 <FinancialEventBridge />
                 <MutationErrorToast />
                 <AuthStatusBadge />
+                <SessionRestorer />
                 <PullToRefreshWrapper />
               </SidebarProvider>
             </RoomLockProvider>

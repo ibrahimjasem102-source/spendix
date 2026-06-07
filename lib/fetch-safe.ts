@@ -34,17 +34,7 @@ function isSameOrigin(input: RequestInfo | URL): boolean {
 
 export function safeFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
   if (isSameOrigin(input)) {
-    // ── Requirement 6: always attach token if it exists ─────────
     const token = getAuthToken();
-
-    // ── Requirement 7: log whether header is attached ────────────
-    const url = typeof input === "string" ? input : (input instanceof URL ? input.href : (input as Request).url);
-    if (token) {
-      console.log("[safeFetch] attaching Authorization header for:", url);
-    } else {
-      console.warn("[safeFetch] NO token — request will be unauthenticated:", url);
-    }
-
     const authHeader: Record<string, string> = token
       ? { Authorization: `Bearer ${token}` }
       : {};

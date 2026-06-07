@@ -126,7 +126,7 @@ export default function LedgerPage() {
       if (e.direction === "outflow") outflow += e.amount;
     }
     return { inflow, outflow, net: inflow - outflow };
-  }, [visible]);
+  }, [allVisible]);
 
   const typeCounts = useMemo(() => {
     const counts = new Map<LedgerEntryType | "all", number>([["all", entries.length]]);
