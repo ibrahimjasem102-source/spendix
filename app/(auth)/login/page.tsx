@@ -3,31 +3,25 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Wallet, Eye, EyeOff, Loader2 } from "lucide-react";
+import { Wallet, Eye, EyeOff, Loader2, Mail, Lock } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { signedIn } from "@/lib/auth/session-manager";
 import { getRefreshToken, storeRefreshToken } from "@/lib/auth/token-store";
 import { useTranslation } from "@/lib/i18n";
 import OAuthButtons from "@/components/auth/OAuthButtons";
 
-// ── Restore session from stored refresh token (silent) ─────────
-// This runs when the middleware redirects to /login because cookies
-// expired (Capacitor app restart, 1-hour token expiry, etc.)
-// but the user still has a valid refresh token in localStorage.
+// ── Restore session from stored refresh token (silent) ─────────────────────
 async function tryRestoreSession(
   supabase: ReturnType<typeof createClient>,
   dest: string,
-  router: ReturnType<typeof useRouter>,
 ): Promise<boolean> {
-  // 1. Active Supabase session in browser cookies?
   const { data: { session } } = await supabase.auth.getSession();
   if (session?.access_token) {
     signedIn(session.access_token, session.refresh_token ?? undefined);
-    router.replace(dest);
+    window.location.replace(dest);
     return true;
   }
 
-  // 2. Our stored refresh token — try to rebuild the session
   const storedRefresh = getRefreshToken();
   if (!storedRefresh) return false;
 
@@ -38,18 +32,17 @@ async function tryRestoreSession(
   signedIn(access_token, refresh_token ?? undefined);
   if (refresh_token) storeRefreshToken(refresh_token);
 
-  // Re-set server-side cookie so middleware works on next request
   await fetch("/api/auth/set-session", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ access_token, refresh_token }),
   }).catch(() => undefined);
 
-  router.replace(dest);
+  window.location.replace(dest);
   return true;
 }
 
-// ── Page ───────────────────────────────────────────────────────
+// ── Page ───────────────────────────────────────────────────────────────────
 
 export default function LoginPage() {
   const router = useRouter();
@@ -62,15 +55,12 @@ export default function LoginPage() {
   const [needsConfirmation, setNeedsConfirmation] = useState(false);
   const [resent,   setResent]   = useState(false);
   const [loading,  setLoading]  = useState(false);
-  const [checking, setChecking] = useState(true); // silent session-check phase
+  const [checking, setChecking] = useState(true);
+  const [dest,     setDest]     = useState("/dashboard");
 
-  // Destination after login (from ?next= param or default /dashboard)
-  const [dest, setDest] = useState("/dashboard");
-
-  // ── Silent session restore on mount ───────────────────────────
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const next   = params.get("next");
+    const params  = new URLSearchParams(window.location.search);
+    const next    = params.get("next");
     const safeDest = next && next.startsWith("/") && !next.startsWith("//") ? next : "/dashboard";
     setDest(safeDest);
 
@@ -81,12 +71,12 @@ export default function LoginPage() {
     }
 
     const supabase = createClient();
-    tryRestoreSession(supabase, safeDest, router)
+    tryRestoreSession(supabase, safeDest)
       .then((restored) => { if (!restored) setChecking(false); })
       .catch(() => setChecking(false));
-  }, [router, t]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  // ── Login submit ──────────────────────────────────────────────
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(""); setNeedsConfirmation(false); setResent(false); setLoading(true);
@@ -116,7 +106,9 @@ export default function LoginPage() {
     const { access_token, refresh_token } = data.session;
     signedIn(access_token, refresh_token);
 
-    // Await the cookie-set so middleware sees the session immediately
+    // Set server-side cookies so middleware sees the session on the next request.
+    // We await this before navigating to avoid a race where middleware redirects
+    // back to /login because the cookie hasn't been written yet.
     await fetch("/api/auth/set-session", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -137,7 +129,10 @@ export default function LoginPage() {
       fetch("/api/auth/bootstrap", { method: "POST", headers: bHeaders, body: bBody }).catch(() => undefined);
     }
 
-    router.replace(dest);
+    // Full page navigation — guarantees the browser sends the freshly-set
+    // session cookies to the middleware (router.replace() is client-side only
+    // and may not flush Set-Cookie headers before the next RSC fetch).
+    window.location.replace(dest);
   }
 
   async function handleResendConfirmation() {
@@ -154,14 +149,18 @@ export default function LoginPage() {
     setResent(true);
   }
 
-  // ── Silent checking: show spinner, not login form ──────────────
+  // ── Checking spinner ────────────────────────────────────────────────────
   if (checking) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "hsl(214 28% 5%)" }}>
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl flex items-center justify-center"
-            style={{ background: "linear-gradient(135deg, #06B6D4, #7C3AED)" }}>
-            <Wallet className="w-5 h-5 text-white" />
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "hsl(214 28% 5%)" }}>
+        <div className="flex flex-col items-center gap-4">
+          <div className="relative">
+            <div className="w-14 h-14 rounded-2xl flex items-center justify-center"
+              style={{ background: "linear-gradient(135deg, #06B6D4, #7C3AED)" }}>
+              <Wallet className="w-7 h-7 text-white" />
+            </div>
+            <div className="absolute -inset-1 rounded-2xl opacity-30 blur-lg"
+              style={{ background: "linear-gradient(135deg, #06B6D4, #7C3AED)" }} />
           </div>
           <Loader2 className="w-5 h-5 text-cyan-400 animate-spin" />
         </div>
@@ -169,55 +168,104 @@ export default function LoginPage() {
     );
   }
 
-  // ── Login form ─────────────────────────────────────────────────
+  // ── Login form ──────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen flex items-center justify-center px-4"
-      style={{ backgroundColor: "hsl(214 28% 5%)" }}>
+    <div
+      className="min-h-screen flex items-center justify-center px-4 py-10"
+      style={{ background: "radial-gradient(ellipse 80% 60% at 50% 0%, hsl(214 60% 8%) 0%, hsl(214 28% 5%) 100%)" }}
+    >
+      {/* Glow blobs */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[600px] h-[300px] opacity-20 blur-3xl rounded-full"
+          style={{ background: "radial-gradient(ellipse, #06B6D4 0%, #7C3AED 60%, transparent 100%)" }} />
+      </div>
+
       <div className="w-full max-w-md relative z-10">
 
         {/* Logo */}
         <div className="flex flex-col items-center mb-8">
-          <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4"
-            style={{ background: "linear-gradient(135deg, #06B6D4, #7C3AED)" }}>
-            <Wallet className="w-7 h-7 text-white" />
+          <div className="relative mb-4">
+            <div className="w-16 h-16 rounded-2xl flex items-center justify-center"
+              style={{ background: "linear-gradient(135deg, #06B6D4, #7C3AED)" }}>
+              <Wallet className="w-8 h-8 text-white" />
+            </div>
+            <div className="absolute -inset-1 rounded-2xl opacity-40 blur-xl"
+              style={{ background: "linear-gradient(135deg, #06B6D4, #7C3AED)" }} />
           </div>
-          <h1 className="text-2xl font-black text-white tracking-tight">Spendix</h1>
-          <p className="text-sm mt-1" style={{ color: "hsl(215 18% 55%)" }}>{t("auth.login_title")}</p>
+          <h1 className="text-3xl font-black text-white tracking-tight">Spendix</h1>
+          <p className="text-sm mt-1.5" style={{ color: "hsl(215 18% 50%)" }}>
+            {t("auth.login_title")}
+          </p>
         </div>
 
         {/* Card */}
-        <div className="rounded-[1.5rem] p-7 space-y-5"
-          style={{ background: "hsl(215 26% 10%)", border: "1px solid hsl(0 0% 100% / 0.08)", boxShadow: "0 25px 50px rgba(0,0,0,0.5)" }}>
-
+        <div
+          className="rounded-2xl p-7 space-y-5"
+          style={{
+            background: "hsl(215 26% 9%)",
+            border: "1px solid hsl(0 0% 100% / 0.07)",
+            boxShadow: "0 0 0 1px hsl(0 0% 100% / 0.04), 0 32px 64px rgba(0,0,0,0.6)",
+          }}
+        >
           <form onSubmit={handleSubmit} className="space-y-4">
+
             {/* Email */}
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: "hsl(215 18% 55%)" }}>
+            <div className="space-y-1.5">
+              <label className="block text-xs font-semibold uppercase tracking-wider"
+                style={{ color: "hsl(215 18% 50%)" }}>
                 {t("auth.email")}
               </label>
-              <input type="email" required value={email} onChange={e => setEmail(e.target.value)}
-                placeholder="you@example.com"
-                className="w-full px-4 py-3 rounded-xl text-sm transition-all outline-none"
-                style={{ background: "hsl(215 22% 13%)", border: "1px solid hsl(0 0% 100% / 0.08)", color: "hsl(210 25% 96%)" }}
-                onFocus={e => (e.target.style.borderColor = "rgba(6,182,212,0.5)")}
-                onBlur={e  => (e.target.style.borderColor = "hsl(0 0% 100% / 0.08)")} />
+              <div className="relative">
+                <Mail className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
+                  style={{ color: "hsl(215 18% 45%)" }} />
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  className="w-full ps-10 pe-4 py-3 rounded-xl text-sm transition-colors outline-none"
+                  style={{
+                    background: "hsl(215 22% 12%)",
+                    border: "1px solid hsl(0 0% 100% / 0.07)",
+                    color: "hsl(210 25% 95%)",
+                  }}
+                  onFocus={e => (e.target.style.borderColor = "rgba(6,182,212,0.4)")}
+                  onBlur={e  => (e.target.style.borderColor = "hsl(0 0% 100% / 0.07)")}
+                />
+              </div>
             </div>
 
             {/* Password */}
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: "hsl(215 18% 55%)" }}>
+            <div className="space-y-1.5">
+              <label className="block text-xs font-semibold uppercase tracking-wider"
+                style={{ color: "hsl(215 18% 50%)" }}>
                 {t("auth.password")}
               </label>
               <div className="relative">
-                <input type={showPw ? "text" : "password"} required value={password}
-                  onChange={e => setPassword(e.target.value)} placeholder="••••••••"
-                  className="w-full px-4 py-3 pe-11 rounded-xl text-sm transition-all outline-none"
-                  style={{ background: "hsl(215 22% 13%)", border: "1px solid hsl(0 0% 100% / 0.08)", color: "hsl(210 25% 96%)" }}
-                  onFocus={e => (e.target.style.borderColor = "rgba(6,182,212,0.5)")}
-                  onBlur={e  => (e.target.style.borderColor = "hsl(0 0% 100% / 0.08)")} />
-                <button type="button" onClick={() => setShowPw(!showPw)}
-                  className="absolute end-3 top-1/2 -translate-y-1/2 p-1 rounded-lg transition-colors"
-                  style={{ color: "hsl(215 18% 55%)" }}>
+                <Lock className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
+                  style={{ color: "hsl(215 18% 45%)" }} />
+                <input
+                  type={showPw ? "text" : "password"}
+                  required
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full ps-10 pe-11 py-3 rounded-xl text-sm transition-colors outline-none"
+                  style={{
+                    background: "hsl(215 22% 12%)",
+                    border: "1px solid hsl(0 0% 100% / 0.07)",
+                    color: "hsl(210 25% 95%)",
+                  }}
+                  onFocus={e => (e.target.style.borderColor = "rgba(6,182,212,0.4)")}
+                  onBlur={e  => (e.target.style.borderColor = "hsl(0 0% 100% / 0.07)")}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPw(p => !p)}
+                  className="absolute end-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg transition-colors"
+                  style={{ color: "hsl(215 18% 45%)" }}
+                >
                   {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
@@ -225,42 +273,76 @@ export default function LoginPage() {
 
             {/* Error */}
             {error && (
-              <div className="px-4 py-3 rounded-xl text-sm"
-                style={{ background: "hsl(350 89% 60% / 0.1)", color: "hsl(350 89% 70%)", border: "1px solid hsl(350 89% 60% / 0.2)" }}>
+              <div
+                className="px-4 py-3 rounded-xl text-sm"
+                style={{
+                  background: "hsl(350 89% 60% / 0.08)",
+                  color: "hsl(350 89% 70%)",
+                  border: "1px solid hsl(350 89% 60% / 0.18)",
+                }}
+              >
                 {error}
                 {needsConfirmation && (
-                  <button type="button" onClick={handleResendConfirmation} disabled={loading}
-                    className="mt-3 w-full rounded-lg px-3 py-2 text-xs font-semibold text-[#0B0F14] disabled:opacity-60"
-                    style={{ background: "#FBBF24" }}>
+                  <button
+                    type="button"
+                    onClick={handleResendConfirmation}
+                    disabled={loading}
+                    className="mt-3 w-full rounded-lg px-3 py-2 text-xs font-semibold disabled:opacity-60 transition-opacity"
+                    style={{ background: "#FBBF24", color: "#0B0F14" }}
+                  >
                     {t("auth.resend_verification")}
                   </button>
                 )}
               </div>
             )}
 
-            {/* Resent */}
+            {/* Resent confirmation */}
             {resent && (
-              <div className="px-4 py-3 rounded-xl text-sm"
-                style={{ background: "hsl(160 84% 39% / 0.1)", color: "hsl(160 84% 65%)", border: "1px solid hsl(160 84% 39% / 0.2)" }}>
+              <div
+                className="px-4 py-3 rounded-xl text-sm"
+                style={{
+                  background: "hsl(160 84% 39% / 0.08)",
+                  color: "hsl(160 84% 60%)",
+                  border: "1px solid hsl(160 84% 39% / 0.18)",
+                }}
+              >
                 {t("auth.verification_sent")}
               </div>
             )}
 
             {/* Submit */}
-            <button type="submit" disabled={loading}
-              className="w-full py-3 rounded-xl text-sm font-semibold text-[hsl(214_28%_5%)] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-              style={{ background: loading ? "#0891B2" : "linear-gradient(135deg, #06B6D4, #0891B2)" }}>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3 rounded-xl text-sm font-bold transition-all disabled:opacity-60 flex items-center justify-center gap-2 mt-1"
+              style={{
+                background: "linear-gradient(135deg, #06B6D4, #7C3AED)",
+                color: "#fff",
+                boxShadow: loading ? "none" : "0 0 24px rgba(6,182,212,0.25)",
+              }}
+            >
               {loading
                 ? <><Loader2 className="w-4 h-4 animate-spin" />{t("auth.signing_in")}</>
                 : t("auth.sign_in")}
             </button>
           </form>
 
+          {/* Divider */}
+          <div className="flex items-center gap-3">
+            <div className="flex-1 h-px" style={{ background: "hsl(0 0% 100% / 0.07)" }} />
+            <span className="text-xs" style={{ color: "hsl(215 18% 40%)" }}>أو</span>
+            <div className="flex-1 h-px" style={{ background: "hsl(0 0% 100% / 0.07)" }} />
+          </div>
+
           <OAuthButtons />
 
-          <p className="text-center text-xs pt-2" style={{ color: "hsl(215 18% 45%)" }}>
+          <p className="text-center text-xs pt-1" style={{ color: "hsl(215 18% 40%)" }}>
             {t("auth.dont_have_account")}{" "}
-            <Link href="/signup" className="font-semibold text-cyan-400 hover:text-cyan-300 transition-colors">
+            <Link
+              href="/signup"
+              className="font-semibold transition-colors"
+              style={{ color: "#22D3EE" }}
+            >
               {t("auth.sign_up")}
             </Link>
           </p>
