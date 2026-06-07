@@ -11,6 +11,11 @@ export async function POST(request: Request) {
   const { email, role = "member" } = await request.json();
   if (!email) return NextResponse.json({ error: "Email is required" }, { status: 400 });
 
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return NextResponse.json({ error: "Invalid email address" }, { status: 400 });
+  }
+
   const { data: membership } = await supabase
     .from("household_members")
     .select("household_id, role")

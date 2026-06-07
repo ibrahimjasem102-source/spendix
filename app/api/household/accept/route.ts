@@ -34,6 +34,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invitation has expired" }, { status: 410 });
   }
 
+  // Verify the invitation was sent to the authenticated user's email.
+  // Without this check any authenticated user who obtains the token can join
+  // a household they were never invited to (IDOR).
+  if (invitation.email.toLowerCase() !== (user.email ?? "").toLowerCase()) {
+    return NextResponse.json({ error: "This invitation was not sent to your account" }, { status: 403 });
+  }
+
   // Add user as member
   const { error: memberErr } = await supabase.from("household_members").insert({
     household_id: invitation.household_id,

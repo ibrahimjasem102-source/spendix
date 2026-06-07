@@ -64,7 +64,9 @@ export async function middleware(request: NextRequest) {
     request.nextUrl.pathname.startsWith("/api/") &&
     !request.nextUrl.pathname.startsWith("/api/stripe/webhook")
   ) {
-    const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "local";
+    // Use request.ip (set by Vercel edge — cannot be spoofed by the client).
+    // Fall back to x-real-ip for other hosts, then a static key for local dev.
+    const ip = request.ip ?? request.headers.get("x-real-ip") ?? "local";
     if (!apiAllowed(ip)) {
       return new NextResponse(JSON.stringify({ error: "Too many requests" }), {
         status: 429,
