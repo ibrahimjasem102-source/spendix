@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { CheckCircle2, Crown, Loader2, Shield, Sparkles, Zap, ExternalLink } from "lucide-react";
 import { PLANS, type PlanId } from "@/lib/plans";
@@ -35,7 +35,7 @@ const FEATURES_AR: { key: string; label: string; plans: PlanId[] }[] = [
   { key: "beta",         label: "ميزات Beta قبل الجميع",          plans: ["elite"] },
 ];
 
-export default function PlansPage() {
+function PlansPageInner() {
   const { plan: currentPlan, hasStripe, isLoading: planLoading, refetch, syncFromStripe } = usePlan();
   const [loadingPlan, setLoadingPlan] = useState<PlanId | null>(null);
   const [portalLoading, setPortalLoading] = useState(false);
@@ -256,5 +256,13 @@ export default function PlansPage() {
     </div>
     <ToastList toasts={toasts} dismiss={dismiss} />
     </>
+  );
+}
+
+export default function PlansPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-cyan-400" /></div>}>
+      <PlansPageInner />
+    </Suspense>
   );
 }
