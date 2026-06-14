@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { WorkPaymentFormData } from "@/types";
 import { notify } from "@/lib/notifications/service";
 import { insertLinkedTransaction } from "@/lib/finance/serverTransactions";
+import { writeLedgerEntry } from "@/lib/ledger/writer";
 
 const WORK_PAYMENT_SELECT =
   "id,user_id,work_session_id,employer_or_client,amount,payment_date,notes,transaction_id,created_at";
@@ -67,6 +68,18 @@ export async function POST(request: Request) {
     Number(body.amount).toFixed(2),
     body.employer_or_client,
   );
+
+  // Write unified ledger entry (best-effort)
+  void writeLedgerEntry(supabase, {
+    user_id:       user.id,
+    source_module: "work_payment",
+    source_id:     payment.id,
+    entry_type:    "work_payment",
+    direction:     "inflow",
+    amount:        Number(body.amount),
+    description:   `Work payment: ${body.employer_or_client}`,
+    transaction_id: tx.id,
+  });
 
   return NextResponse.json({ payment }, { status: 201 });
 }

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -50,7 +50,7 @@ export default function InlineLoginModal({ onClose, onSuccess }: Props) {
       return;
     }
 
-    // ── Authenticated! ─────────────────────────────────────
+    // â”€â”€ Authenticated! â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const { access_token, refresh_token } = data.session;
 
     // 1. Store tokens
@@ -68,7 +68,7 @@ export default function InlineLoginModal({ onClose, onSuccess }: Props) {
       body: JSON.stringify({ locale }),
     }).catch(() => undefined);
 
-    // 3. Migrate guest data → Supabase silently
+    // 3. Migrate guest data â†’ Supabase silently
     await migrateGuestData({ saveSettings: true }).catch(() => undefined);
 
     setDone(true);
@@ -105,8 +105,7 @@ export default function InlineLoginModal({ onClose, onSuccess }: Props) {
           {/* Header */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl"
-                style={{ background: "linear-gradient(135deg, #06B6D4, #7C3AED)" }}>
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-500">
                 <Wallet className="h-4 w-4 text-white" />
               </div>
               <div>
@@ -125,7 +124,7 @@ export default function InlineLoginModal({ onClose, onSuccess }: Props) {
           </div>
 
           {/* Mode toggle */}
-          <div className="flex gap-1 rounded-2xl bg-[hsl(var(--bg-input))] p-1">
+          <div className="flex gap-1 rounded-xl bg-[hsl(var(--bg-input))] p-1">
             {(["login", "signup"] as Mode[]).map((m) => (
               <button key={m} type="button" onClick={() => { setMode(m); setError(""); }}
                 className={`flex-1 rounded-xl py-2 text-xs font-bold transition-all ${
@@ -173,7 +172,7 @@ export default function InlineLoginModal({ onClose, onSuccess }: Props) {
                   <div className="relative">
                     <input type={showPw ? "text" : "password"} required value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      placeholder="••••••••"
+                      placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                       className="field text-sm pe-10" />
                     <button type="button" onClick={() => setShowPw(!showPw)}
                       className="absolute end-3 top-1/2 -translate-y-1/2 p-1 rounded-lg t3 hover:t1 transition-colors">
@@ -190,8 +189,8 @@ export default function InlineLoginModal({ onClose, onSuccess }: Props) {
 
                 <motion.button type="submit" disabled={loading}
                   whileTap={{ scale: 0.97 }} transition={tapTransition}
-                  className="flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-bold text-white disabled:opacity-50"
-                  style={{ background: "linear-gradient(135deg, #06B6D4, #7C3AED)" }}>
+                  className="flex w-full items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-bold text-white disabled:opacity-50"
+                  style={{ background: "#06B6D4", color: "#0D1117" }}>
                   {loading
                     ? <><Loader2 className="h-4 w-4 animate-spin" />{t("auth.signing_in")}</>
                     : mode === "login"
@@ -213,3 +212,4 @@ export default function InlineLoginModal({ onClose, onSuccess }: Props) {
     </div>
   );
 }
+

@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { readJson } from "@/lib/api/request";
+import { insertLinkedTransaction } from "@/lib/finance/serverTransactions";
+import { writeLedgerEntry } from "@/lib/ledger/writer";
 
 function isOptionalCompletedAtError(message = "") {
   return message.includes("completed_at") ||
@@ -61,6 +63,31 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
   // Race condition guard: if goal was deleted between fetch and update
   if (!updatedRows || updatedRows.length === 0) return NextResponse.json({ error: "Goal not found" }, { status: 404 });
+
+  // Create an expense transaction so the contribution appears in the unified ledger.
+  // Errors here are non-fatal — the goal update already succeeded.
+  void insertLinkedTransaction(supabase, {
+    user_id: user.id,
+    title: `Goal contribution: ${goal.title}`,
+    amount,
+    type: "expense",
+    source: "goal_contribution",
+    related_source_id: goal.id,
+    transaction_date: new Date().toISOString().slice(0, 10),
+    notes: null,
+  }).then(({ data: txData }) => {
+    // Also write to the unified ledger
+    void writeLedgerEntry(supabase, {
+      user_id:       user.id,
+      source_module: "goal_contribution",
+      source_id:     goal.id,
+      entry_type:    "goal_contribution",
+      direction:     "outflow",
+      amount,
+      description:   `Goal contribution: ${goal.title}`,
+      transaction_id: txData?.id ?? null,
+    });
+  }).catch(() => undefined);
 
   if (completed && !goal.completed_at) {
     void supabase.from("notifications").insert({

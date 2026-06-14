@@ -16,7 +16,8 @@ type FinancialDomain =
   | "accounts"
   | "subscriptions"
   | "goals"
-  | "calendar";
+  | "calendar"
+  | "ledger";
 
 export function invalidateDomains(queryClient: QueryClient, domains: FinancialDomain[]) {
   domains.forEach((domain) => {
@@ -62,24 +63,27 @@ export function invalidateDomains(queryClient: QueryClient, domains: FinancialDo
       case "calendar":
         void queryClient.invalidateQueries({ queryKey: queryKeys.calendar.all, refetchType: "all" });
         break;
+      case "ledger":
+        void queryClient.invalidateQueries({ queryKey: queryKeys.ledger.all, refetchType: "all" });
+        break;
     }
   });
 }
 
 export function invalidateFinancialQueries(queryClient: QueryClient) {
-  invalidateDomains(queryClient, ["transactions", "dashboard", "analytics", "budgets"]);
+  invalidateDomains(queryClient, ["transactions", "dashboard", "analytics", "budgets", "accounts", "ledger"]);
 }
 
 export function invalidateDebtQueries(queryClient: QueryClient) {
-  invalidateDomains(queryClient, ["debts", "transactions", "dashboard", "analytics", "budgets", "contacts"]);
+  invalidateDomains(queryClient, ["debts", "transactions", "dashboard", "analytics", "budgets", "contacts", "accounts", "ledger"]);
 }
 
 export function invalidateInvestmentQueries(queryClient: QueryClient) {
-  invalidateDomains(queryClient, ["investments", "transactions", "dashboard", "analytics", "budgets"]);
+  invalidateDomains(queryClient, ["investments", "transactions", "dashboard", "analytics", "budgets", "accounts", "ledger"]);
 }
 
 export function invalidateWorkQueries(queryClient: QueryClient) {
-  invalidateDomains(queryClient, ["work", "transactions", "dashboard", "analytics", "budgets"]);
+  invalidateDomains(queryClient, ["work", "transactions", "dashboard", "analytics", "budgets", "accounts", "ledger"]);
 }
 
 export function invalidateForRealtimeTable(queryClient: QueryClient, table: string) {
@@ -119,7 +123,12 @@ export function invalidateForRealtimeTable(queryClient: QueryClient, table: stri
   }
 
   if (table === "accounts") {
-    invalidateDomains(queryClient, ["accounts", "dashboard"]);
+    invalidateDomains(queryClient, ["accounts", "dashboard", "ledger"]);
+    return;
+  }
+
+  if (table === "ledger_entries") {
+    invalidateDomains(queryClient, ["ledger"]);
     return;
   }
 

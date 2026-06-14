@@ -39,6 +39,12 @@ import { recurringTransactions } from "./recurring/config";
 import { exportData }          from "./export/config";
 import { ledger }              from "./ledger/config";
 import { profile }             from "./profile/config";
+// Phase 13 — Business Platform
+import { invoices }            from "./invoices/config";
+import { projects }            from "./projects/config";
+import { automation }          from "./automation/config";
+// Phase 14 — Governance & Security
+import { adminPanel }          from "./admin/config";
 
 export const FEATURE_REGISTRY: FeatureModule[] = [
   // ── Primary (always visible) ──────────────────────────────
@@ -75,6 +81,14 @@ export const FEATURE_REGISTRY: FeatureModule[] = [
   exportData,
   ledger,
   profile,
+
+  // ── Phase 13 — Business Platform (showInNav: false) ─────────
+  invoices,
+  projects,
+  automation,
+
+  // ── Phase 14 — Governance & Security (showInNav: false) ──────
+  adminPanel,
 ];
 
 export const ACTIVE_FEATURES = FEATURE_REGISTRY.filter(f => f.enabled !== false);

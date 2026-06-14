@@ -1,17 +1,17 @@
-"use client";
+﻿"use client";
 
-import { useEffect, useState } from "react";
-import { createPortal } from "react-dom";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  X, TrendingUp, Bitcoin, BarChart2, Home, Package, Check, Loader2,
+  X, TrendingUp, Bitcoin, BarChart2, Home, Package, Check,
   ArrowDownRight, CalendarDays, FileText, Wallet,
 } from "lucide-react";
+import { FormShell, FormFooter, FormSaveBtn } from "@/components/ui/FormShell";
 import { Investment, InvestmentFormData, AssetType } from "@/types";
 import { useTranslation } from "@/lib/i18n";
 import { useCurrency } from "@/lib/currency";
 import { useGuest } from "@/contexts/GuestContext";
-import { spring, tapTransition } from "@/lib/motion";
+import { tapTransition } from "@/lib/motion";
 import SheetDragHandle from "@/components/ui/SheetDragHandle";
 
 interface Props {
@@ -38,10 +38,6 @@ export default function InvestmentForm({ initial, onSubmit, onClose }: Props) {
   const { isLoading: guestLoading } = useGuest();
   const isEdit = !!initial;
 
-  useEffect(() => {
-    window.dispatchEvent(new CustomEvent("spendix:nav-hide"));
-    return () => { window.dispatchEvent(new CustomEvent("spendix:nav-show")); };
-  }, []);
 
   const [form, setForm] = useState<InvestmentFormData>({
     asset_name:      initial?.asset_name      ?? "",
@@ -91,37 +87,15 @@ export default function InvestmentForm({ initial, onSubmit, onClose }: Props) {
     }
   }
 
-  if (typeof document === "undefined") return null;
-
-  return createPortal(
-    <div
-      className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-4"
-      style={{
-        backgroundColor: "rgba(11,15,20,0.75)",
-        backdropFilter: "blur(8px)",
-        WebkitBackdropFilter: "blur(8px)",
-      }}
-      onClick={(event) => event.target === event.currentTarget && onClose()}
-    >
-      <motion.div
-        initial={{ y: 60, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        exit={{ y: 60, opacity: 0 }}
-        transition={spring}
-        className="flex w-full flex-col overflow-hidden rounded-t-[2rem] sm:max-w-md sm:rounded-[1.75rem]"
-        style={{
-          backgroundColor: "hsl(var(--bg-card))",
-          border: "1px solid hsl(var(--border))",
-          maxHeight: "92dvh",
-        }}
-      >
+  return (
+    <FormShell onClose={onClose} maxWidth="sm:max-w-md">
         <div className="shrink-0 px-5 pb-4 pt-5" style={{ background: `${cfg.ring}12` }}>
           <div className="mb-2 sm:hidden">
             <SheetDragHandle onClose={onClose} />
           </div>
           <div className="flex items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-3">
-              <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${cfg.bg}`}>
+              <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${cfg.bg}`}>
                 <cfg.icon className={`h-5 w-5 ${cfg.color}`} />
               </div>
               <div className="min-w-0">
@@ -140,7 +114,7 @@ export default function InvestmentForm({ initial, onSubmit, onClose }: Props) {
         <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
           <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-5 py-5">
 
-            {/* 1 ── Amount (big, centered) ──────────────────── */}
+            {/* 1 â”€â”€ Amount (big, centered) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
             <div className="text-center">
               <p className="text-[10px] font-semibold t3 uppercase tracking-[0.14em] mb-3">
                 {t("investments.amount_invested_label")}
@@ -171,7 +145,7 @@ export default function InvestmentForm({ initial, onSubmit, onClose }: Props) {
             {/* Separator */}
             <div className="h-px bg-[hsl(var(--border-2))]" />
 
-            {/* 2 ── Asset name ─────────────────────────────── */}
+            {/* 2 â”€â”€ Asset name â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
             <div className="space-y-2">
               <label className="block text-[10px] font-semibold uppercase tracking-wide t3">
                 {t("investments.asset_name")}
@@ -185,7 +159,7 @@ export default function InvestmentForm({ initial, onSubmit, onClose }: Props) {
               />
             </div>
 
-            {/* 3 ── Asset type ─────────────────────────────── */}
+            {/* 3 â”€â”€ Asset type â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
             <section className="space-y-2.5">
               <label className="block text-[10px] font-semibold uppercase tracking-wide t3">
                 {t("investments.type")}
@@ -199,7 +173,7 @@ export default function InvestmentForm({ initial, onSubmit, onClose }: Props) {
                       key={type} type="button"
                       onClick={() => set("asset_type", type)}
                       whileTap={{ scale: 0.95 }} transition={tapTransition}
-                      className={`relative flex flex-col items-center justify-center gap-1.5 rounded-2xl border py-3 transition-all ${
+                      className={`relative flex flex-col items-center justify-center gap-1.5 rounded-xl border py-3 transition-all ${
                         active ? `${item.bg} border-2` : "bg-[hsl(var(--bg-input))] border-[hsl(var(--border))]"
                       }`}
                       style={active ? { borderColor: `${item.ring}60` } : undefined}
@@ -222,7 +196,7 @@ export default function InvestmentForm({ initial, onSubmit, onClose }: Props) {
               </div>
             </section>
 
-            {/* 4 ── Date ───────────────────────────────────── */}
+            {/* 4 â”€â”€ Date â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
             <div className="space-y-2">
               <label className="block text-[10px] font-semibold uppercase tracking-wide t3">
                 {t("investments.date")}
@@ -238,8 +212,8 @@ export default function InvestmentForm({ initial, onSubmit, onClose }: Props) {
               </div>
             </div>
 
-            {/* 5 ── Optional details ────────────────────── */}
-            <section className="space-y-4 rounded-2xl border border-[hsl(var(--border))] p-4">
+            {/* 5 â”€â”€ Optional details â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+            <section className="space-y-4 rounded-xl border border-[hsl(var(--border))] p-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="text-[10px] font-semibold uppercase tracking-wide t3">{t("investments.optional_details")}</p>
@@ -280,7 +254,7 @@ export default function InvestmentForm({ initial, onSubmit, onClose }: Props) {
                 <motion.div
                   initial={{ opacity: 0, y: -4 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className={`rounded-2xl border px-4 py-3 ${
+                  className={`rounded-xl border px-4 py-3 ${
                     gain >= 0 ? "border-emerald-400/20 bg-emerald-400/10" : "border-rose-400/20 bg-rose-400/10"
                   }`}
                 >
@@ -331,44 +305,17 @@ export default function InvestmentForm({ initial, onSubmit, onClose }: Props) {
             </AnimatePresence>
           </div>
 
-          <div className="shrink-0 px-5 pt-2" style={{ paddingBottom: "max(20px, calc(env(safe-area-inset-bottom, 0px) + 8px))" }}>
-            <motion.button
-              type="submit"
+          <FormFooter>
+            <FormSaveBtn
+              loading={loading}
               disabled={!canSubmit}
-              whileTap={{ scale: 0.97 }}
-              transition={tapTransition}
-              className="w-full rounded-2xl py-3.5 text-sm font-bold text-white transition-all disabled:opacity-40"
-              style={{ background: `linear-gradient(135deg, ${cfg.ring}, ${cfg.ring}bb)` }}
-            >
-              <AnimatePresence mode="wait">
-                {loading ? (
-                  <motion.span
-                    key="loading"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="flex items-center justify-center gap-2"
-                  >
-                    <Loader2 className="h-4 w-4 animate-spin" />{t("common.saving")}
-                  </motion.span>
-                ) : (
-                  <motion.span
-                    key="idle"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="flex items-center justify-center gap-2"
-                  >
-                    <TrendingUp className="h-4 w-4" />
-                    {isEdit ? t("investments.save_edit") : t("investments.add")}
-                  </motion.span>
-                )}
-              </AnimatePresence>
-            </motion.button>
-          </div>
+              accentHex={cfg.ring}
+              icon={<TrendingUp className="h-4 w-4" />}
+              label={isEdit ? t("investments.save_edit") : t("investments.add")}
+            />
+          </FormFooter>
         </form>
-      </motion.div>
-    </div>,
-    document.body
+    </FormShell>
   );
 }
+

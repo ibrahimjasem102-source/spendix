@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { motion } from "framer-motion";
@@ -11,7 +11,7 @@ import { useGuest } from "@/contexts/GuestContext";
 import { safeFetch } from "@/lib/fetch-safe";
 import { spring, tapTransition } from "@/lib/motion";
 
-// ── Export items ───────────────────────────────────────────────
+// â”€â”€ Export items â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 interface ExportItem {
   type: string;
@@ -80,7 +80,7 @@ const EXPORTS: ExportItem[] = [
   },
 ];
 
-// ── Page ───────────────────────────────────────────────────────
+// â”€â”€ Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export default function ExportPage() {
   const { t }     = useTranslation();
@@ -118,7 +118,7 @@ export default function ExportPage() {
     <div className="space-y-5">
       {/* Header */}
       <div className="flex min-w-0 items-center gap-2.5">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-cyan-400/10">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-cyan-400/10">
           <Download className="h-4 w-4 text-cyan-400" />
         </div>
         <div className="min-w-0">
@@ -163,7 +163,7 @@ export default function ExportPage() {
               }`}
             >
               {/* Icon */}
-              <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 ${item.bg}`}>
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${item.bg}`}>
                 <Icon className={`w-4 h-4 ${item.color}`} />
               </div>
 
@@ -201,3 +201,4 @@ export default function ExportPage() {
     </div>
   );
 }
+

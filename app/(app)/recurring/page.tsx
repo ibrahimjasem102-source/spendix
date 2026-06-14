@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -17,7 +17,7 @@ import ConfirmModal from "@/components/ui/ConfirmModal";
 import SheetDragHandle from "@/components/ui/SheetDragHandle";
 import type { RecurringTransaction, RecurringFormData } from "@/app/api/recurring/route";
 
-// ── Helpers ────────────────────────────────────────────────────
+// â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const FREQUENCIES = ["daily", "weekly", "monthly", "yearly"] as const;
 type Frequency = typeof FREQUENCIES[number];
@@ -41,7 +41,7 @@ function toMonthly(amount: number, frequency: Frequency, interval: number): numb
   return amount;
 }
 
-// ── Form ───────────────────────────────────────────────────────
+// â”€â”€ Form â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 interface FormProps {
   initial?: RecurringTransaction;
@@ -119,7 +119,7 @@ function RecurringForm({ initial, onSubmit, onClose, categories }: FormProps) {
           </div>
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2.5">
-              <div className="flex h-9 w-9 items-center justify-center rounded-2xl"
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl"
                 style={{ backgroundColor: `${accent}18` }}>
                 <RefreshCw className="h-4 w-4" style={{ color: accent }} />
               </div>
@@ -134,7 +134,7 @@ function RecurringForm({ initial, onSubmit, onClose, categories }: FormProps) {
           </div>
 
           {/* Type toggle */}
-          <div className="flex gap-1.5 rounded-2xl bg-[hsl(var(--bg-input))] p-1">
+          <div className="flex gap-1.5 rounded-xl bg-[hsl(var(--bg-input))] p-1">
             {(["expense", "income"] as const).map((item) => {
               const itemColor = item === "income" ? "#10B981" : "#F43F5E";
               const isActive  = form.type === item;
@@ -242,7 +242,7 @@ function RecurringForm({ initial, onSubmit, onClose, categories }: FormProps) {
             )}
 
             {/* Auto-create */}
-            <label className="flex cursor-pointer items-center justify-between gap-3 rounded-2xl border border-[hsl(var(--border))] p-4">
+            <label className="flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-[hsl(var(--border))] p-4">
               <div className="min-w-0">
                 <p className="text-sm font-semibold t1">{t("recurring.auto_create")}</p>
                 <p className="mt-0.5 text-xs t3">{t("recurring.auto_create_hint")}</p>
@@ -275,7 +275,7 @@ function RecurringForm({ initial, onSubmit, onClose, categories }: FormProps) {
           <div className="shrink-0 px-5 pt-2" style={{ paddingBottom: "max(80px, calc(env(safe-area-inset-bottom,0px) + 72px))" }}>
             <motion.button type="submit" disabled={loading}
               whileTap={{ scale: 0.97 }} transition={tapTransition}
-              className="flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-bold text-white transition-all disabled:opacity-40"
+              className="flex w-full items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-bold text-white transition-all disabled:opacity-40"
               style={{ background: `linear-gradient(135deg, ${accent}, ${accent}bb)` }}>
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
               {loading ? t("common.saving") : initial ? t("common.save") : t("recurring.create")}
@@ -287,7 +287,7 @@ function RecurringForm({ initial, onSubmit, onClose, categories }: FormProps) {
   );
 }
 
-// ── Card ───────────────────────────────────────────────────────
+// â”€â”€ Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function RecurringCard({
   r, catMap, onEdit, onDelete, onToggle,
@@ -314,7 +314,7 @@ function RecurringCard({
     >
       <div className="flex items-center gap-3">
         {/* Icon */}
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl"
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
           style={{ backgroundColor: `${color}15` }}>
           {isIncome
             ? <ArrowUpRight   className="h-4 w-4" style={{ color }} />
@@ -335,7 +335,7 @@ function RecurringCard({
             <span className="flex items-center gap-1 text-[11px] t3">
               <RefreshCw className="h-3 w-3" />
               {t(`recurring.freq_${r.frequency}`)}
-              {r.interval_count > 1 && ` ×${r.interval_count}`}
+              {r.interval_count > 1 && ` Ã—${r.interval_count}`}
             </span>
             {cat && (
               <span className="rounded-full px-1.5 py-0.5 text-[11px] font-medium"
@@ -357,7 +357,7 @@ function RecurringCard({
         {/* Right side */}
         <div className="shrink-0 text-end">
           <p className="text-base font-black number-display" style={{ color }}>
-            {isIncome ? "+" : "−"}{symbol}{Number(r.amount).toFixed(0)}
+            {isIncome ? "+" : "âˆ’"}{symbol}{Number(r.amount).toFixed(0)}
           </p>
           <div className="mt-1.5 flex items-center justify-end gap-0.5">
             <button onClick={() => onToggle(r)}
@@ -383,7 +383,7 @@ function RecurringCard({
   );
 }
 
-// ── Page ───────────────────────────────────────────────────────
+// â”€â”€ Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export default function RecurringPage() {
   const { t }              = useTranslation();
@@ -456,7 +456,7 @@ export default function RecurringPage() {
       {/* Header */}
       <div className="flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2.5">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-teal-400/10">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-400/10">
             <RefreshCw className="h-4 w-4 text-teal-400" />
           </div>
           <div className="min-w-0">
@@ -467,7 +467,7 @@ export default function RecurringPage() {
         <motion.button
           onClick={openCreate}
           whileTap={{ scale: 0.93 }} transition={tapTransition}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-teal-400/10 text-teal-400 hover:bg-teal-400/20 transition-all">
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-400/10 text-teal-400 hover:bg-teal-400/20 transition-all">
           <Plus className="h-5 w-5" />
         </motion.button>
       </div>
@@ -493,7 +493,7 @@ export default function RecurringPage() {
               {t("recurring.monthly_impact")}
             </p>
             <p className={`text-xl font-bold ${monthlyIncome >= monthlyExpense ? "text-emerald-400" : "text-rose-400"}`}>
-              {monthlyIncome >= monthlyExpense ? "+" : "−"}{symbol}{Math.abs(monthlyIncome - monthlyExpense).toFixed(0)}
+              {monthlyIncome >= monthlyExpense ? "+" : "âˆ’"}{symbol}{Math.abs(monthlyIncome - monthlyExpense).toFixed(0)}
             </p>
           </div>
           <div className="text-center">
@@ -548,13 +548,13 @@ export default function RecurringPage() {
         <div className="space-y-2.5">
           {active.length === 0 ? (
             <div className="card flex flex-col items-center gap-3 py-14">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-teal-400/10">
+              <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-teal-400/10">
                 <RefreshCw className="h-6 w-6 text-teal-400 opacity-40" />
               </div>
               <p className="text-sm t3">{t("recurring.empty")}</p>
               <motion.button onClick={openCreate}
                 whileTap={{ scale: 0.97 }} transition={tapTransition}
-                className="rounded-2xl bg-teal-400/10 px-4 py-2 text-sm font-semibold text-teal-400 hover:bg-teal-400/20 transition-all">
+                className="rounded-xl bg-teal-400/10 px-4 py-2 text-sm font-semibold text-teal-400 hover:bg-teal-400/20 transition-all">
                 {t("recurring.create")}
               </motion.button>
             </div>
@@ -573,7 +573,7 @@ export default function RecurringPage() {
       {inactive.length > 0 && (
         <div className="space-y-2">
           <p className="px-1 text-[10px] font-semibold uppercase tracking-wide t3">
-            {t("recurring.paused")} · {inactive.length}
+            {t("recurring.paused")} Â· {inactive.length}
           </p>
           <AnimatePresence mode="popLayout">
             {inactive.map((r) => (
@@ -608,3 +608,4 @@ export default function RecurringPage() {
     </div>
   );
 }
+

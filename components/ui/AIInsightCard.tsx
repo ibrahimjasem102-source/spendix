@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { motion } from "framer-motion";
 import { fadeIn, spring } from "@/lib/motion";
@@ -14,7 +14,7 @@ export interface FinancialInsight {
   level: InsightLevel;
   actionLabel?: string;
   actionHref?: string;
-  confidence?: number;   // 0–1
+  confidence?: number;   // 0â€“1
 }
 
 const LEVEL_CONFIG: Record<InsightLevel, {
@@ -75,7 +75,7 @@ export default function AIInsightCard({ insight, delay = 0 }: Props) {
       animate="visible"
       transition={{ ...spring, delay }}
       className={cn(
-        "rounded-2xl p-4 border",
+        "rounded-xl p-4 border",
         cfg.bg, cfg.border
       )}
     >
@@ -126,3 +126,4 @@ export default function AIInsightCard({ insight, delay = 0 }: Props) {
     </motion.div>
   );
 }
+

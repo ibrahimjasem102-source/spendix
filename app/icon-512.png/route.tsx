@@ -1,4 +1,4 @@
-import { ImageResponse } from "next/og";
+﻿import { ImageResponse } from "next/og";
 
 export const runtime = "edge";
 
@@ -9,7 +9,7 @@ export async function GET() {
         style={{
           width: 512,
           height: 512,
-          background: "linear-gradient(135deg, #06B6D4 0%, #7C3AED 100%)",
+          background: "#06B6D4",
           borderRadius: 112,
           display: "flex",
           alignItems: "center",
@@ -28,3 +28,4 @@ export async function GET() {
     }
   );
 }
+

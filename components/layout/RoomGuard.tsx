@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
@@ -50,7 +50,7 @@ export default function RoomGuard({ children }: { children: React.ReactNode }) {
         className="card w-full max-w-sm p-5 sm:p-6"
       >
         <div className="mb-5 flex items-start gap-3">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-cyan-400/10 text-cyan-300">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-cyan-400/10 text-cyan-300">
             <LockKeyhole className="h-4 w-4" />
           </div>
           <div className="min-w-0">
@@ -101,3 +101,4 @@ export default function RoomGuard({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
+

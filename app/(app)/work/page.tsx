@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -33,7 +33,7 @@ import {
   useCreateWorkPayment, useUpdateWorkPayment, useDeleteWorkPayment,
 } from "@/lib/query/hooks";
 
-// ── Types & constants ─────────────────────────────────────────
+// â”€â”€ Types & constants â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 type Tab = "sessions" | "payments" | "recurring" | "statistics";
 
@@ -61,7 +61,7 @@ function paidPct(s: WorkSession, payments: WorkPayment[]) {
   return exp > 0 ? Math.min(100, Math.round((paid / exp) * 100)) : 0;
 }
 
-// ── Page ──────────────────────────────────────────────────────
+// â”€â”€ Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export default function WorkPage() {
   const { t }               = useTranslation();
@@ -131,7 +131,7 @@ export default function WorkPage() {
     setWorkFormTab("session"); setShowWorkForm(true);
   }
 
-  // ── Stats ─────────────────────────────────────────────────────
+  // â”€â”€ Stats â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const now  = new Date();
   const mnth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 
@@ -179,12 +179,12 @@ export default function WorkPage() {
   const deletingPayment = deletePaymentM.isPending ? (deletePaymentM.variables as string) : null;
 
   return (
-    <PlanGate require="elite" featureName="تتبع العمل والدخل" overlay>
+    <PlanGate require="elite" featureName="ØªØªØ¨Ø¹ Ø§Ù„Ø¹Ù…Ù„ ÙˆØ§Ù„Ø¯Ø®Ù„" overlay>
     <div className="space-y-5">
 
-      {/* ── Header ─────────────────────────────────────────────── */}
+      {/* â”€â”€ Header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <div className="flex min-w-0 items-center gap-2.5">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-amber-400/10">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-400/10">
           <Briefcase className="h-4 w-4 text-amber-400" />
         </div>
         <div className="min-w-0">
@@ -193,7 +193,7 @@ export default function WorkPage() {
         </div>
       </div>
 
-      {/* ── Summary Card ───────────────────────────────────────── */}
+      {/* â”€â”€ Summary Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <div className="rounded-[1.5rem] overflow-hidden border border-[hsl(var(--border))]"
         style={{ background: "linear-gradient(145deg, hsl(var(--bg-card)) 0%, hsl(var(--bg-card-2)) 100%)" }}>
 
@@ -263,7 +263,7 @@ export default function WorkPage() {
         </div>
       </div>
 
-      {/* ── Tabs ───────────────────────────────────────────────── */}
+      {/* â”€â”€ Tabs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <div className="flex gap-1 overflow-x-auto pb-0.5 -mx-1 px-1">
         {TABS.map((tb) => (
           <button key={tb.value} onClick={() => setTab(tb.value)}
@@ -291,14 +291,14 @@ export default function WorkPage() {
         </div>
       )}
 
-      {/* ── Sessions ───────────────────────────────────────────── */}
+      {/* â”€â”€ Sessions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <AnimatePresence mode="popLayout">
         {!loading && tab === "sessions" && (
           <motion.div key="sessions" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={spring}
             className="space-y-2.5">
             {oneSessions.length === 0 ? (
               <div className="card py-14 flex flex-col items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-cyan-400/10 flex items-center justify-center">
+                <div className="w-12 h-12 rounded-xl bg-cyan-400/10 flex items-center justify-center">
                   <Briefcase className="w-5 h-5 text-cyan-400 opacity-40" />
                 </div>
                 <p className="text-sm t3">{t("work.no_sessions")}</p>
@@ -343,13 +343,13 @@ export default function WorkPage() {
                     <div className="flex items-center gap-2 flex-wrap text-[11px] t3 mb-2.5">
                       <span className="flex items-center gap-1">
                         <Clock className="w-3 h-3" />
-                        {Number(s.hours_worked).toFixed(1)}h × {symbol}{Number(s.hourly_rate).toFixed(0)}/h
+                        {Number(s.hours_worked).toFixed(1)}h Ã— {symbol}{Number(s.hourly_rate).toFixed(0)}/h
                       </span>
-                      <span>·</span>
+                      <span>Â·</span>
                       <span>{s.work_date}</span>
                       {s.due_date && (
                         <>
-                          <span>·</span>
+                          <span>Â·</span>
                           <span className={s.due_date < today && st !== "paid" ? "text-rose-400 font-semibold" : ""}>
                             {t("work.due_date") || "Due"}: {s.due_date}
                           </span>
@@ -404,14 +404,14 @@ export default function WorkPage() {
         )}
       </AnimatePresence>
 
-      {/* ── Payments ───────────────────────────────────────────── */}
+      {/* â”€â”€ Payments â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <AnimatePresence mode="popLayout">
         {!loading && tab === "payments" && (
           <motion.div key="payments" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={spring}
             className="space-y-2.5">
             {payments.length === 0 ? (
               <div className="card py-14 flex flex-col items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-emerald-400/10 flex items-center justify-center">
+                <div className="w-12 h-12 rounded-xl bg-emerald-400/10 flex items-center justify-center">
                   <DollarSign className="w-5 h-5 text-emerald-400 opacity-40" />
                 </div>
                 <p className="text-sm t3">{t("work.no_payments")}</p>
@@ -426,7 +426,7 @@ export default function WorkPage() {
                   className={`card px-4 py-3.5 transition-opacity ${isDeleting ? "opacity-40 pointer-events-none" : ""}`}>
                   <div className="flex items-center gap-3">
                     {/* Icon */}
-                    <div className="shrink-0 w-10 h-10 rounded-2xl flex items-center justify-center"
+                    <div className="shrink-0 w-10 h-10 rounded-xl flex items-center justify-center"
                       style={{ backgroundColor: "rgba(52,211,153,0.12)" }}>
                       <ArrowUpRight className="w-4 h-4 text-emerald-400" />
                     </div>
@@ -441,13 +441,13 @@ export default function WorkPage() {
                         <span>{p.payment_date}</span>
                         {linkedSession && (
                           <>
-                            <span>·</span>
+                            <span>Â·</span>
                             <span className="text-cyan-400/80 truncate">{linkedSession.title}</span>
                           </>
                         )}
                         {p.notes && (
                           <>
-                            <span>·</span>
+                            <span>Â·</span>
                             <span className="truncate">{p.notes}</span>
                           </>
                         )}
@@ -478,14 +478,14 @@ export default function WorkPage() {
         )}
       </AnimatePresence>
 
-      {/* ── Recurring ──────────────────────────────────────────── */}
+      {/* â”€â”€ Recurring â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <AnimatePresence mode="popLayout">
         {!loading && tab === "recurring" && (
           <motion.div key="recurring" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={spring}
             className="space-y-2.5">
             {recurSessions.length === 0 ? (
               <div className="card py-14 flex flex-col items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-purple-400/10 flex items-center justify-center">
+                <div className="w-12 h-12 rounded-xl bg-purple-400/10 flex items-center justify-center">
                   <RefreshCcw className="w-5 h-5 text-purple-400 opacity-40" />
                 </div>
                 <p className="text-sm t3">{t("work.no_recurring")}</p>
@@ -508,7 +508,7 @@ export default function WorkPage() {
                           {t(`work.recurrence_${s.recurrence}`)}
                         </span>
                         <span className="text-[11px] t3">
-                          {Number(s.hours_worked).toFixed(1)}h × {symbol}{Number(s.hourly_rate).toFixed(0)}/h
+                          {Number(s.hours_worked).toFixed(1)}h Ã— {symbol}{Number(s.hourly_rate).toFixed(0)}/h
                         </span>
                       </div>
                     </div>
@@ -529,7 +529,7 @@ export default function WorkPage() {
         )}
       </AnimatePresence>
 
-      {/* ── Statistics ─────────────────────────────────────────── */}
+      {/* â”€â”€ Statistics â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <AnimatePresence mode="popLayout">
         {!loading && tab === "statistics" && (
           <motion.div key="statistics" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={spring}
@@ -618,7 +618,7 @@ export default function WorkPage() {
                 <div className="card p-5">
                   <div className="flex items-center gap-2 mb-4">
                     <div className="p-1.5 rounded-xl bg-purple-400/10"><Briefcase className="w-4 h-4 text-purple-400" /></div>
-                    <h3 className="text-sm font-bold t1">{t("work.top_clients") || "أبرز العملاء"}</h3>
+                    <h3 className="text-sm font-bold t1">{t("work.top_clients") || "Ø£Ø¨Ø±Ø² Ø§Ù„Ø¹Ù…Ù„Ø§Ø¡"}</h3>
                   </div>
                   <div className="space-y-3">
                     {clients.map(([client, stats]) => (
@@ -644,7 +644,7 @@ export default function WorkPage() {
         )}
       </AnimatePresence>
 
-      {/* ── Modals ─────────────────────────────────────────────── */}
+      {/* â”€â”€ Modals â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       {showWorkForm && (
         <WorkForm
           initialTab={workFormTab}
@@ -669,3 +669,4 @@ export default function WorkPage() {
     </PlanGate>
   );
 }
+

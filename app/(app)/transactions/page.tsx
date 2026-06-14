@@ -1,10 +1,10 @@
-"use client";
+﻿"use client";
 
 import { useMemo, useState, Suspense } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
-  Banknote, Building2, CreditCard, Wallet, PiggyBank,
+  Banknote, Building2, CreditCard, Wallet, PiggyBank, TrendingUp,
   ChevronRight, Loader2, Plus,
   Receipt, AlertCircle, CheckCircle2,
   Repeat, Landmark,
@@ -29,16 +29,17 @@ import ToastList from "@/components/ui/Toast";
 import { useToast } from "@/hooks/useToast";
 import { staggerContainer, staggerItem } from "@/lib/motion";
 
-// ── Account type meta ─────────────────────────────────────────
+// â”€â”€ Account type meta â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const ACCOUNT_META: Record<AccountType, { icon: React.ElementType; color: string }> = {
-  cash:        { icon: Banknote,   color: "#10B981" },
-  bank:        { icon: Building2,  color: "#3B82F6" },
-  credit_card: { icon: CreditCard, color: "#8B5CF6" },
-  wallet:      { icon: Wallet,     color: "#F59E0B" },
-  savings:     { icon: PiggyBank,  color: "#06B6D4" },
+  cash:        { icon: Banknote,    color: "#10B981" },
+  bank:        { icon: Building2,   color: "#3B82F6" },
+  credit_card: { icon: CreditCard,  color: "#8B5CF6" },
+  wallet:      { icon: Wallet,      color: "#F59E0B" },
+  savings:     { icon: PiggyBank,   color: "#06B6D4" },
+  investment:  { icon: TrendingUp,  color: "#6366F1" },
 };
 
-// ── Section header ────────────────────────────────────────────
+// â”€â”€ Section header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function SectionHeader({ title, href }: { title: string; href: string }) {
   const { t } = useTranslation();
   return (
@@ -55,7 +56,7 @@ function SectionHeader({ title, href }: { title: string; href: string }) {
   );
 }
 
-// ── Skeleton row ──────────────────────────────────────────────
+// â”€â”€ Skeleton row â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function SkeletonRows({ count = 3 }: { count?: number }) {
   return (
     <div className="card overflow-hidden">
@@ -76,7 +77,7 @@ function SkeletonRows({ count = 3 }: { count?: number }) {
   );
 }
 
-// ── Accounts section ──────────────────────────────────────────
+// â”€â”€ Accounts section â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function AccountsSection({
   accounts, isLoading, format,
 }: {
@@ -92,7 +93,7 @@ function AccountsSection({
         {[...Array(3)].map((_, i) => (
           <div
             key={i}
-            className="shrink-0 w-36 h-[88px] rounded-2xl bg-[hsl(var(--bg-input))] animate-pulse"
+            className="shrink-0 w-36 h-[88px] rounded-xl bg-[hsl(var(--bg-input))] animate-pulse"
           />
         ))}
       </div>
@@ -110,7 +111,7 @@ function AccountsSection({
       {accounts.length > 0 && (
         <Link
           href={ROUTES.accounts}
-          className="shrink-0 snap-start w-36 rounded-2xl p-3.5 flex flex-col justify-between"
+          className="shrink-0 snap-start w-36 rounded-xl p-3.5 flex flex-col justify-between"
           style={{
             background: "linear-gradient(135deg, rgba(6,182,212,0.18), rgba(6,182,212,0.06))",
             border: "1px solid rgba(6,182,212,0.25)",
@@ -135,7 +136,7 @@ function AccountsSection({
           <Link
             key={account.id}
             href={ROUTES.accounts}
-            className="shrink-0 snap-start w-36 rounded-2xl p-3.5 flex flex-col justify-between"
+            className="shrink-0 snap-start w-36 rounded-xl p-3.5 flex flex-col justify-between"
             style={{
               background: `linear-gradient(135deg, ${meta.color}18, ${meta.color}08)`,
               border: `1px solid ${meta.color}25`,
@@ -155,7 +156,7 @@ function AccountsSection({
       {/* Add account */}
       <Link
         href={ROUTES.accounts}
-        className="shrink-0 snap-start w-16 rounded-2xl border-2 border-dashed border-[hsl(var(--border))] flex items-center justify-center hover:border-cyan-400/40 transition-colors"
+        className="shrink-0 snap-start w-16 rounded-xl border-2 border-dashed border-[hsl(var(--border))] flex items-center justify-center hover:border-cyan-400/40 transition-colors"
       >
         <Plus className="w-5 h-5 t3" />
       </Link>
@@ -163,7 +164,7 @@ function AccountsSection({
   );
 }
 
-// ── Recent transactions ───────────────────────────────────────
+// â”€â”€ Recent transactions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function RecentTransactions({
   transactions, isLoading,
 }: {
@@ -192,7 +193,7 @@ function RecentTransactions({
   );
 }
 
-// ── Budgets section ───────────────────────────────────────────
+// â”€â”€ Budgets section â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function BudgetsSection({
   budgets, isLoading, format,
 }: {
@@ -235,7 +236,7 @@ function BudgetsSection({
                   />
                 )}
                 <p className="text-sm font-medium t1 truncate">
-                  {budget.category?.name ?? "—"}
+                  {budget.category?.name ?? "â€”"}
                 </p>
               </div>
               <p className="text-[10px] t3 tabular-nums shrink-0 ms-2">
@@ -257,7 +258,7 @@ function BudgetsSection({
   );
 }
 
-// ── Subscriptions section ─────────────────────────────────────
+// â”€â”€ Subscriptions section â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function SubscriptionsSection({
   subscriptions, isLoading, format, formatDate,
 }: {
@@ -313,7 +314,7 @@ function SubscriptionsSection({
   );
 }
 
-// ── Debts section ─────────────────────────────────────────────
+// â”€â”€ Debts section â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function DebtsSection({
   debts, isLoading, format,
 }: {
@@ -382,7 +383,7 @@ function DebtsSection({
   );
 }
 
-// ── Main hub ──────────────────────────────────────────────────
+// â”€â”€ Main hub â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function TransactionsHub() {
   const { isGuest, isLoading: guestLoading } = useGuest();
   const { t, formatDate } = useTranslation();
@@ -442,9 +443,9 @@ function TransactionsHub() {
   return (
     <div className="space-y-5">
 
-      {/* ── Header ──────────────────────────────────────── */}
+      {/* â”€â”€ Header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <div className="flex min-w-0 items-center gap-2.5">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-cyan-400/10">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-cyan-400/10">
           <Receipt className="h-4 w-4 text-cyan-400" />
         </div>
         <div className="min-w-0">
@@ -453,7 +454,7 @@ function TransactionsHub() {
         </div>
       </div>
 
-      {/* ── Monthly quick stats ──────────────────────────── */}
+      {/* â”€â”€ Monthly quick stats â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <motion.div
         variants={staggerContainer}
         initial="hidden"
@@ -474,13 +475,13 @@ function TransactionsHub() {
         </motion.div>
       </motion.div>
 
-      {/* ── Accounts ─────────────────────────────────────── */}
+      {/* â”€â”€ Accounts â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <section>
         <SectionHeader title={t("nav.accounts")} href={ROUTES.accounts} />
         <AccountsSection accounts={accounts} isLoading={acLoading} format={format} />
       </section>
 
-      {/* ── Recent transactions ──────────────────────────── */}
+      {/* â”€â”€ Recent transactions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <section>
         <SectionHeader title={t("ledger.title") || t("transactions.title")} href={ROUTES.ledger} />
         <RecentTransactions
@@ -489,13 +490,13 @@ function TransactionsHub() {
         />
       </section>
 
-      {/* ── Budgets ───────────────────────────────────────── */}
+      {/* â”€â”€ Budgets â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <section>
         <SectionHeader title={t("nav.budgets")} href={ROUTES.budgets} />
         <BudgetsSection budgets={budgets} isLoading={bgLoading} format={format} />
       </section>
 
-      {/* ── Subscriptions ─────────────────────────────────── */}
+      {/* â”€â”€ Subscriptions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <section>
         <SectionHeader title={t("nav.subscriptions")} href={ROUTES.subscriptions} />
         <SubscriptionsSection
@@ -506,13 +507,13 @@ function TransactionsHub() {
         />
       </section>
 
-      {/* ── Debts ─────────────────────────────────────────── */}
+      {/* â”€â”€ Debts â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <section>
         <SectionHeader title={t("nav.debts")} href={ROUTES.debts} />
         <DebtsSection debts={debts} isLoading={deLoading} format={format} />
       </section>
 
-      {/* ── Modal ────────────────────────────────────────── */}
+      {/* â”€â”€ Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       {showForm && (
         <TransactionForm
           onSubmit={handleAdd}
@@ -537,3 +538,4 @@ export default function TransactionsPage() {
     </Suspense>
   );
 }
+

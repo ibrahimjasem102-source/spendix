@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -13,7 +13,7 @@ import { useFinancialEngine } from "@/lib/finance/engine";
 import { ROUTES } from "@/lib/routes";
 import type { Investment, Debt } from "@/types";
 
-// ── types ─────────────────────────────────────────────────────────────────────
+// â”€â”€ types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 interface LineItem {
   id: string;
@@ -31,7 +31,7 @@ interface Group {
   isAsset: boolean;
 }
 
-// ── helpers ───────────────────────────────────────────────────────────────────
+// â”€â”€ helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function investmentValue(i: Investment): number {
   return Number(i.current_value ?? i.amount_invested);
@@ -41,7 +41,7 @@ function debtRemaining(d: Debt): number {
   return Math.max(0, Number(d.total_amount) - Number(d.paid_amount));
 }
 
-// ── GroupCard ─────────────────────────────────────────────────────────────────
+// â”€â”€ GroupCard â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function GroupCard({ group, label, sub }: { group: Group; label: string; sub: string }) {
   const { t } = useTranslation();
@@ -55,7 +55,7 @@ function GroupCard({ group, label, sub }: { group: Group; label: string; sub: st
   const noKey = `net_worth.no_${group.key}` as Parameters<typeof t>[0];
 
   return (
-    <div className={`rounded-2xl border ${accent.border} ${accent.bg} overflow-hidden`}>
+    <div className={`rounded-xl border ${accent.border} ${accent.bg} overflow-hidden`}>
       <button
         onClick={() => setOpen((o) => !o)}
         className="w-full flex items-center gap-3 p-4 text-start hover:bg-white/5 transition-colors"
@@ -123,19 +123,19 @@ function GroupCard({ group, label, sub }: { group: Group; label: string; sub: st
   );
 }
 
-// ── Page ──────────────────────────────────────────────────────────────────────
+// â”€â”€ Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export default function NetWorthPage() {
   const { t, formatDate } = useTranslation();
   const { format } = useCurrency();
-  // Single source of truth — same engine used by Dashboard
+  // Single source of truth â€” same engine used by Dashboard
   const engine = useFinancialEngine();
 
   const investments = engine.investments;
   const debts       = engine.debts;
   const isLoading   = engine.isLoading;
 
-  // ── Amounts — all from engine (identical to Dashboard) ───────────────────
+  // â”€â”€ Amounts â€” all from engine (identical to Dashboard) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const cashTotal       = engine.balance;
   const investTotal     = engine.portfolioValue;
   const receivableTotal = engine.debtReceivable;
@@ -151,11 +151,11 @@ export default function NetWorthPage() {
   const assetPct = Math.round((totalAssets    / barTotal) * 100);
   const liabPct  = 100 - assetPct;
 
-  // ── Item lists ────────────────────────────────────────────────────────────
+  // â”€â”€ Item lists â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const payableDebts    = debts.filter((d) => d.debt_type === "payable"    && d.status !== "paid");
   const receivableDebts = debts.filter((d) => d.debt_type === "receivable" && d.status !== "paid");
 
-  // ── Group data ────────────────────────────────────────────────────────────
+  // â”€â”€ Group data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const assetGroups: (Group & { label: string; sub: string })[] = [
     {
       key: "cash", isAsset: true,
@@ -214,13 +214,13 @@ export default function NetWorthPage() {
     },
   ];
 
-  // ── Render ────────────────────────────────────────────────────────────────
+  // â”€â”€ Render â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   return (
     <div className="max-w-2xl mx-auto px-4 py-8 space-y-5">
 
       {/* Header */}
       <div className="flex min-w-0 items-center gap-2.5">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-emerald-400/10">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-400/10">
           <Scale className="h-4 w-4 text-emerald-400" />
         </div>
         <div className="min-w-0">
@@ -234,7 +234,7 @@ export default function NetWorthPage() {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className="rounded-3xl bg-gradient-to-br from-white/10 to-white/5 border border-white/10 p-6 space-y-5"
+        className="card p-6 space-y-5"
       >
         {/* Label */}
         <div className="flex items-center gap-2 text-xs text-white/40 uppercase tracking-widest">
@@ -247,7 +247,7 @@ export default function NetWorthPage() {
           <div className="h-14 w-48 rounded-xl bg-white/10 animate-pulse" />
         ) : (
           <div className={`text-5xl font-black tracking-tight ${isPositive ? "text-emerald-400" : "text-red-400"}`}>
-            {!isPositive && "−"}
+            {!isPositive && "âˆ’"}
             {format(Math.abs(netWorth))}
           </div>
         )}
@@ -295,7 +295,7 @@ export default function NetWorthPage() {
 
         {isLoading
           ? Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="h-16 rounded-2xl bg-white/5 animate-pulse" />
+              <div key={i} className="h-16 rounded-xl bg-white/5 animate-pulse" />
             ))
           : assetGroups.map((g, i) => (
               <motion.div
@@ -321,7 +321,7 @@ export default function NetWorthPage() {
 
         {isLoading
           ? Array.from({ length: 1 }).map((_, i) => (
-              <div key={i} className="h-16 rounded-2xl bg-white/5 animate-pulse" />
+              <div key={i} className="h-16 rounded-xl bg-white/5 animate-pulse" />
             ))
           : liabGroups.map((g, i) => (
               <motion.div
@@ -340,14 +340,14 @@ export default function NetWorthPage() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.5 }}
-        className="rounded-2xl border border-white/10 bg-white/5 p-5"
+        className="rounded-xl border border-white/10 bg-white/5 p-5"
       >
         <div className="flex items-center justify-center gap-3 flex-wrap text-sm">
           <div className="text-center">
             <div className="text-emerald-400 font-bold text-lg">{format(totalAssets)}</div>
             <div className="text-white/40 text-xs mt-1">{t("net_worth.assets")}</div>
           </div>
-          <span className="text-white/30 text-xl font-thin">−</span>
+          <span className="text-white/30 text-xl font-thin">âˆ’</span>
           <div className="text-center">
             <div className="text-red-400 font-bold text-lg">{format(totalLiabilities)}</div>
             <div className="text-white/40 text-xs mt-1">{t("net_worth.liabilities")}</div>
@@ -355,7 +355,7 @@ export default function NetWorthPage() {
           <span className="text-white/30 text-xl font-thin">=</span>
           <div className="text-center">
             <div className={`font-bold text-lg ${isPositive ? "text-emerald-400" : "text-red-400"}`}>
-              {!isPositive && "−"}{format(Math.abs(netWorth))}
+              {!isPositive && "âˆ’"}{format(Math.abs(netWorth))}
             </div>
             <div className="text-white/40 text-xs mt-1">{t("net_worth.total")}</div>
           </div>
@@ -365,3 +365,4 @@ export default function NetWorthPage() {
     </div>
   );
 }
+

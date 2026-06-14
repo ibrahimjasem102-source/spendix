@@ -130,3 +130,51 @@ export function getExpenses(entries: UnifiedLedgerEntry[]): number {
 export function getInvestmentOutflow(entries: UnifiedLedgerEntry[]): number {
   return entries.filter((e) => e.type === "investment").reduce((s, e) => s + e.amount, 0);
 }
+
+// ── Ledger Architecture public API ───────────────────────────────
+
+/** Alias: cash balance across all inflow/outflow entries */
+export const getBalance = calculateBalance;
+
+/** Cash-flow summary with inflow, outflow, net, and per-type breakdown */
+export const getCashFlow = getCashflowSummary;
+
+export interface NetWorthSnapshot {
+  /** Net cash position from transactions */
+  cash: number;
+  /** Market value of investment portfolio */
+  investments: number;
+  /** Remaining balance on loans owed to you */
+  receivable: number;
+  /** Remaining balance on debts you owe */
+  payable: number;
+  /** cash + investments + receivable - payable */
+  netWorth: number;
+}
+
+export function getNetWorth(params: {
+  cashBalance: number;
+  portfolioValue: number;
+  debtReceivable: number;
+  debtPayable: number;
+}): NetWorthSnapshot {
+  const { cashBalance, portfolioValue, debtReceivable, debtPayable } = params;
+  return {
+    cash:        cashBalance,
+    investments: portfolioValue,
+    receivable:  debtReceivable,
+    payable:     debtPayable,
+    netWorth:    cashBalance + portfolioValue + debtReceivable - debtPayable,
+  };
+}
+
+/**
+ * Returns the N most recent entries by date, then by created_at.
+ * Entries already sorted by sortByDate() are cheaply sliced.
+ */
+export function getRecentActivity(
+  entries: UnifiedLedgerEntry[],
+  limit = 10,
+): UnifiedLedgerEntry[] {
+  return sortByDate(entries).slice(0, limit);
+}

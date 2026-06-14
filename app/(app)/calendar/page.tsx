@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useMemo, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
@@ -18,7 +18,7 @@ import SheetDragHandle from "@/components/ui/SheetDragHandle";
 import Link from "next/link";
 import type { CalendarEvent, CalendarEventType, TransactionFormData, TransactionType } from "@/types";
 
-// ── Event type meta ───────────────────────────────────────────
+// â”€â”€ Event type meta â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const TYPE_META: Record<CalendarEventType, { color: string; labelKey: string; Icon: React.ElementType }> = {
   income:       { color: "#10B981", labelKey: "calendar.type_income",       Icon: TrendingUp   },
@@ -44,7 +44,7 @@ function amountSign(type: CalendarEventType) {
   return "";
 }
 
-// ── Helpers ───────────────────────────────────────────────────
+// â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function getDaysInMonth(year: number, month: number) {
   return new Date(year, month, 0).getDate();
@@ -58,7 +58,7 @@ function toDateStr(year: number, month: number, day: number) {
   return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }
 
-// ── Sub-components ────────────────────────────────────────────
+// â”€â”€ Sub-components â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function EventCard({ event, format, t }: { event: CalendarEvent; format: (n: number) => string; t: (k: string) => string }) {
   const meta = TYPE_META[event.type];
@@ -286,7 +286,7 @@ function FinancialEventForm({
                   key={item}
                   type="button"
                   onClick={() => setType(item)}
-                  className={`flex min-h-12 items-center justify-center gap-2 rounded-2xl border text-sm font-semibold transition-colors ${
+                  className={`flex min-h-12 items-center justify-center gap-2 rounded-xl border text-sm font-semibold transition-colors ${
                     active
                       ? income ? "border-emerald-400/40 bg-emerald-400/12 text-emerald-300" : "border-rose-400/40 bg-rose-400/12 text-rose-300"
                       : "border-white/10 bg-white/5 text-white/55"
@@ -325,7 +325,7 @@ function FinancialEventForm({
                 step="0.01"
                 value={amount}
                 onChange={(event) => { setAmount(event.target.value); if (error) setError(""); }}
-                className="w-full rounded-2xl border border-white/10 bg-white/5 py-4 pe-4 ps-10 text-3xl font-bold text-white number-display focus:outline-none focus:border-cyan-400/40"
+                className="w-full rounded-xl border border-white/10 bg-white/5 py-4 pe-4 ps-10 text-3xl font-bold text-white number-display focus:outline-none focus:border-cyan-400/40"
                 placeholder="0.00"
               />
             </div>
@@ -372,7 +372,7 @@ function FinancialEventForm({
             disabled={loading}
             whileTap={{ scale: 0.97 }}
             transition={tapTransition}
-            className="flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-cyan-500 text-sm font-bold text-white disabled:opacity-50"
+            className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-cyan-500 text-sm font-bold text-white disabled:opacity-50"
           >
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
             {t("calendar.save_financial_event")}
@@ -384,7 +384,7 @@ function FinancialEventForm({
   );
 }
 
-// ── Main page ─────────────────────────────────────────────────
+// â”€â”€ Main page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export default function CalendarPage() {
   const { t, locale } = useTranslation();
@@ -474,7 +474,7 @@ export default function CalendarPage() {
     await queryClient.invalidateQueries({ queryKey: queryKeys.calendar.all, refetchType: "all" });
   }
 
-  // Day abbreviations (Sun→Sat) using Intl
+  // Day abbreviations (Sunâ†’Sat) using Intl
   const dayHeaders = useMemo(() => {
     const base = new Date(2025, 0, 5); // a Sunday
     return Array.from({ length: 7 }, (_, i) => {
@@ -489,7 +489,7 @@ export default function CalendarPage() {
     return new Date(year, month - 1, 1).toLocaleDateString(locale, { month: "long", year: "numeric" });
   }, [year, month, locale]);
 
-  // Legend — deduplicate event types present this month
+  // Legend â€” deduplicate event types present this month
   const activeTypes = useMemo(() => {
     const seen = new Set<CalendarEventType>();
     for (const ev of events) seen.add(ev.type);
@@ -512,10 +512,10 @@ export default function CalendarPage() {
     <>
       <div className="space-y-5">
 
-        {/* ── Header ─────────────────────────────────────────── */}
+        {/* â”€â”€ Header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex min-w-0 items-center gap-2.5">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-emerald-400/10">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-400/10">
               <CalendarCheck className="h-4 w-4 text-emerald-400" />
             </div>
             <div className="min-w-0">
@@ -549,7 +549,7 @@ export default function CalendarPage() {
           </div>
         </div>
 
-        {/* ── Main area: calendar + side panel ──────────────── */}
+        {/* â”€â”€ Main area: calendar + side panel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <div className={`flex gap-4 ${hasSidePanel ? "lg:grid lg:grid-cols-[1fr_320px]" : ""}`}>
           {/* Calendar grid */}
           <div
@@ -578,7 +578,7 @@ export default function CalendarPage() {
               </div>
             )}
 
-            {/* Grid — animates in the swipe direction on month change */}
+            {/* Grid â€” animates in the swipe direction on month change */}
             <AnimatePresence mode="wait" initial={false} custom={swipeDir}>
               {!isLoading && (
                 <motion.div
@@ -662,7 +662,7 @@ export default function CalendarPage() {
                 animate={{ opacity: 1, width: "auto" }}
                 exit={{ opacity: 0, width: 0 }}
                 transition={{ duration: 0.2 }}
-                className="hidden lg:flex flex-col rounded-2xl p-4 overflow-hidden"
+                className="hidden lg:flex flex-col rounded-xl p-4 overflow-hidden"
                 style={{ background: "hsl(var(--bg-card))", border: "1px solid hsl(var(--border))", minWidth: 280, maxWidth: 320 }}
               >
                 <DayPanel
@@ -731,7 +731,7 @@ export default function CalendarPage() {
           )}
         </AnimatePresence>
 
-        {/* ── Legend ──────────────────────────────────────────── */}
+        {/* â”€â”€ Legend â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         {activeTypes.length > 0 && (
           <div className="card p-4">
             <p className="text-xs font-medium t3 uppercase tracking-wide mb-3">
@@ -751,7 +751,7 @@ export default function CalendarPage() {
           </div>
         )}
 
-        {/* ── Event summary strip (month totals) ──────────────── */}
+        {/* â”€â”€ Event summary strip (month totals) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         {events.length > 0 && (
           <MonthSummary events={events} format={format} t={t} />
         )}
@@ -772,7 +772,7 @@ export default function CalendarPage() {
   );
 }
 
-// ── Month summary ─────────────────────────────────────────────
+// â”€â”€ Month summary â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function MonthSummary({ events, format, t }: { events: CalendarEvent[]; format: (n: number) => string; t: (k: string) => string }) {
   const income     = events.filter((e) => e.type === "income").reduce((s, e) => s + (e.amount ?? 0), 0);
@@ -811,3 +811,4 @@ function MonthSummary({ events, format, t }: { events: CalendarEvent[]; format: 
     </div>
   );
 }
+

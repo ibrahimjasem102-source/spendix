@@ -1,3 +1,5 @@
+import { PageErrorBoundary } from "@/components/system/ErrorBoundary";
+import { PageContainer } from "@/components/layout/PageContainer";
 import Sidebar from "@/components/layout/Sidebar";
 import TopBar from "@/components/layout/TopBar";
 import BottomNav from "@/components/navigation/BottomNav";
@@ -22,9 +24,18 @@ import { LedgerProvider } from "@/contexts/LedgerContext";
 import { RoomLockProvider } from "@/contexts/RoomLockContext";
 import { CurrencyProvider } from "@/lib/currency";
 import { PlanProvider } from "@/contexts/PlanContext";
+import { NavigationProvider } from "@/lib/navigation/manager";
+import { OfflineBanner } from "@/components/offline/OfflineBanner";
+import { PWAUpdatePrompt } from "@/components/offline/PWAUpdatePrompt";
+import { ModeProvider } from "@/contexts/ModeContext";
+import { FrontendErrorReporter } from "@/components/system/FrontendErrorReporter";
+import { FeedbackWidget } from "@/components/feedback/FeedbackWidget";
+import { PerformanceTracker } from "@/components/monitoring/PerformanceTracker";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
+    <NavigationProvider>
+    <ModeProvider>
     <CurrencyProvider>
       <PlanProvider>
       <GuestProvider>
@@ -32,7 +43,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <GlobalActionsProvider>
             <RoomLockProvider>
               <SidebarProvider>
-                <div className="app-shell relative flex h-screen overflow-hidden">
+                <div className="app-shell relative flex h-dvh overflow-hidden">
                   <LiveBackground />
                   {/* Sidebar — desktop only */}
                   <div className="hidden lg:flex shrink-0">
@@ -44,27 +55,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                     <TopBar />
                     <main className="flex-1 overflow-y-auto overflow-x-hidden">
                       <PageTransition>
-                        {/* Responsive container:
-                            mobile  → 16px sides, 16px top
-                            sm      → 20px sides, 20px top
-                            lg      → 24px sides, 24px top
-                            xl      → centered, max 1280px
-                            bottom  → clears bottom nav on mobile/tablet, normal on desktop
-                        */}
-                        <div className="
-                          w-full mx-auto
-                          px-3 sm:px-5 lg:px-7 xl:px-8
-                          pt-3 sm:pt-5 lg:pt-7
-                          pb-[calc(88px+env(safe-area-inset-bottom,0px))] lg:pb-8
-                          max-w-none 2xl:max-w-[1500px]
-                        ">
+                        <PageContainer>
                           <Breadcrumbs />
                           <AuthGate>
                             <RoomGuard>
-                              {children}
+                              <PageErrorBoundary>
+                                {children}
+                              </PageErrorBoundary>
                             </RoomGuard>
                           </AuthGate>
-                        </div>
+                        </PageContainer>
                       </PageTransition>
                     </main>
                   </div>
@@ -84,6 +84,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 <AuthStatusBadge />
                 <SessionRestorer />
                 <PullToRefreshWrapper />
+                <OfflineBanner />
+                <PWAUpdatePrompt />
+                <FrontendErrorReporter />
+                <FeedbackWidget />
+                <PerformanceTracker />
               </SidebarProvider>
             </RoomLockProvider>
           </GlobalActionsProvider>
@@ -91,5 +96,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       </GuestProvider>
       </PlanProvider>
     </CurrencyProvider>
+    </ModeProvider>
+    </NavigationProvider>
   );
 }

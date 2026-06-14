@@ -3,7 +3,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { QueryClient, QueryKey } from "@tanstack/react-query";
 import { safeFetch } from "@/lib/fetch-safe";
-import { setAuthToken } from "@/lib/auth/token-store";
+import { signedIn } from "@/lib/auth/session-manager";
 import { notifyMutationError } from "@/lib/query/mutation-toast";
 
 // ── Core fetch ─────────────────────────────────────────────────────────────
@@ -24,7 +24,7 @@ async function refreshSessionToken(): Promise<string | null> {
     // Try 1: let Supabase use its internal refresh token
     const { data, error } = await supabase.auth.refreshSession();
     if (!error && data.session?.access_token) {
-      setAuthToken(data.session.access_token);
+      signedIn(data.session.access_token, data.session.refresh_token ?? undefined);
       return data.session.access_token;
     }
 
@@ -34,8 +34,7 @@ async function refreshSessionToken(): Promise<string | null> {
     if (storedRefresh) {
       const { data: d2 } = await supabase.auth.refreshSession({ refresh_token: storedRefresh });
       if (d2.session?.access_token) {
-        setAuthToken(d2.session.access_token);
-        if (d2.session.refresh_token) localStorage.setItem("spendix_refresh_token", d2.session.refresh_token);
+        signedIn(d2.session.access_token, d2.session.refresh_token ?? undefined);
         return d2.session.access_token;
       }
     }
@@ -43,7 +42,7 @@ async function refreshSessionToken(): Promise<string | null> {
     // Try 3: getSession (auto-refresh fallback)
     const { data: sessionData } = await supabase.auth.getSession();
     if (sessionData.session?.access_token) {
-      setAuthToken(sessionData.session.access_token);
+      signedIn(sessionData.session.access_token, sessionData.session.refresh_token ?? undefined);
       return sessionData.session.access_token;
     }
 

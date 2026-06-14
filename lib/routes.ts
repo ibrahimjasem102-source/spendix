@@ -27,6 +27,11 @@ export const ROUTES = {
   tags:          "/tags",
   household:     "/household",
   export:        "/export",
+  invoices:      "/invoices",
+  projects:      "/projects",
+  automation:    "/automation",
+  admin:         "/admin",
+  adminBeta:     "/admin/beta",
 } as const;
 
 export type AppRoute = (typeof ROUTES)[keyof typeof ROUTES];

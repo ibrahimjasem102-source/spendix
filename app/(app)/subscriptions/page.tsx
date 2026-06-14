@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -18,7 +18,7 @@ import SheetDragHandle from "@/components/ui/SheetDragHandle";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 import type { Subscription, SubscriptionFormData, BillingCycle, SubscriptionStatus, AccountType } from "@/types";
 
-// ── Constants ────────────────────────────────────────────────
+// â”€â”€ Constants â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const BILLING_CYCLES: { value: BillingCycle; labelKey: string; multiplier: number }[] = [
   { value: "weekly",    labelKey: "subscriptions.weekly",    multiplier: 52 / 12 },
@@ -28,18 +28,18 @@ const BILLING_CYCLES: { value: BillingCycle; labelKey: string; multiplier: numbe
 ];
 
 const PRESETS = [
-  { name: "Netflix",       icon: "🎬", color: "#E50914" },
-  { name: "Spotify",       icon: "🎵", color: "#1DB954" },
-  { name: "Amazon Prime",  icon: "📦", color: "#00A8E0" },
-  { name: "YouTube",       icon: "📺", color: "#FF0000" },
-  { name: "Disney+",       icon: "🏰", color: "#113CCF" },
-  { name: "Apple Music",   icon: "🍎", color: "#FC3C44" },
-  { name: "iCloud",        icon: "☁️", color: "#3B82F6" },
-  { name: "Gym",           icon: "💪", color: "#10B981" },
-  { name: "ChatGPT",       icon: "🤖", color: "#10A37F" },
-  { name: "Adobe",         icon: "🎨", color: "#FF0000" },
-  { name: "Dropbox",       icon: "📁", color: "#0061FF" },
-  { name: "LinkedIn",      icon: "💼", color: "#0A66C2" },
+  { name: "Netflix",       icon: "ðŸŽ¬", color: "#E50914" },
+  { name: "Spotify",       icon: "ðŸŽµ", color: "#1DB954" },
+  { name: "Amazon Prime",  icon: "ðŸ“¦", color: "#00A8E0" },
+  { name: "YouTube",       icon: "ðŸ“º", color: "#FF0000" },
+  { name: "Disney+",       icon: "ðŸ°", color: "#113CCF" },
+  { name: "Apple Music",   icon: "ðŸŽ", color: "#FC3C44" },
+  { name: "iCloud",        icon: "â˜ï¸", color: "#3B82F6" },
+  { name: "Gym",           icon: "ðŸ’ª", color: "#10B981" },
+  { name: "ChatGPT",       icon: "ðŸ¤–", color: "#10A37F" },
+  { name: "Adobe",         icon: "ðŸŽ¨", color: "#FF0000" },
+  { name: "Dropbox",       icon: "ðŸ“", color: "#0061FF" },
+  { name: "LinkedIn",      icon: "ðŸ’¼", color: "#0A66C2" },
 ];
 
 const COLORS = [
@@ -49,10 +49,10 @@ const COLORS = [
 ];
 
 const ACCOUNT_ICONS: Record<AccountType, React.ElementType> = {
-  cash: Banknote, bank: Building2, credit_card: CreditCard, wallet: Wallet, savings: PiggyBank,
+  cash: Banknote, bank: Building2, credit_card: CreditCard, wallet: Wallet, savings: PiggyBank, investment: TrendingDown,
 };
 const ACCOUNT_COLORS: Record<AccountType, string> = {
-  cash: "#10B981", bank: "#3B82F6", credit_card: "#8B5CF6", wallet: "#F59E0B", savings: "#06B6D4",
+  cash: "#10B981", bank: "#3B82F6", credit_card: "#8B5CF6", wallet: "#F59E0B", savings: "#06B6D4", investment: "#6366F1",
 };
 
 function toMonthly(amount: number, cycle: BillingCycle): number {
@@ -74,7 +74,7 @@ function dayLabel(days: number, t: (k: string) => string): string {
   return `${t("subscriptions.in")} ${days} ${t("subscriptions.days")}`;
 }
 
-// ── Subscription Form ────────────────────────────────────────
+// â”€â”€ Subscription Form â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 interface FormProps {
   initial?: Subscription;
@@ -230,7 +230,7 @@ function SubscriptionForm({ initial, onSubmit, onClose }: FormProps) {
               </div>
               {form.amount > 0 && form.billing_cycle !== "monthly" && (
                 <p className="text-[10px] t3 mt-1.5">
-                  ≈ {monthlyEq.toFixed(2)} / {t("subscriptions.month")}
+                  â‰ˆ {monthlyEq.toFixed(2)} / {t("subscriptions.month")}
                 </p>
               )}
             </div>
@@ -274,7 +274,7 @@ function SubscriptionForm({ initial, onSubmit, onClose }: FormProps) {
                     className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all ${
                       !form.account_id ? "bg-[hsl(var(--bg-card-2))] border-[hsl(var(--text-3))] t1 border-[1.5px]" : "bg-[hsl(var(--bg-input))] border-[hsl(var(--border))] t3"
                     }`}>
-                    —
+                    â€”
                   </button>
                   {accounts.map((acc) => {
                     const Icon = ACCOUNT_ICONS[acc.type] ?? Wallet;
@@ -383,7 +383,7 @@ function SubscriptionForm({ initial, onSubmit, onClose }: FormProps) {
             <motion.button type="submit"
               disabled={loading || !form.name.trim() || !form.amount}
               whileTap={{ scale: 0.97 }} transition={tapTransition}
-              className="w-full py-4 rounded-2xl text-sm font-bold text-white transition-all disabled:opacity-40"
+              className="w-full py-4 rounded-xl text-sm font-bold text-white transition-all disabled:opacity-40"
               style={{ background: `linear-gradient(135deg, ${accent}, ${accent}bb)`, boxShadow: `0 4px 20px ${accent}35` }}>
               <AnimatePresence mode="wait">
                 {loading ? (
@@ -408,7 +408,7 @@ function SubscriptionForm({ initial, onSubmit, onClose }: FormProps) {
   );
 }
 
-// ── Subscription Card ────────────────────────────────────────
+// â”€â”€ Subscription Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 interface CardProps {
   sub: Subscription;
@@ -452,7 +452,7 @@ function SubscriptionCard({ sub, onEdit, onDelete, onToggleStatus }: CardProps) 
 
       {/* Top row */}
       <div className="flex items-start gap-3">
-        <div className="w-11 h-11 rounded-2xl flex items-center justify-center text-xl shrink-0"
+        <div className="w-11 h-11 rounded-xl flex items-center justify-center text-xl shrink-0"
           style={{ backgroundColor: `${color}18` }}>
           {sub.icon ?? <RefreshCw className="w-5 h-5" style={{ color }} />}
         </div>
@@ -487,7 +487,7 @@ function SubscriptionCard({ sub, onEdit, onDelete, onToggleStatus }: CardProps) 
             {format(sub.amount)}
           </p>
           {sub.billing_cycle !== "monthly" && (
-            <p className="text-[10px] t3">≈ {format(monthly)}/{t("subscriptions.month")}</p>
+            <p className="text-[10px] t3">â‰ˆ {format(monthly)}/{t("subscriptions.month")}</p>
           )}
         </div>
 
@@ -498,7 +498,7 @@ function SubscriptionCard({ sub, onEdit, onDelete, onToggleStatus }: CardProps) 
               backgroundColor: isPaused ? "hsl(var(--bg-input))" : `${urgency}18`,
               color: isPaused ? "hsl(var(--text-3))" : urgency,
             }}>
-            {isPaused ? "—" : dayLabel(days, t)}
+            {isPaused ? "â€”" : dayLabel(days, t)}
           </div>
         )}
       </div>
@@ -522,10 +522,10 @@ function SubscriptionCard({ sub, onEdit, onDelete, onToggleStatus }: CardProps) 
   );
 }
 
-// ── Delete Confirm ───────────────────────────────────────────
+// â”€â”€ Delete Confirm â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 
-// ── Main Page ────────────────────────────────────────────────
+// â”€â”€ Main Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export default function SubscriptionsPage() {
   const { t } = useTranslation();
@@ -573,7 +573,7 @@ export default function SubscriptionsPage() {
     <div className="space-y-5">
       {/* Header */}
       <div className="flex min-w-0 items-center gap-2.5">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-indigo-400/10">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-400/10">
           <RefreshCw className="h-4 w-4 text-indigo-400" />
         </div>
         <div className="min-w-0">
@@ -624,11 +624,11 @@ export default function SubscriptionsPage() {
               return (
                 <motion.div key={sub.id}
                   initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={spring}
-                  className="flex items-center gap-3 px-4 py-3 rounded-2xl"
+                  className="flex items-center gap-3 px-4 py-3 rounded-xl"
                   style={{ backgroundColor: `${urgency}10`, border: `1px solid ${urgency}25` }}>
                   <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg shrink-0"
                     style={{ backgroundColor: `${sub.color ?? urgency}18` }}>
-                    {sub.icon ?? "📋"}
+                    {sub.icon ?? "ðŸ“‹"}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-bold t1 truncate">{sub.name}</p>
@@ -695,7 +695,7 @@ export default function SubscriptionsPage() {
         <motion.div
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }}
           className="text-center py-16 space-y-4">
-          <div className="w-16 h-16 rounded-3xl bg-indigo-500/10 flex items-center justify-center mx-auto">
+          <div className="w-16 h-16 rounded-xl bg-indigo-500/10 flex items-center justify-center mx-auto">
             <RefreshCw className="w-8 h-8 text-indigo-400/60" />
           </div>
           <div>
@@ -728,3 +728,5 @@ export default function SubscriptionsPage() {
     </div>
   );
 }
+
+

@@ -23,11 +23,9 @@ nextjs-portal:empty {
   -moz-user-select:       none;
   -ms-user-select:        none;
   user-select:            none;
-  /* Prevents iOS/Android long-press callout (Copy, Define, Translate…) */
   -webkit-touch-callout:  none;
 }
 
-/* Re-enable selection only where typing or copying is expected */
 input,
 textarea,
 select,
@@ -42,8 +40,6 @@ select,
   -webkit-touch-callout: default;
 }
 
-/* ── touch-action: manipulation — kills 300ms delay & prevents
-      Android/Samsung One UI long-press text selection overlay ─ */
 button,
 a,
 [role="button"],
@@ -89,72 +85,72 @@ label {
 }
 
 /* ────────────────────────────────────────────────────────────
-   LUXURY DARK FINTECH — Design Tokens
-   Background  #0B0F14   card  #131A22   elevated  #18212B
+   MODERN FINANCE — Design Tokens
+   Background  #0D1117   card  #161B22   elevated  #1C2230
 ──────────────────────────────────────────────────────────── */
 @layer base {
   :root {
-    --radius: 1.25rem;          /* 20px — softer premium curves */
+    --radius: 1rem;               /* 16px — clean, not over-rounded */
 
     /* Palette: Dark (default) */
-    --bg-page:    214 28% 7%;   /* #0B0F14 */
-    --bg-card:    215 26% 10%;  /* #131A22 */
-    --bg-card-2:  215 22% 13%;  /* #18212B */
-    --bg-input:   0 0% 100% / 0.05;
-    --border:     0 0% 100% / 0.06;
-    --border-2:   0 0% 100% / 0.04;
+    --bg-page:    216 30% 7%;    /* #0D1117 */
+    --bg-card:    215 24% 10%;   /* #141C24 */
+    --bg-card-2:  215 20% 14%;   /* #1C2430 */
+    --bg-input:   0 0% 100% / 0.06;
+    --border:     0 0% 100% / 0.09;
+    --border-2:   0 0% 100% / 0.06;
 
-    --text-1: 210 25% 96%;      /* almost white */
-    --text-2: 215 18% 62%;
-    --text-3: 217 14% 38%;
+    --text-1: 210 20% 94%;       /* near white */
+    --text-2: 215 15% 58%;
+    --text-3: 217 12% 36%;
 
-    /* Accent system */
-    --accent-cyan:    187 100% 42%;
-    --accent-emerald: 158  64% 52%;
-    --accent-purple:  265  83% 64%;
-    --accent-rose:    350  89% 60%;
-    --accent-amber:    38  90% 60%;
+    /* Accent system — single primary + semantic only */
+    --accent-cyan:    187 100% 42%;   /* brand primary */
+    --accent-emerald: 158  64% 48%;   /* income */
+    --accent-rose:    350  85% 58%;   /* expense */
+    --accent-amber:    38  90% 56%;   /* warning */
+    --accent-purple:  265  70% 60%;   /* investments only */
 
     /* shadcn compat */
-    --background: 214 28% 7%;
-    --foreground: 210 25% 96%;
-    --card: 215 26% 10%;
-    --card-foreground: 210 25% 96%;
-    --border-hsl: 217 22% 14%;
-    --input: 217 22% 14%;
+    --background: 216 30% 7%;
+    --foreground: 210 20% 94%;
+    --card: 215 24% 10%;
+    --card-foreground: 210 20% 94%;
+    --border-hsl: 217 18% 16%;
+    --input: 217 18% 16%;
     --primary: 187 100% 42%;
-    --primary-foreground: 214 28% 7%;
-    --secondary: 217 22% 14%;
-    --secondary-foreground: 210 25% 96%;
-    --muted: 217 22% 14%;
-    --muted-foreground: 215 18% 55%;
-    --accent: 265 83% 64%;
-    --accent-foreground: 210 25% 96%;
-    --destructive: 350 89% 60%;
-    --destructive-foreground: 210 25% 96%;
+    --primary-foreground: 216 30% 7%;
+    --secondary: 217 18% 16%;
+    --secondary-foreground: 210 20% 94%;
+    --muted: 217 18% 16%;
+    --muted-foreground: 215 15% 52%;
+    --accent: 187 100% 42%;
+    --accent-foreground: 216 30% 7%;
+    --destructive: 350 85% 58%;
+    --destructive-foreground: 210 20% 94%;
     --ring: 187 100% 42%;
   }
 
   /* Light theme */
   :root.light {
-    --bg-page:    220 20% 96%;
+    --bg-page:    220 18% 96%;
     --bg-card:    0 0% 100%;
-    --bg-card-2:  220 14% 93%;
+    --bg-card-2:  220 12% 93%;
     --bg-input:   0 0% 0% / 0.04;
-    --border:     0 0% 0% / 0.08;
-    --border-2:   0 0% 0% / 0.05;
-    --text-1: 222 40% 10%;
-    --text-2: 215 18% 40%;
-    --text-3: 215 14% 58%;
+    --border:     0 0% 0% / 0.09;
+    --border-2:   0 0% 0% / 0.06;
+    --text-1: 222 36% 10%;
+    --text-2: 215 16% 38%;
+    --text-3: 215 12% 56%;
 
-    --background: 220 20% 96%;
-    --foreground: 222 40% 10%;
+    --background: 220 18% 96%;
+    --foreground: 222 36% 10%;
     --card: 0 0% 100%;
-    --card-foreground: 222 40% 10%;
+    --card-foreground: 222 36% 10%;
     --border-hsl: 220 12% 88%;
     --input: 220 12% 88%;
     --muted: 220 12% 93%;
-    --muted-foreground: 215 16% 47%;
+    --muted-foreground: 215 14% 46%;
   }
 
   * { @apply border-[hsl(var(--border-hsl))]; }
@@ -167,11 +163,11 @@ label {
     transition: background-color 0.25s ease, color 0.25s ease;
   }
 
-  /* Premium scrollbars */
+  /* Scrollbars */
   ::-webkit-scrollbar { width: 3px; height: 3px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 99px; }
-  ::-webkit-scrollbar-thumb:hover { background: hsl(var(--border-2) / 1.5); }
+  ::-webkit-scrollbar-thumb:hover { background: hsl(var(--border) / 1.5); }
 }
 
 /* ────────────────────────────────────────────────────────────
@@ -179,74 +175,54 @@ label {
 ──────────────────────────────────────────────────────────── */
 @layer components {
 
-  /* ── Surfaces ────────────────────────────────────── */
+  /* ── Surfaces — solid, no glass ─────────────────── */
   .card {
-    background: rgba(255, 255, 255, 0.045);
-    backdrop-filter: blur(24px) saturate(160%);
-    -webkit-backdrop-filter: blur(24px) saturate(160%);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: hsl(var(--bg-card));
+    border: 1px solid rgba(255, 255, 255, 0.09);
     border-radius: var(--radius);
-    box-shadow:
-      0 1px 0 rgba(255, 255, 255, 0.06) inset,
-      0 4px 24px rgba(0, 0, 0, 0.18);
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.20);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
   }
   .card:hover {
-    border-color: rgba(255, 255, 255, 0.13);
-    box-shadow:
-      0 1px 0 rgba(255, 255, 255, 0.06) inset,
-      0 8px 32px rgba(0, 0, 0, 0.28);
+    border-color: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.24);
   }
   :root.light .card {
-    background: rgba(255, 255, 255, 0.70);
-    border-color: rgba(0, 0, 0, 0.07);
-    box-shadow:
-      0 1px 0 rgba(255, 255, 255, 0.95) inset,
-      0 4px 20px rgba(0, 0, 0, 0.06);
+    background: white;
+    border-color: rgba(0, 0, 0, 0.08);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
   }
   :root.light .card:hover {
-    border-color: rgba(0, 0, 0, 0.11);
-    box-shadow:
-      0 1px 0 rgba(255, 255, 255, 0.95) inset,
-      0 8px 28px rgba(0, 0, 0, 0.10);
+    border-color: rgba(0, 0, 0, 0.13);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.09);
   }
 
   .card-2 {
-    background: rgba(255, 255, 255, 0.03);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: calc(var(--radius) - 4px);
+    background: hsl(var(--bg-card-2));
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: calc(var(--radius) - 2px);
   }
   :root.light .card-2 {
-    background: rgba(255, 255, 255, 0.55);
-    border-color: rgba(0, 0, 0, 0.06);
+    background: hsl(var(--bg-card-2));
+    border-color: rgba(0, 0, 0, 0.07);
   }
 
-  /* Premium glass surface */
   .glass {
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(28px) saturate(180%);
-    -webkit-backdrop-filter: blur(28px) saturate(180%);
-    border: 1px solid rgba(255, 255, 255, 0.10);
+    background: hsl(var(--bg-card));
+    border: 1px solid rgba(255, 255, 255, 0.09);
     border-radius: var(--radius);
-    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.08) inset;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.16);
   }
   :root.light .glass {
-    background: rgba(255, 255, 255, 0.78);
+    background: white;
     border-color: rgba(0, 0, 0, 0.08);
   }
 
-  /* Elevated card */
   .card-elevated {
-    background: rgba(255, 255, 255, 0.06);
-    backdrop-filter: blur(24px) saturate(160%);
-    -webkit-backdrop-filter: blur(24px) saturate(160%);
+    background: hsl(var(--bg-card-2));
     border: 1px solid rgba(255, 255, 255, 0.10);
     border-radius: var(--radius);
-    box-shadow:
-      0 1px 0 rgba(255, 255, 255, 0.08) inset,
-      0 8px 32px rgba(0, 0, 0, 0.22);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.22);
   }
 
   /* ── Form fields ─────────────────────────────────── */
@@ -254,13 +230,13 @@ label {
     background-color: hsl(var(--bg-input));
     border: 1px solid hsl(var(--border));
     color: hsl(var(--text-1));
-    border-radius: calc(var(--radius) - 4px);
+    border-radius: calc(var(--radius) - 2px);
     @apply px-3 py-2.5 text-sm w-full transition-all;
   }
   .field:focus {
     @apply outline-none;
-    border-color: rgba(6,182,212,0.45);
-    background-color: hsl(var(--bg-input) / 1.4);
+    border-color: rgba(6, 182, 212, 0.50);
+    background-color: hsl(var(--bg-input));
   }
   .field::placeholder { color: hsl(var(--text-3)); }
 
@@ -277,42 +253,41 @@ label {
   .trow:last-child { @apply border-0; }
   .trow:hover { background-color: hsl(var(--bg-input)); }
 
-  /* ── Modal ───────────────────────────────────────── */
+  /* ── Modal — keeps blur (overlay context) ────────── */
   .modal-card {
-    background: rgba(15, 20, 28, 0.82);
-    backdrop-filter: blur(32px) saturate(180%);
-    -webkit-backdrop-filter: blur(32px) saturate(180%);
-    border: 1px solid rgba(255, 255, 255, 0.10);
+    background: hsl(var(--bg-card));
+    backdrop-filter: blur(24px) saturate(140%);
+    -webkit-backdrop-filter: blur(24px) saturate(140%);
+    border: 1px solid rgba(255, 255, 255, 0.11);
     border-radius: var(--radius);
     box-shadow:
-      0 1px 0 rgba(255, 255, 255, 0.06) inset,
       0 25px 60px rgba(0, 0, 0, 0.55),
-      0 0 0 1px rgba(0, 0, 0, 0.4);
+      0 0 0 1px rgba(0, 0, 0, 0.35);
   }
   :root.light .modal-card {
-    background: rgba(255, 255, 255, 0.88);
-    border-color: rgba(0, 0, 0, 0.08);
-    box-shadow:
-      0 1px 0 rgba(255, 255, 255, 1) inset,
-      0 25px 60px rgba(0, 0, 0, 0.18);
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-color: rgba(0, 0, 0, 0.09);
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.14);
   }
 
   /* ── Buttons ─────────────────────────────────────── */
   .btn-primary {
     @apply inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all;
-    background: linear-gradient(135deg, hsl(var(--accent-cyan)), #0891B2);
+    background: hsl(var(--accent-cyan));
     color: hsl(var(--bg-page));
-    box-shadow: 0 0 20px hsl(var(--accent-cyan) / 0.2);
   }
-  .btn-primary:hover { filter: brightness(1.1); transform: translateY(-1px); }
-  .btn-primary:active { transform: scale(0.97) translateY(0); }
+  .btn-primary:hover { filter: brightness(1.08); transform: translateY(-1px); }
+  .btn-primary:active { transform: scale(0.97) translateY(0); filter: none; }
 
   .btn-danger {
     @apply inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all;
-    background: linear-gradient(135deg, hsl(var(--accent-rose)), #be123c);
+    background: hsl(var(--accent-rose));
     color: white;
   }
-  .btn-danger:hover { filter: brightness(1.1); }
+  .btn-danger:hover { filter: brightness(1.08); }
+  .btn-danger:active { transform: scale(0.97); filter: none; }
 
   .btn-ghost {
     @apply inline-flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all;
@@ -320,7 +295,7 @@ label {
     border: 1px solid hsl(var(--border));
     color: hsl(var(--text-2));
   }
-  .btn-ghost:hover { color: hsl(var(--text-1)); border-color: hsl(var(--border) / 2); }
+  .btn-ghost:hover { color: hsl(var(--text-1)); border-color: rgba(255,255,255,0.16); }
   .btn-ghost:active { transform: scale(0.97); }
 
   /* ── Press / tap animation ───────────────────────── */
@@ -331,52 +306,50 @@ label {
 
   /* ── Badges ──────────────────────────────────────── */
   .badge {
-    @apply inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-lg font-medium;
+    @apply inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-md font-medium;
   }
   .badge-income    { @apply badge; background: hsl(var(--accent-emerald) / 0.12); color: hsl(var(--accent-emerald)); }
   .badge-expense   { @apply badge; background: hsl(var(--accent-rose)    / 0.12); color: hsl(var(--accent-rose));    }
   .badge-invest    { @apply badge; background: hsl(var(--accent-purple)   / 0.12); color: hsl(var(--accent-purple));  }
   .badge-debt      { @apply badge; background: hsl(var(--accent-amber)    / 0.12); color: hsl(var(--accent-amber));   }
-  .badge-payment   { @apply badge; background: hsl(38 80% 55% / 0.12); color: hsl(38 80% 60%); }
+  .badge-payment   { @apply badge; background: hsl(38 80% 55% / 0.12); color: hsl(38 80% 58%); }
   .badge-neutral   { @apply badge; background-color: hsl(var(--bg-input)); color: hsl(var(--text-2)); }
 
   /* ── Tab pill ────────────────────────────────────── */
   .tab-pill {
-    @apply px-3 py-1.5 rounded-xl text-xs font-semibold transition-all whitespace-nowrap;
+    @apply px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap;
     color: hsl(var(--text-3));
   }
   .tab-pill:hover { color: hsl(var(--text-2)); background-color: hsl(var(--bg-input)); }
   .tab-pill.active {
-    background: linear-gradient(135deg, hsl(var(--accent-cyan) / 0.10), hsl(var(--accent-purple) / 0.06));
-    color: hsl(var(--text-1));
-    border: 1px solid hsl(var(--accent-cyan) / 0.18);
-    box-shadow: 0 1px 4px rgba(0,0,0,0.18);
+    background-color: hsl(var(--accent-cyan) / 0.12);
+    color: hsl(var(--accent-cyan));
+    border: 1px solid hsl(var(--accent-cyan) / 0.22);
   }
   :root.light .tab-pill.active {
-    background: white;
-    border-color: hsl(var(--accent-cyan) / 0.25);
-    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    background-color: hsl(var(--accent-cyan) / 0.10);
+    border-color: hsl(var(--accent-cyan) / 0.28);
   }
 
   /* ── Skeleton ────────────────────────────────────── */
   .skeleton {
     background: linear-gradient(
       90deg,
-      rgba(255, 255, 255, 0.04) 25%,
-      rgba(255, 255, 255, 0.08) 50%,
-      rgba(255, 255, 255, 0.04) 75%
+      hsl(var(--bg-card-2)) 25%,
+      hsl(var(--bg-card-2) / 0.7) 50%,
+      hsl(var(--bg-card-2)) 75%
     );
     background-size: 200% 100%;
     animation: shimmer 1.6s infinite;
-    border-radius: calc(var(--radius) - 4px);
+    border-radius: calc(var(--radius) - 2px);
     border: 1px solid rgba(255, 255, 255, 0.06);
   }
   :root.light .skeleton {
     background: linear-gradient(
       90deg,
-      rgba(0, 0, 0, 0.05) 25%,
-      rgba(0, 0, 0, 0.09) 50%,
-      rgba(0, 0, 0, 0.05) 75%
+      rgba(0, 0, 0, 0.06) 25%,
+      rgba(0, 0, 0, 0.03) 50%,
+      rgba(0, 0, 0, 0.06) 75%
     );
     background-size: 200% 100%;
     border-color: rgba(0, 0, 0, 0.06);
@@ -388,8 +361,8 @@ label {
     @apply flex flex-col items-center justify-center py-16 px-6 text-center;
   }
   .empty-state-icon {
-    @apply w-14 h-14 rounded-2xl flex items-center justify-center mb-4;
-    background-color: hsl(var(--bg-input));
+    @apply w-12 h-12 rounded-xl flex items-center justify-center mb-4;
+    background-color: hsl(var(--bg-card-2));
   }
   .empty-state-title { @apply text-sm font-semibold t1 mb-1; }
   .empty-state-body  { @apply text-xs t2 max-w-xs leading-relaxed; }
@@ -401,11 +374,6 @@ label {
   /* ── Divider ─────────────────────────────────────── */
   .divider { @apply w-full h-px; background-color: hsl(var(--border-2)); }
 
-  /* ── Accent glows ────────────────────────────────── */
-  .glow-cyan    { box-shadow: 0 0 24px hsl(var(--accent-cyan)    / 0.18); }
-  .glow-emerald { box-shadow: 0 0 24px hsl(var(--accent-emerald) / 0.18); }
-  .glow-purple  { box-shadow: 0 0 24px hsl(var(--accent-purple)  / 0.18); }
-
   /* ── Stat row ────────────────────────────────────── */
   .stat-row {
     @apply flex items-center justify-between py-3 border-b;
@@ -413,13 +381,13 @@ label {
   }
   .stat-row:last-child { @apply border-0; }
 
-  /* ── Number animate (count-up feel) ─────────────── */
+  /* ── Number display ──────────────────────────────── */
   .number-display {
     @apply tabular-nums;
     font-variant-numeric: tabular-nums;
   }
 
-  /* ── Responsive page header ──────────────────────── */
+  /* ── Page header ─────────────────────────────────── */
   .page-header {
     @apply flex items-start justify-between gap-3 mb-3 sm:mb-5;
   }
@@ -430,12 +398,12 @@ label {
     @apply text-xs sm:text-sm t2 mt-0.5;
   }
 
-  /* ── Mobile page icon container ─────────────────── */
+  /* ── Page icon ───────────────────────────────────── */
   .page-icon {
-    @apply w-9 h-9 sm:w-10 sm:h-10 rounded-2xl flex items-center justify-center shrink-0;
+    @apply w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shrink-0;
   }
 
-  /* ── Mobile list item ────────────────────────────── */
+  /* ── List item ───────────────────────────────────── */
   .list-item {
     @apply flex items-center gap-3 px-4 py-3 sm:py-3.5 transition-colors;
     border-bottom: 1px solid hsl(var(--border-2));
@@ -443,7 +411,7 @@ label {
   .list-item:last-child { border-bottom: none; }
   .list-item:active { background-color: hsl(var(--bg-input)); }
 
-  /* ── Responsive KPI grid ─────────────────────────── */
+  /* ── KPI grid ────────────────────────────────────── */
   .kpi-grid {
     @apply grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3;
   }
@@ -460,7 +428,7 @@ label {
     @apply text-base sm:text-lg font-bold number-display;
   }
 
-  /* ── Responsive content grid ─────────────────────── */
+  /* ── Content grid ────────────────────────────────── */
   .content-grid {
     @apply grid grid-cols-1 lg:grid-cols-3 gap-4;
   }
@@ -473,7 +441,7 @@ label {
     @apply card p-3 sm:p-4 lg:p-5;
   }
 
-  /* ── Responsive tabs ─────────────────────────────── */
+  /* ── Tabs row ────────────────────────────────────── */
   .tabs-row {
     @apply flex gap-1 overflow-x-auto pb-0.5 -mx-1 px-1;
     scrollbar-width: none;
@@ -482,7 +450,7 @@ label {
 
   /* ── Hero balance card ───────────────────────────── */
   .hero-balance {
-    @apply relative rounded-2xl sm:rounded-[1.5rem] overflow-hidden p-4 sm:p-6;
+    @apply relative rounded-2xl overflow-hidden p-4 sm:p-6;
   }
   .hero-amount {
     @apply text-3xl sm:text-4xl lg:text-5xl font-bold text-white tracking-tight number-display;
@@ -496,12 +464,12 @@ label {
     @apply min-w-full;
   }
 
-  /* ── Touch target minimum ────────────────────────── */
+  /* ── Touch target ────────────────────────────────── */
   .touch-target {
     @apply min-h-[44px] min-w-[44px] flex items-center justify-center;
   }
 
-  /* ── Responsive modal ────────────────────────────── */
+  /* ── Modal responsive ────────────────────────────── */
   .modal-responsive {
     @apply w-full max-w-sm sm:max-w-md;
   }
@@ -511,14 +479,13 @@ label {
 @layer utilities {
   .text-balance { text-wrap: balance; }
 
-  /* fluid heading sizes */
   .h-display { @apply text-2xl sm:text-3xl font-bold; }
   .h-page    { @apply text-lg sm:text-xl font-bold; }
   .h-section { @apply text-sm sm:text-base font-semibold; }
   .h-card    { @apply text-sm font-semibold; }
 }
 
-/* Android / Capacitor touch polish: remove tap flash and force stable compositing. */
+/* Android / Capacitor touch polish */
 @layer base {
   html,
   body,
@@ -562,57 +529,9 @@ label {
     outline: none;
     box-shadow: none;
   }
-
-  button,
-  a,
-  [role="button"],
-  .pressable,
-  .card,
-  .card-2,
-  .card-elevated,
-  .modal-card,
-  .glass,
-  nav,
-  [class*="backdrop-blur"] {
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
-    perspective: 1000px;
-    will-change: transform;
-  }
-
-  .pressable,
-  .card,
-  .card-2,
-  .card-elevated,
-  .modal-card,
-  .glass,
-  nav,
-  [class*="backdrop-blur"] {
-    transform: translate3d(0, 0, 0);
-  }
-
-  button:active,
-  a:active,
-  [role="button"]:active,
-  .pressable:active,
-  .card:active,
-  .card-2:active,
-  .card-elevated:active {
-    -webkit-tap-highlight-color: transparent;
-    outline: none;
-  }
 }
 
 @layer components {
-  .glass,
-  .modal-card,
-  [class*="backdrop-blur"] {
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
-    transform: translate3d(0, 0, 0);
-    will-change: transform;
-  }
-
   .pressable,
   .btn-primary,
   .btn-danger,
@@ -624,7 +543,7 @@ label {
   }
 
   .pressable:active {
-    transform: translate3d(0, 0, 0) scale(0.975);
+    transform: scale(0.975);
   }
 }
 
@@ -636,77 +555,74 @@ label {
 
   .app-main-panel {
     background: transparent;
-    border-inline-start: 1px solid rgba(255, 255, 255, 0.05);
+    border-inline-start: 1px solid rgba(255, 255, 255, 0.06);
   }
 
+  /* Navigation shell — only place where blur is used */
   .modern-surface {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.10);
-    box-shadow:
-      0 1px 0 rgba(255, 255, 255, 0.07) inset,
-      0 12px 40px rgba(0, 0, 0, 0.28);
-    backdrop-filter: blur(28px) saturate(180%);
-    -webkit-backdrop-filter: blur(28px) saturate(180%);
+    background: hsl(var(--bg-card) / 0.90);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.22);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+  :root.light .modern-surface {
+    background: rgba(255, 255, 255, 0.90);
+    border-color: rgba(0, 0, 0, 0.08);
   }
 
   .modern-card {
-    background: rgba(255, 255, 255, 0.04);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 18px;
-    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.05) inset, 0 8px 32px rgba(0, 0, 0, 0.20);
+    background: hsl(var(--bg-card));
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 16px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.16);
   }
 
   .metric-tile {
-    border-radius: 18px;
-    background: rgba(255, 255, 255, 0.04);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.05) inset, 0 4px 16px rgba(0,0,0,0.16);
+    border-radius: 16px;
+    background: hsl(var(--bg-card));
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.14);
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
   }
   .metric-tile:hover {
-    border-color: rgba(255, 255, 255, 0.13);
-    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.05) inset, 0 8px 24px rgba(0,0,0,0.22);
+    border-color: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.20);
   }
   :root.light .metric-tile {
-    background: rgba(255, 255, 255, 0.72);
-    border-color: rgba(0, 0, 0, 0.07);
-    box-shadow: 0 1px 0 rgba(255,255,255,0.95) inset, 0 2px 8px rgba(0,0,0,0.06);
+    background: white;
+    border-color: rgba(0, 0, 0, 0.08);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
   }
 
   .icon-button {
-    min-width: 40px;
-    min-height: 40px;
+    min-width: 38px;
+    min-height: 38px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    border-radius: 14px;
+    border-radius: 10px;
     color: hsl(var(--text-2));
     background: hsl(var(--bg-input));
     border: 1px solid hsl(var(--border));
     transition: transform 120ms ease, color 120ms ease, border-color 120ms ease, background-color 120ms ease;
   }
-
   .icon-button:hover {
     color: hsl(var(--text-1));
-    border-color: hsl(var(--accent-cyan) / 0.28);
+    border-color: rgba(255, 255, 255, 0.18);
   }
-
   .icon-button:active {
-    transform: scale(0.96);
+    transform: scale(0.95);
   }
 
   .command-pill {
-    min-height: 44px;
-    border-radius: 16px;
+    min-height: 40px;
+    border-radius: 12px;
     background: hsl(var(--bg-input));
     border: 1px solid hsl(var(--border));
   }
 
-  /* ── Section heading — consistent across all pages ── */
+  /* ── Section heading ─────────────────────────────── */
   .section-head {
     display: flex;
     align-items: center;
@@ -714,10 +630,10 @@ label {
     margin-bottom: 14px;
   }
   .section-head-bar {
-    width: 3px;
-    height: 18px;
+    width: 2px;
+    height: 16px;
     border-radius: 99px;
-    background: linear-gradient(to bottom, #06B6D4 0%, #7C3AED 100%);
+    background: hsl(var(--accent-cyan));
     flex-shrink: 0;
   }
   .section-head-title {
@@ -737,7 +653,7 @@ label {
     text-decoration: none;
     transition: opacity 0.15s;
   }
-  .section-head-action:hover { opacity: 0.8; }
+  .section-head-action:hover { opacity: 0.75; }
 
   /* ── Quick action card ────────────────────────────── */
   .quick-card {
@@ -746,31 +662,30 @@ label {
     align-items: flex-start;
     gap: 10px;
     padding: 14px;
-    border-radius: 20px;
-    background: rgba(255, 255, 255, 0.045);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.06) inset, 0 4px 16px rgba(0,0,0,0.16);
+    border-radius: 16px;
+    background: hsl(var(--bg-card));
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.14);
     transition: border-color 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
     text-decoration: none;
     cursor: pointer;
   }
   .quick-card:hover {
-    border-color: rgba(255, 255, 255, 0.14);
-    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.06) inset, 0 8px 28px rgba(0,0,0,0.24);
+    border-color: rgba(255, 255, 255, 0.16);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
     transform: translateY(-1px);
   }
   .quick-card:active { transform: scale(0.97) translateY(0); }
   :root.light .quick-card {
-    background: rgba(255, 255, 255, 0.72);
-    border-color: rgba(0, 0, 0, 0.07);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    background: white;
+    border-color: rgba(0, 0, 0, 0.08);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
   }
   :root.light .quick-card:hover {
-    box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.09);
   }
 
+  /* ── App background — clean static ──────────────── */
   .spendix-live-bg {
     position: fixed;
     inset: 0;
@@ -778,135 +693,64 @@ label {
     pointer-events: none;
     overflow: hidden;
     background: hsl(var(--bg-page));
-    transform: translate3d(0, 0, 0);
-    backface-visibility: hidden;
   }
 
   .spendix-live-bg__mesh {
     position: absolute;
-    inset: -25%;
+    inset: 0;
     background:
-      radial-gradient(ellipse 72% 68% at 12% 8%,  rgba(124, 58, 237, 0.26) 0%, transparent 55%),
-      radial-gradient(ellipse 65% 58% at 88% 92%,  rgba(6, 182, 212, 0.22) 0%, transparent 52%),
-      radial-gradient(ellipse 50% 45% at 82% 12%,  rgba(245, 158, 11, 0.12) 0%, transparent 48%),
-      radial-gradient(ellipse 60% 50% at 18% 88%,  rgba(16, 185, 129, 0.13) 0%, transparent 50%),
-      radial-gradient(ellipse 40% 35% at 50% 50%,  rgba(244, 63, 94, 0.06)  0%, transparent 55%);
-    filter: blur(52px);
-    animation: spendixMeshDrift 22s ease-in-out infinite alternate;
-    will-change: transform;
+      radial-gradient(ellipse 55% 35% at 0% 0%, rgba(6, 182, 212, 0.06) 0%, transparent 60%),
+      radial-gradient(ellipse 45% 30% at 100% 100%, rgba(6, 182, 212, 0.04) 0%, transparent 55%);
   }
 
-  .spendix-live-bg__grain {
-    position: absolute;
-    inset: 0;
-    opacity: 0.032;
-    background-image:
-      linear-gradient(rgba(255,255,255,0.12) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255,255,255,0.12) 1px, transparent 1px);
-    background-size: 52px 52px;
-    mask-image: linear-gradient(to bottom, rgba(0,0,0,0.6), transparent 65%);
-  }
+  .spendix-live-bg__grain { display: none; }
 
   :root.light .spendix-live-bg {
-    background:
-      linear-gradient(115deg, hsl(var(--bg-page)) 0%, hsl(var(--bg-page)) 46%, hsl(204 55% 93%) 100%);
+    background: hsl(var(--bg-page));
   }
-
   :root.light .spendix-live-bg__mesh {
-    opacity: 0.72;
     background:
-      linear-gradient(120deg, transparent 0 30%, rgba(6, 182, 212, 0.14) 44%, transparent 60% 100%),
-      linear-gradient(260deg, transparent 0 38%, rgba(124, 58, 237, 0.10) 52%, transparent 70% 100%),
-      linear-gradient(20deg, transparent 0 46%, rgba(245, 158, 11, 0.10) 62%, transparent 80% 100%);
-  }
-
-  :root.light .spendix-live-bg__grain {
-    opacity: 0.08;
-    background-image:
-      linear-gradient(rgba(15,23,42,0.08) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(15,23,42,0.08) 1px, transparent 1px);
-  }
-
-  @keyframes spendixMeshDrift {
-    0% { transform: translate3d(-2%, -1%, 0) scale(1); }
-    50% { transform: translate3d(2%, 1%, 0) scale(1.04); }
-    100% { transform: translate3d(1%, -2%, 0) scale(1.02); }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .spendix-live-bg__mesh {
-      animation: none;
-    }
+      radial-gradient(ellipse 55% 35% at 0% 0%, rgba(6, 182, 212, 0.05) 0%, transparent 60%);
   }
 
   /* ── RTL global fixes ───────────────────────────── */
-
-  /* Charts (Recharts) are always LTR — prevent RTL from flipping axes */
   [dir="rtl"] .recharts-wrapper,
   [dir="rtl"] .recharts-surface,
   [dir="rtl"] .recharts-layer {
     direction: ltr;
   }
 
-  /* Number displays should always be LTR regardless of UI direction */
   [dir="rtl"] .number-display {
     direction: ltr;
     unicode-bidi: embed;
   }
 
-  /* Scrollbars: in RTL scrollbars appear on the left side by default.
-     Keep them on the right for consistency with the scrollable content. */
   [dir="rtl"] * {
     scrollbar-width: thin;
   }
 
-  /* ── Mobile-specific improvements ───────────────── */
+  /* ── Mobile specifics ────────────────────────────── */
   @media (max-width: 639px) {
-    /* Slightly reduce main page padding on small phones */
     .kpi-grid { gap: 8px; }
     .kpi-card { padding: 10px 12px; }
     .hero-balance { padding: 16px 20px; }
     .hero-amount  { font-size: 1.875rem; }
-
-    /* Ensure touch targets in lists */
     .stat-row { padding-top: 14px; padding-bottom: 14px; }
-
-    /* Quick card on very small screens */
-    .quick-card { padding: 12px; gap: 8px; border-radius: 16px; }
-
-    /* Section head tighter on mobile */
+    .quick-card { padding: 12px; gap: 8px; }
     .section-head { margin-bottom: 10px; }
   }
 
   .bg-black\/60 {
-    background-color: rgba(19, 26, 34, 0.68) !important;
+    background-color: rgba(13, 17, 23, 0.72) !important;
   }
-
   .bg-black\/70 {
-    background-color: rgba(19, 26, 34, 0.74) !important;
-  }
-
-  .shadow-black\/30,
-  .shadow-black\/50,
-  .shadow-black\/60 {
-    --tw-shadow-color: rgba(11, 15, 20, 0.32) !important;
-    --tw-shadow: var(--tw-shadow-colored) !important;
+    background-color: rgba(13, 17, 23, 0.80) !important;
   }
 
   :root.light .bg-black\/60 {
     background-color: rgba(241, 245, 249, 0.72) !important;
   }
-
   :root.light .bg-black\/70 {
-    background-color: rgba(241, 245, 249, 0.8) !important;
+    background-color: rgba(241, 245, 249, 0.82) !important;
   }
-
-  /* Light theme: gradient hero cards keep their dark appearance for readability */
-  :root.light [style*="linear-gradient(135deg, #0"] {
-    filter: brightness(1.08) saturate(0.95);
-  }
-
-  /* Ensure white text on gradient banners stays readable in light mode */
-  :root.light .text-white\/50 { color: rgba(255,255,255,0.65) !important; }
-  :root.light .text-white\/40 { color: rgba(255,255,255,0.55) !important; }
 }

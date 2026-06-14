@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
@@ -150,7 +150,7 @@ export default function DebtPaymentFABModal({ onClose, onSuccess }: Props) {
                 </motion.button>
               )}
               <div className="flex items-center gap-3 min-w-0">
-                <div className="shrink-0 rounded-2xl p-2.5 ring-1 ring-white/5 bg-amber-400/10">
+                <div className="shrink-0 rounded-xl p-2.5 ring-1 ring-white/5 bg-amber-400/10">
                   <DollarSign className="w-5 h-5 text-amber-400" />
                 </div>
                 <div className="min-w-0">
@@ -172,7 +172,7 @@ export default function DebtPaymentFABModal({ onClose, onSuccess }: Props) {
           </div>
         </div>
 
-        {/* Step 1 — Select debt group */}
+        {/* Step 1 â€” Select debt group */}
         {step === "select" && (
           <div className="flex-1 overflow-y-auto min-h-0 px-5 py-4 space-y-3"
             style={{ paddingBottom: "max(20px, env(safe-area-inset-bottom, 0px))" }}>
@@ -194,7 +194,7 @@ export default function DebtPaymentFABModal({ onClose, onSuccess }: Props) {
                     type="button"
                     onClick={() => selectGroup(group)}
                     whileTap={{ scale: 0.98 }} transition={tapTransition}
-                    className="w-full rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--bg-input))]/50 p-4 text-start hover:border-amber-400/30 hover:bg-amber-400/5 transition-all group"
+                    className="w-full rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--bg-input))]/50 p-4 text-start hover:border-amber-400/30 hover:bg-amber-400/5 transition-all group"
                   >
                     <div className="flex items-center justify-between gap-3">
                       <div className="min-w-0 flex-1">
@@ -233,18 +233,18 @@ export default function DebtPaymentFABModal({ onClose, onSuccess }: Props) {
           </div>
         )}
 
-        {/* Step 2 — Payment form */}
+        {/* Step 2 â€” Payment form */}
         {step === "pay" && selectedGroup && (
           <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
             <div className="flex-1 overflow-y-auto min-h-0 px-5 py-4 space-y-4">
 
               {/* Summary */}
-              <section className="rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--bg-input))]/40 p-4">
+              <section className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--bg-input))]/40 p-4">
                 <div className="flex items-center justify-between gap-3">
                   <div className="min-w-0">
                     <p className="text-sm font-bold t1 truncate">{selectedGroup.name}</p>
                     <p className="text-[11px] t3 mt-0.5">
-                      {selectedGroup.debts.length} {t("relationship.total_debts")} · {t(`debts.${selectedGroup.debtType}`)}
+                      {selectedGroup.debts.length} {t("relationship.total_debts")} Â· {t(`debts.${selectedGroup.debtType}`)}
                     </p>
                   </div>
                   <div className="text-end shrink-0">
@@ -256,7 +256,7 @@ export default function DebtPaymentFABModal({ onClose, onSuccess }: Props) {
 
               {/* Amount */}
               <section
-                className="rounded-2xl border p-4"
+                className="rounded-xl border p-4"
                 style={{ borderColor: "#34d39930", backgroundColor: "#34d39908" }}
               >
                 <div className="mb-3 flex items-center justify-between gap-3">
@@ -276,7 +276,7 @@ export default function DebtPaymentFABModal({ onClose, onSuccess }: Props) {
                     value={rawAmount}
                     onChange={(e) => handleAmount(e.target.value)}
                     placeholder="0.00"
-                    className="w-full ps-12 pe-4 py-4 text-4xl font-black number-display rounded-2xl bg-[hsl(var(--bg-card))] border focus:outline-none transition-all"
+                    className="w-full ps-12 pe-4 py-4 text-4xl font-black number-display rounded-xl bg-[hsl(var(--bg-card))] border focus:outline-none transition-all"
                     style={{ color: rawAmount ? "#34d399" : undefined, borderColor: rawAmount ? "#34d39940" : "hsl(var(--border))" }}
                     autoFocus
                   />
@@ -284,7 +284,7 @@ export default function DebtPaymentFABModal({ onClose, onSuccess }: Props) {
               </section>
 
               {/* Date + Notes */}
-              <section className="space-y-3 rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--bg-input))]/50 p-4">
+              <section className="space-y-3 rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--bg-input))]/50 p-4">
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide t2 mb-2">
@@ -333,7 +333,7 @@ export default function DebtPaymentFABModal({ onClose, onSuccess }: Props) {
                 type="submit"
                 disabled={submitting || form.amount <= 0}
                 whileTap={{ scale: 0.97 }} transition={tapTransition}
-                className="w-full rounded-2xl py-3.5 text-sm font-bold text-white transition-all disabled:opacity-40"
+                className="w-full rounded-xl py-3.5 text-sm font-bold text-white transition-all disabled:opacity-40"
                 style={{ background: "linear-gradient(135deg, #34d399, #34d399bb)" }}
               >
                 <AnimatePresence mode="wait">
@@ -360,3 +360,4 @@ export default function DebtPaymentFABModal({ onClose, onSuccess }: Props) {
     document.body
   );
 }
+

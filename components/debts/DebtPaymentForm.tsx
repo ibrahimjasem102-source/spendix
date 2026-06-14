@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
@@ -93,7 +93,7 @@ export default function DebtPaymentForm({ debt, debts, onSubmit, onClose }: Prop
           </div>
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="shrink-0 rounded-2xl p-2.5 ring-1 ring-white/5 bg-emerald-400/10">
+              <div className="shrink-0 rounded-xl p-2.5 ring-1 ring-white/5 bg-emerald-400/10">
                 <DollarSign className="w-5 h-5 text-emerald-400" />
               </div>
               <div className="min-w-0">
@@ -115,12 +115,12 @@ export default function DebtPaymentForm({ debt, debts, onSubmit, onClose }: Prop
           <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-4">
 
             {/* Debt summary */}
-            <section className="rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--bg-input))]/40 p-4">
+            <section className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--bg-input))]/40 p-4">
               <div className="flex items-center justify-between gap-3">
                 <div className="min-w-0">
                   <p className="text-xs font-semibold t1 truncate">{displayName}</p>
                   <p className="text-[11px] t3 mt-0.5">
-                    {paymentDebts.length} {t("relationship.total_debts")} · {t(`debts.${primaryDebt.debt_type}`)}
+                    {paymentDebts.length} {t("relationship.total_debts")} Â· {t(`debts.${primaryDebt.debt_type}`)}
                   </p>
                 </div>
                 <div className="text-end shrink-0">
@@ -135,7 +135,7 @@ export default function DebtPaymentForm({ debt, debts, onSubmit, onClose }: Prop
 
             {/* Amount */}
             <section
-              className="rounded-2xl border p-4"
+              className="rounded-xl border p-4"
               style={{ borderColor: `${RING}30`, backgroundColor: `${RING}08` }}
             >
               <div className="mb-3 flex items-center justify-between gap-3">
@@ -154,7 +154,7 @@ export default function DebtPaymentForm({ debt, debts, onSubmit, onClose }: Prop
                   value={rawAmount}
                   onChange={(e) => handleAmount(e.target.value)}
                   placeholder="0.00"
-                  className="w-full ps-12 pe-4 py-4 text-4xl font-black number-display rounded-2xl bg-[hsl(var(--bg-card))] border focus:outline-none transition-all"
+                  className="w-full ps-12 pe-4 py-4 text-4xl font-black number-display rounded-xl bg-[hsl(var(--bg-card))] border focus:outline-none transition-all"
                   style={{ color: rawAmount ? RING : undefined, borderColor: rawAmount ? `${RING}40` : "hsl(var(--border))" }}
                   autoFocus
                 />
@@ -162,7 +162,7 @@ export default function DebtPaymentForm({ debt, debts, onSubmit, onClose }: Prop
             </section>
 
             {/* Date + Notes */}
-            <section className="space-y-3 rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--bg-input))]/50 p-4">
+            <section className="space-y-3 rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--bg-input))]/50 p-4">
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide t2 mb-2">
@@ -211,7 +211,7 @@ export default function DebtPaymentForm({ debt, debts, onSubmit, onClose }: Prop
               type="submit"
               disabled={loading || form.amount <= 0}
               whileTap={{ scale: 0.97 }} transition={tapTransition}
-              className="w-full rounded-2xl py-3.5 text-sm font-bold text-white transition-all disabled:opacity-40"
+              className="w-full rounded-xl py-3.5 text-sm font-bold text-white transition-all disabled:opacity-40"
               style={{ background: `linear-gradient(135deg, ${RING}, ${RING}bb)` }}
             >
               <AnimatePresence mode="wait">
@@ -237,3 +237,4 @@ export default function DebtPaymentForm({ debt, debts, onSubmit, onClose }: Prop
     document.body
   );
 }
+

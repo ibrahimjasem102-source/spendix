@@ -5,6 +5,7 @@ import { rateLimit } from "@/lib/api/rate-limit";
 import { boundedInt, readJson } from "@/lib/api/request";
 import { checkMonthlyTransactionLimit } from "@/lib/api/plan-guard";
 import { TransactionFormData } from "@/types";
+import { writeLedgerEntry } from "@/lib/ledger/writer";
 
 const TRANSACTION_SELECT =
   "id,user_id,category_id,account_id,title,notes,amount,type,source,related_source_id,contact_id,transaction_date,created_at,updated_at,category:categories(id, name, color, icon),account:accounts(id, name, type)";
@@ -149,6 +150,24 @@ export async function POST(request: Request) {
   if (Array.isArray(body.tag_ids) && body.tag_ids.length > 0) {
     const txId = (data as { id: string } | null)?.id;
     if (txId) await syncTags(supabase, txId, body.tag_ids).catch(() => null);
+  }
+
+  // Write unified ledger entry (best-effort, non-blocking)
+  const txId = (data as { id: string } | null)?.id;
+  if (txId) {
+    void writeLedgerEntry(supabase, {
+      user_id:       user.id,
+      source_module: "transaction",
+      source_id:     txId,
+      entry_type:    payload.type === "income" ? "income" : "expense",
+      direction:     payload.type === "income" ? "inflow" : "outflow",
+      amount:        payload.amount,
+      description:   payload.title ?? "",
+      transaction_id: txId,
+      account_id:    payload.account_id   ?? null,
+      category_id:   payload.category_id  ?? null,
+      contact_id:    payload.contact_id   ?? null,
+    });
   }
 
   return NextResponse.json({ transaction: data }, { status: 201 });

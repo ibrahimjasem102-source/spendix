@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { DebtPaymentFormData } from "@/types";
 import { notify } from "@/lib/notifications/service";
 import { insertLinkedTransaction, transactionTypeForDebtPayment } from "@/lib/finance/serverTransactions";
+import { writeLedgerEntry } from "@/lib/ledger/writer";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -105,6 +106,21 @@ export async function POST(request: Request, { params }: Params) {
   } else {
     void notify.debtPaymentMade(supabase, user.id, debtId, amountLabel, debt.person_or_entity);
   }
+
+  // Write unified ledger entry (best-effort)
+  // payable debt payment → outflow (paying back)
+  // receivable debt payment → inflow (receiving back)
+  void writeLedgerEntry(supabase, {
+    user_id:       user.id,
+    source_module: "debt_payment",
+    source_id:     payment.id,
+    entry_type:    "debt_payment",
+    direction:     debt.debt_type === "payable" ? "outflow" : "inflow",
+    amount:        paymentAmount,
+    description:   `Debt payment: ${debt.person_or_entity}`,
+    transaction_id: tx.id,
+    contact_id:    (debt as { contact_id?: string | null }).contact_id ?? null,
+  });
 
   return NextResponse.json({ debt: updatedDebt }, { status: 201 });
 }

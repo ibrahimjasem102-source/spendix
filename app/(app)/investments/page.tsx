@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useMemo, useEffect, useRef } from "react";
 import {
@@ -84,7 +84,7 @@ export default function InvestmentsPage() {
     }
   }
 
-  // ── Aggregates ────────────────────────────────────────────────
+  // â”€â”€ Aggregates â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const totalInvested = useMemo(
     () => investments.reduce((s, i) => s + Number(i.amount_invested), 0),
     [investments],
@@ -143,12 +143,12 @@ export default function InvestmentsPage() {
   ];
 
   return (
-    <PlanGate require="pro" featureName="الاستثمارات" overlay>
+    <PlanGate require="pro" featureName="Ø§Ù„Ø§Ø³ØªØ«Ù…Ø§Ø±Ø§Øª" overlay>
     <div className="space-y-5">
 
-      {/* ── Header ───────────────────────────────────────────── */}
+      {/* â”€â”€ Header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <div className="flex min-w-0 items-center gap-2.5">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-purple-400/10">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-purple-400/10">
           <TrendingUp className="h-4 w-4 text-purple-400" />
         </div>
         <div className="min-w-0">
@@ -157,7 +157,7 @@ export default function InvestmentsPage() {
         </div>
       </div>
 
-      {/* ── Portfolio Hero ────────────────────────────────────── */}
+      {/* â”€â”€ Portfolio Hero â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       {investments.length > 0 && (
         <div
           className="relative rounded-[1.5rem] overflow-hidden p-6"
@@ -176,18 +176,18 @@ export default function InvestmentsPage() {
             <p className="text-4xl font-bold text-white number-display mb-1">{format(currentValue)}</p>
             <div className="flex items-center gap-2 mt-2 flex-wrap">
               <span className={`text-sm font-semibold ${isPositive ? "text-emerald-300" : "text-rose-300"}`}>
-                {isPositive ? "▲" : "▼"} {isPositive ? "+" : ""}{format(totalProfit)}
+                {isPositive ? "â–²" : "â–¼"} {isPositive ? "+" : ""}{format(totalProfit)}
                 {" "}({returnPct >= 0 ? "+" : ""}{returnPct.toFixed(1)}%)
               </span>
               <span className="text-white/30 text-xs">
-                · {format(totalInvested)} {t("investments.total_invested").toLowerCase()}
+                Â· {format(totalInvested)} {t("investments.total_invested").toLowerCase()}
               </span>
             </div>
           </div>
         </div>
       )}
 
-      {/* ── KPIs ─────────────────────────────────────────────── */}
+      {/* â”€â”€ KPIs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       {investments.length > 0 && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {kpis.map((k) => (
@@ -204,7 +204,7 @@ export default function InvestmentsPage() {
         </div>
       )}
 
-      {/* ── Allocation + Chart ────────────────────────────────── */}
+      {/* â”€â”€ Allocation + Chart â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       {investments.length > 0 && (
         <div className="grid gap-4 lg:grid-cols-[1fr_1.6fr]">
 
@@ -253,7 +253,7 @@ export default function InvestmentsPage() {
               <p className="text-xs t3 mt-0.5">{t("investments.over_time")}</p>
             </div>
             {isGuest ? (
-              <div className="h-[200px] flex flex-col items-center justify-center gap-3 rounded-2xl bg-purple-400/5 border border-purple-400/10">
+              <div className="h-[200px] flex flex-col items-center justify-center gap-3 rounded-xl bg-purple-400/5 border border-purple-400/10">
                 <TrendingUp className="w-8 h-8 text-purple-400/30" />
                 <p className="text-xs t3 text-center px-4">{t("investments.history_guest")}</p>
               </div>
@@ -264,7 +264,7 @@ export default function InvestmentsPage() {
         </div>
       )}
 
-      {/* ── Assets list ───────────────────────────────────────── */}
+      {/* â”€â”€ Assets list â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <div className="card overflow-hidden">
 
         {/* List header + type filter tabs */}
@@ -310,9 +310,9 @@ export default function InvestmentsPage() {
         {guestLoading || isLoading ? (
           <div className="space-y-2.5 p-4">
             {[1,2,3].map((i) => (
-              <div key={i} className="animate-pulse rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--bg-card-2))] p-4 space-y-3">
+              <div key={i} className="animate-pulse rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--bg-card-2))] p-4 space-y-3">
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-2xl bg-[hsl(var(--bg-input))]" />
+                  <div className="h-10 w-10 rounded-xl bg-[hsl(var(--bg-input))]" />
                   <div className="flex-1 space-y-2">
                     <div className="h-4 w-3/4 rounded-lg bg-[hsl(var(--bg-input))]" />
                     <div className="h-3 w-1/2 rounded-lg bg-[hsl(var(--bg-input))]" />
@@ -324,13 +324,13 @@ export default function InvestmentsPage() {
           </div>
         ) : filtered.length === 0 ? (
           <div className="py-16 text-center px-5">
-            <div className="w-14 h-14 rounded-2xl bg-purple-400/10 flex items-center justify-center mx-auto mb-4">
+            <div className="w-14 h-14 rounded-xl bg-purple-400/10 flex items-center justify-center mx-auto mb-4">
               <TrendingUp className="w-7 h-7 text-purple-400" />
             </div>
             <p className="text-sm font-medium t2 mb-1">
               {activeType === "all"
                 ? t("investments.no_data")
-                : `${t("common.no_data")} — ${t(`investments.types.${activeType}`)}`}
+                : `${t("common.no_data")} â€” ${t(`investments.types.${activeType}`)}`}
             </p>
           </div>
         ) : (
@@ -358,7 +358,7 @@ export default function InvestmentsPage() {
                     {/* Row 1: icon + name + P&L */}
                     <div className="flex items-start justify-between gap-3 mb-3">
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className={`p-2.5 rounded-2xl ${cfg.bg} shrink-0`}>
+                        <div className={`p-2.5 rounded-xl ${cfg.bg} shrink-0`}>
                           <cfg.icon className={`w-4 h-4 ${cfg.color}`} />
                         </div>
                         <div className="min-w-0">
@@ -380,7 +380,7 @@ export default function InvestmentsPage() {
                       </div>
                     </div>
 
-                    {/* Row 2: invested → current + date */}
+                    {/* Row 2: invested â†’ current + date */}
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-1.5 text-xs">
                         <span className="t3 number-display">{format(ai)}</span>
@@ -423,7 +423,7 @@ export default function InvestmentsPage() {
         )}
       </div>
 
-      {/* ── Modals ───────────────────────────────────────────── */}
+      {/* â”€â”€ Modals â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <AnimatePresence>
         {showForm && (
           <InvestmentForm
@@ -448,3 +448,4 @@ export default function InvestmentsPage() {
     </PlanGate>
   );
 }
+

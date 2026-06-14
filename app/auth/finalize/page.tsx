@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -35,8 +35,7 @@ export default function AuthFinalizePage() {
   return (
     <div className="min-h-screen flex items-center justify-center px-4" style={{ backgroundColor: "hsl(214 28% 5%)" }}>
       <div className="flex flex-col items-center gap-4 text-center">
-        <div className="w-14 h-14 rounded-2xl flex items-center justify-center"
-          style={{ background: "linear-gradient(135deg, #06B6D4, #7C3AED)" }}>
+        <div className="w-14 h-14 rounded-xl flex items-center justify-center bg-cyan-500">
           <Wallet className="w-7 h-7 text-white" />
         </div>
         <Loader2 className="h-5 w-5 animate-spin text-cyan-300" />
@@ -45,3 +44,4 @@ export default function AuthFinalizePage() {
     </div>
   );
 }
+

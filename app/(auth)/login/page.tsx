@@ -1,51 +1,37 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Wallet, Eye, EyeOff, Loader2, Mail, Lock } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { signedIn } from "@/lib/auth/session-manager";
-import { getRefreshToken, storeRefreshToken } from "@/lib/auth/token-store";
+import { signedIn, init as initSession, getSessionState } from "@/lib/auth/session-manager";
 import { useTranslation } from "@/lib/i18n";
 import OAuthButtons from "@/components/auth/OAuthButtons";
 
-// ── Restore session from stored refresh token (silent) ─────────────────────
-async function tryRestoreSession(
-  supabase: ReturnType<typeof createClient>,
-  dest: string,
-): Promise<boolean> {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (session?.access_token) {
-    signedIn(session.access_token, session.refresh_token ?? undefined);
-    window.location.replace(dest);
-    return true;
-  }
+// Silently restore an existing session and redirect if one is found.
+// Delegates all restore logic (cookie, localStorage fallback, server cookie
+// refresh) to SessionManager.init() — the single source of truth.
+// Hard 6-second timeout so a slow/unreachable Supabase never leaves the user
+// staring at a loading spinner — the login form shows up regardless.
+async function tryRestoreSession(dest: string): Promise<boolean> {
+  const timeout = new Promise<false>((resolve) => setTimeout(() => resolve(false), 6000));
+  const restore = initSession()
+    .then(() => {
+      const { isAuthenticated } = getSessionState();
+      if (isAuthenticated) {
+        window.location.replace(dest);
+        return true as const;
+      }
+      return false as const;
+    })
+    .catch(() => false as const);
 
-  const storedRefresh = getRefreshToken();
-  if (!storedRefresh) return false;
-
-  const { data } = await supabase.auth.refreshSession({ refresh_token: storedRefresh });
-  if (!data.session?.access_token) return false;
-
-  const { access_token, refresh_token } = data.session;
-  signedIn(access_token, refresh_token ?? undefined);
-  if (refresh_token) storeRefreshToken(refresh_token);
-
-  await fetch("/api/auth/set-session", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ access_token, refresh_token }),
-  }).catch(() => undefined);
-
-  window.location.replace(dest);
-  return true;
+  return Promise.race([restore, timeout]);
 }
 
 // ── Page ───────────────────────────────────────────────────────────────────
 
 export default function LoginPage() {
-  const router = useRouter();
   const { t } = useTranslation();
 
   const [email,    setEmail]    = useState("");
@@ -70,8 +56,7 @@ export default function LoginPage() {
       return;
     }
 
-    const supabase = createClient();
-    tryRestoreSession(supabase, safeDest)
+    tryRestoreSession(safeDest)
       .then((restored) => { if (!restored) setChecking(false); })
       .catch(() => setChecking(false));
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -152,17 +137,12 @@ export default function LoginPage() {
   // ── Checking spinner ────────────────────────────────────────────────────
   if (checking) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: "hsl(214 28% 5%)" }}>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "hsl(216 30% 7%)" }}>
         <div className="flex flex-col items-center gap-4">
-          <div className="relative">
-            <div className="w-14 h-14 rounded-2xl flex items-center justify-center"
-              style={{ background: "linear-gradient(135deg, #06B6D4, #7C3AED)" }}>
-              <Wallet className="w-7 h-7 text-white" />
-            </div>
-            <div className="absolute -inset-1 rounded-2xl opacity-30 blur-lg"
-              style={{ background: "linear-gradient(135deg, #06B6D4, #7C3AED)" }} />
+          <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-cyan-500">
+            <Wallet className="w-6 h-6 text-white" />
           </div>
-          <Loader2 className="w-5 h-5 text-cyan-400 animate-spin" />
+          <Loader2 className="w-4 h-4 text-cyan-400 animate-spin" />
         </div>
       </div>
     );
@@ -172,39 +152,28 @@ export default function LoginPage() {
   return (
     <div
       className="min-h-screen flex items-center justify-center px-4 py-10"
-      style={{ background: "radial-gradient(ellipse 80% 60% at 50% 0%, hsl(214 60% 8%) 0%, hsl(214 28% 5%) 100%)" }}
+      style={{ background: "hsl(216 30% 7%)" }}
     >
-      {/* Glow blobs */}
-      <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[600px] h-[300px] opacity-20 blur-3xl rounded-full"
-          style={{ background: "radial-gradient(ellipse, #06B6D4 0%, #7C3AED 60%, transparent 100%)" }} />
-      </div>
-
-      <div className="w-full max-w-md relative z-10">
+      <div className="w-full max-w-sm relative z-10">
 
         {/* Logo */}
         <div className="flex flex-col items-center mb-8">
-          <div className="relative mb-4">
-            <div className="w-16 h-16 rounded-2xl flex items-center justify-center"
-              style={{ background: "linear-gradient(135deg, #06B6D4, #7C3AED)" }}>
-              <Wallet className="w-8 h-8 text-white" />
-            </div>
-            <div className="absolute -inset-1 rounded-2xl opacity-40 blur-xl"
-              style={{ background: "linear-gradient(135deg, #06B6D4, #7C3AED)" }} />
+          <div className="w-14 h-14 rounded-xl flex items-center justify-center bg-cyan-500 mb-4">
+            <Wallet className="w-7 h-7 text-white" />
           </div>
-          <h1 className="text-3xl font-black text-white tracking-tight">Spendix</h1>
-          <p className="text-sm mt-1.5" style={{ color: "hsl(215 18% 50%)" }}>
+          <h1 className="text-2xl font-bold text-[hsl(210_20%_94%)] tracking-tight">Spendix</h1>
+          <p className="text-sm mt-1.5" style={{ color: "hsl(215 15% 52%)" }}>
             {t("auth.login_title")}
           </p>
         </div>
 
         {/* Card */}
         <div
-          className="rounded-2xl p-7 space-y-5"
+          className="rounded-xl p-6 space-y-5"
           style={{
-            background: "hsl(215 26% 9%)",
-            border: "1px solid hsl(0 0% 100% / 0.07)",
-            boxShadow: "0 0 0 1px hsl(0 0% 100% / 0.04), 0 32px 64px rgba(0,0,0,0.6)",
+            background: "hsl(215 24% 10%)",
+            border: "1px solid rgba(255,255,255,0.09)",
+            boxShadow: "0 16px 48px rgba(0,0,0,0.40)",
           }}
         >
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -314,12 +283,8 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 rounded-xl text-sm font-bold transition-all disabled:opacity-60 flex items-center justify-center gap-2 mt-1"
-              style={{
-                background: "linear-gradient(135deg, #06B6D4, #7C3AED)",
-                color: "#fff",
-                boxShadow: loading ? "none" : "0 0 24px rgba(6,182,212,0.25)",
-              }}
+              className="w-full py-3 rounded-xl text-sm font-semibold transition-all disabled:opacity-60 flex items-center justify-center gap-2 mt-1"
+              style={{ background: "#06B6D4", color: "#0D1117" }}
             >
               {loading
                 ? <><Loader2 className="w-4 h-4 animate-spin" />{t("auth.signing_in")}</>

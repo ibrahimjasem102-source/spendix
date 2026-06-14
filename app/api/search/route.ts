@@ -5,7 +5,7 @@ import { normalizeSearchQuery } from "@/lib/api/request";
 
 export interface SearchResult {
   id:          string;
-  type:        "transaction" | "debt" | "investment" | "work_session" | "work_payment" | "goal" | "contact" | "subscription" | "account" | "budget" | "recurring";
+  type:        "transaction" | "debt" | "investment" | "work_session" | "work_payment" | "goal" | "contact" | "subscription" | "account" | "budget" | "recurring" | "family_member";
   title:       string;
   subtitle:    string;
   amount?:     number;
@@ -43,6 +43,7 @@ export async function GET(request: Request) {
   const [
     txsRes, debtsRes, invsRes, sessionsRes, paymentsRes,
     goalsRes, contactsRes, subsRes, accsRes, budgetsRes, recurringRes,
+    familyRes,
   ] = await Promise.all([
     // ── Transactions ──────────────────────────────────────────────
     supabase
@@ -132,6 +133,14 @@ export async function GET(request: Request) {
       .or(`title.ilike.${pattern},notes.ilike.${pattern}`)
       .eq("active", true)
       .limit(4),
+
+    // ── Family members ────────────────────────────────────────────
+    supabase
+      .from("family_members")
+      .select("id, name, relationship, birth_date, notes")
+      .eq("user_id", uid)
+      .or(`name.ilike.${pattern},relationship.ilike.${pattern},notes.ilike.${pattern}`)
+      .limit(3),
   ]);
 
   // ── Map transactions ──────────────────────────────────────────
@@ -308,6 +317,18 @@ export async function GET(request: Request) {
       amount:     a.balance ? Number(a.balance) : undefined,
       amountType: "neutral",
       url:        `/accounts`,
+    });
+  }
+
+  // ── Map family members ────────────────────────────────────────
+  for (const fm of familyRes.data ?? []) {
+    results.push({
+      id:          fm.id,
+      type:        "family_member",
+      title:       fm.name,
+      subtitle:    fm.relationship?.replace(/_/g, " ") ?? "",
+      url:         `/family`,
+      noteSnippet: fm.notes ? snippet(fm.notes) : undefined,
     });
   }
 

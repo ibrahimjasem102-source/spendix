@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -19,7 +19,7 @@ const COLORS = [
   "#EC4899", "#F97316", "#3B82F6", "#14B8A6", "#A855F7",
 ];
 
-// ── Tag pill ──────────────────────────────────────────────────
+// â”€â”€ Tag pill â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function TagPill({ tag, size = "sm" }: { tag: Pick<Tag, "name" | "color">; size?: "xs" | "sm" }) {
   const px = size === "xs" ? "px-2 py-0.5 text-[10px]" : "px-2.5 py-1 text-xs";
   return (
@@ -33,7 +33,7 @@ function TagPill({ tag, size = "sm" }: { tag: Pick<Tag, "name" | "color">; size?
   );
 }
 
-// ── Inline create / edit form ─────────────────────────────────
+// â”€â”€ Inline create / edit form â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function TagForm({
   initial,
   onSave,
@@ -113,7 +113,7 @@ function TagForm({
   );
 }
 
-// ── Single tag row with inline transaction expansion ──────────
+// â”€â”€ Single tag row with inline transaction expansion â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function TagRow({
   tag,
   transactions,
@@ -140,7 +140,7 @@ function TagRow({
     <div className="border-b border-[hsl(var(--border-2))] last:border-0">
       {/* Main row */}
       <div className="flex items-center gap-2 px-4 py-3">
-        {/* Pill + count — tap to expand */}
+        {/* Pill + count â€” tap to expand */}
         <button
           type="button"
           onClick={() => setExpanded((v) => !v)}
@@ -155,7 +155,7 @@ function TagRow({
           />
         </button>
 
-        {/* Action buttons — always visible */}
+        {/* Action buttons â€” always visible */}
         <div className="flex items-center gap-1 shrink-0 ms-2">
           <button
             onClick={onEdit}
@@ -184,7 +184,7 @@ function TagRow({
             style={{ overflow: "hidden" }}
           >
             <div
-              className="mx-4 mb-3 rounded-2xl overflow-hidden"
+              className="mx-4 mb-3 rounded-xl overflow-hidden"
               style={{ backgroundColor: "hsl(var(--bg-input))", border: "1px solid hsl(var(--border-2))" }}
             >
               {tagTxs.length === 0 ? (
@@ -204,7 +204,7 @@ function TagRow({
   );
 }
 
-// ── Main page ─────────────────────────────────────────────────
+// â”€â”€ Main page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export default function TagsPage() {
   const { t } = useTranslation();
   const { isLoading } = useGuest();
@@ -292,7 +292,7 @@ export default function TagsPage() {
           initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={spring}
           className="card py-20 flex flex-col items-center gap-3"
         >
-          <div className="w-14 h-14 rounded-2xl bg-pink-400/10 flex items-center justify-center">
+          <div className="w-14 h-14 rounded-xl bg-pink-400/10 flex items-center justify-center">
             <Hash className="w-6 h-6 text-pink-400 opacity-50" />
           </div>
           <p className="text-sm font-semibold t1">{t("tags.empty")}</p>
@@ -361,3 +361,4 @@ export default function TagsPage() {
     </div>
   );
 }
+

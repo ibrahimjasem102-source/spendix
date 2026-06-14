@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useMemo, useState } from "react";
 import { Plus, AlertTriangle, Check, CheckCircle, ChevronDown, Search, Target, Loader2, Pencil, Trash2, Wallet } from "lucide-react";
@@ -54,7 +54,7 @@ function BudgetCategoryPicker({
         type="button"
         onClick={() => setOpen((current) => !current)}
         disabled={categories.length === 0}
-        className="flex min-h-[58px] w-full items-center justify-between gap-3 rounded-2xl border px-3.5 py-3 text-start transition-all disabled:opacity-60"
+        className="flex min-h-[58px] w-full items-center justify-between gap-3 rounded-xl border px-3.5 py-3 text-start transition-all disabled:opacity-60"
         style={{ backgroundColor: "hsl(var(--bg-input))", borderColor: open ? "rgba(34,211,238,0.38)" : "hsl(var(--border))" }}
       >
         <span className="flex min-w-0 items-center gap-3">
@@ -81,7 +81,7 @@ function BudgetCategoryPicker({
 
       {open && (
         <div
-          className="overflow-hidden rounded-2xl border"
+          className="overflow-hidden rounded-xl border"
           style={{ backgroundColor: "hsl(var(--bg-card-2))", borderColor: "hsl(var(--border))" }}
         >
           <div className="border-b border-[hsl(var(--border-2))] p-2.5">
@@ -112,7 +112,7 @@ function BudgetCategoryPicker({
                       setOpen(false);
                       setSearch("");
                     }}
-                    className={`flex w-full items-center gap-3 rounded-2xl border px-3 py-2.5 text-start transition-all ${
+                    className={`flex w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-start transition-all ${
                       isSelected ? "border-cyan-400/35 bg-cyan-400/10" : "border-transparent hover:bg-[hsl(var(--bg-input))]"
                     }`}
                   >
@@ -236,7 +236,7 @@ function BudgetFormModal({
         <button
           type="submit"
           disabled={loading || categories.length === 0}
-          className="w-full py-3 rounded-2xl text-sm font-bold text-[#0B0F14] bg-gradient-to-r from-cyan-500 to-cyan-400 disabled:opacity-50 flex items-center justify-center gap-2"
+          className="w-full py-3 rounded-xl text-sm font-bold text-[#0B0F14] bg-cyan-500 hover:bg-cyan-400 disabled:opacity-50 flex items-center justify-center gap-2 transition-colors"
         >
           {loading && <Loader2 className="w-4 h-4 animate-spin" />}
           {initial ? t("common.save") : t("budgets.create_budget")}
@@ -313,7 +313,7 @@ export default function BudgetsPage() {
     <div className="space-y-5">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2.5">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-amber-400/10">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-400/10">
             <Wallet className="h-4 w-4 text-amber-400" />
           </div>
           <div className="min-w-0">
@@ -334,7 +334,7 @@ export default function BudgetsPage() {
           </select>
           <button
             onClick={() => { setEditing(undefined); setShowForm(true); }}
-            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-[#0B0F17] rounded-xl text-sm font-semibold transition-all"
+            className="flex items-center gap-2 px-4 py-2 bg-cyan-500 hover:bg-cyan-400 text-[#0B0F17] rounded-xl text-sm font-semibold transition-colors"
           >
             <Plus className="w-3.5 h-3.5" />
             {t("budgets.new_budget")}
@@ -379,7 +379,7 @@ export default function BudgetsPage() {
         </div>
         <div className="h-2.5 bg-[hsl(var(--bg-input))] rounded-full overflow-hidden">
           <div
-            className={`h-full rounded-full transition-all ${summary.totalSpent > summary.totalBudget && summary.totalBudget > 0 ? "bg-rose-400" : "bg-gradient-to-r from-cyan-400 to-purple-500"}`}
+            className={`h-full rounded-full transition-all ${summary.totalSpent > summary.totalBudget && summary.totalBudget > 0 ? "bg-rose-400" : "bg-cyan-400"}`}
             style={{ width: `${Math.min(totalPercent, 100)}%` }}
           />
         </div>
@@ -471,3 +471,4 @@ export default function BudgetsPage() {
     </div>
   );
 }
+

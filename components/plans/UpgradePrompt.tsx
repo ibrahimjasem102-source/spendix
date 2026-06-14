@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -67,26 +67,26 @@ export default function UpgradePrompt({ requiredPlan, featureName, onClose }: Pr
             className={`bg-gradient-to-br ${meta.colorClass} p-6 text-white`}
           >
             <div className="flex items-start justify-between mb-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/20">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/20">
                 <Icon className="h-6 w-6" />
               </div>
               <button onClick={onClose} className="p-1 rounded-lg hover:bg-white/20 transition-colors">
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <h2 className="text-xl font-black">ترقية مطلوبة</h2>
+            <h2 className="text-xl font-black">ØªØ±Ù‚ÙŠØ© Ù…Ø·Ù„ÙˆØ¨Ø©</h2>
             {featureName && (
               <p className="mt-1 text-sm text-white/75">
-                {featureName} متاح في خطة {requiredPlan === "plus" ? "Plus" : requiredPlan === "pro" ? "Pro" : "Elite"} فقط
+                {featureName} Ù…ØªØ§Ø­ ÙÙŠ Ø®Ø·Ø© {requiredPlan === "plus" ? "Plus" : requiredPlan === "pro" ? "Pro" : "Elite"} ÙÙ‚Ø·
               </p>
             )}
           </div>
 
           {/* Body */}
           <div className="p-5 space-y-4">
-            <div className="rounded-2xl border border-[hsl(var(--border))] p-4">
+            <div className="rounded-xl border border-[hsl(var(--border))] p-4">
               <p className="text-sm font-bold t1 mb-1">{requiredPlan === "plus" ? "Spendix Plus" : requiredPlan === "pro" ? "Spendix Pro" : "Spendix Elite"}</p>
-              <p className="text-2xl font-black t1">${meta.price}<span className="text-sm font-normal t3">/شهر</span></p>
+              <p className="text-2xl font-black t1">${meta.price}<span className="text-sm font-normal t3">/Ø´Ù‡Ø±</span></p>
             </div>
 
             <div className="flex gap-3">
@@ -94,14 +94,14 @@ export default function UpgradePrompt({ requiredPlan, featureName, onClose }: Pr
                 onClick={onClose}
                 className="flex-1 rounded-xl border border-[hsl(var(--border))] py-2.5 text-sm font-semibold t2"
               >
-                لاحقاً
+                Ù„Ø§Ø­Ù‚Ø§Ù‹
               </button>
               <button
                 onClick={handleUpgrade}
                 disabled={loading}
                 className={`flex-1 rounded-xl py-2.5 text-sm font-bold text-white bg-gradient-to-r ${meta.colorClass} disabled:opacity-60`}
               >
-                {loading ? "جاري التحميل..." : "ترقية الآن"}
+                {loading ? "Ø¬Ø§Ø±ÙŠ Ø§Ù„ØªØ­Ù…ÙŠÙ„..." : "ØªØ±Ù‚ÙŠØ© Ø§Ù„Ø¢Ù†"}
               </button>
             </div>
 
@@ -109,7 +109,7 @@ export default function UpgradePrompt({ requiredPlan, featureName, onClose }: Pr
               onClick={() => { onClose(); router.push("/plans"); }}
               className="w-full text-center text-xs t3 hover:t1 transition-colors"
             >
-              عرض جميع الخطط
+              Ø¹Ø±Ø¶ Ø¬Ù…ÙŠØ¹ Ø§Ù„Ø®Ø·Ø·
             </button>
           </div>
         </motion.div>
@@ -117,3 +117,4 @@ export default function UpgradePrompt({ requiredPlan, featureName, onClose }: Pr
     </AnimatePresence>
   );
 }
+

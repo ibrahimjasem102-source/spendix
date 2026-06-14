@@ -98,13 +98,16 @@ const CATEGORY_COLORS = [
 ];
 
 const SOURCE_META: Record<TransactionSource, { label: string; color: string }> = {
-  manual: { label: "Manual", color: "#06B6D4" },
-  investment: { label: "Investment", color: "#8B5CF6" },
-  debt: { label: "Debt", color: "#F97316" },
-  debt_payment: { label: "Debt payment", color: "#F59E0B" },
-  work: { label: "Work", color: "#14B8A6" },
-  work_payment: { label: "Work payment", color: "#10B981" },
-  subscription: { label: "Subscription", color: "#8B5CF6" },
+  manual:            { label: "Manual",            color: "#06B6D4" },
+  investment:        { label: "Investment",        color: "#8B5CF6" },
+  debt:              { label: "Debt",              color: "#F97316" },
+  debt_payment:      { label: "Debt payment",      color: "#F59E0B" },
+  work:              { label: "Work",              color: "#14B8A6" },
+  work_payment:      { label: "Work payment",      color: "#10B981" },
+  subscription:      { label: "Subscription",      color: "#8B5CF6" },
+  goal_contribution: { label: "Goal contribution", color: "#F59E0B" },
+  transfer:          { label: "Transfer",          color: "#64748B" },
+  recurring:         { label: "Recurring",         color: "#0EA5E9" },
 };
 
 function numberValue(value: unknown) {

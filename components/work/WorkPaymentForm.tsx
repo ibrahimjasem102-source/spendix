@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -93,7 +93,7 @@ export default function WorkPaymentForm({ initial, sessions = [], defaultSession
           </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-2xl bg-emerald-400/10">
+              <div className="p-2.5 rounded-xl bg-emerald-400/10">
                 <Banknote className="w-5 h-5 text-emerald-400" />
               </div>
               <div>
@@ -120,10 +120,10 @@ export default function WorkPaymentForm({ initial, sessions = [], defaultSession
                 <select value={form.work_session_id ?? ""}
                   onChange={(e) => handleSessionChange(e.target.value)}
                   className="field" style={{ backgroundColor: "hsl(var(--bg-input))" }}>
-                  <option value="">— {t("work.sessions")} —</option>
+                  <option value="">â€” {t("work.sessions")} â€”</option>
                   {unpaidSessions.map((s) => (
                     <option key={s.id} value={s.id}>
-                      {s.title} · {s.employer_or_client} ({format(s.expected_amount)})
+                      {s.title} Â· {s.employer_or_client} ({format(s.expected_amount)})
                     </option>
                   ))}
                 </select>
@@ -140,7 +140,7 @@ export default function WorkPaymentForm({ initial, sessions = [], defaultSession
                 className="field" placeholder={t("work.employer_placeholder") || t("work.employer")} />
             </div>
 
-            {/* Amount — large */}
+            {/* Amount â€” large */}
             <div>
               <label className="block text-xs font-medium t3 uppercase tracking-wide mb-2">
                 {t("transactions.amount")}
@@ -152,7 +152,7 @@ export default function WorkPaymentForm({ initial, sessions = [], defaultSession
                   value={rawAmount}
                   onChange={(e) => { setRawAmount(e.target.value); set("amount", parseFloat(e.target.value) || 0); }}
                   placeholder="0.00"
-                  className="w-full ps-10 pe-4 py-4 text-3xl font-bold number-display rounded-2xl bg-[hsl(var(--bg-input))] border focus:outline-none transition-all"
+                  className="w-full ps-10 pe-4 py-4 text-3xl font-bold number-display rounded-xl bg-[hsl(var(--bg-input))] border focus:outline-none transition-all"
                   style={{
                     color: rawAmount ? RING : undefined,
                     borderColor: rawAmount ? `${RING}40` : "hsl(var(--border))",
@@ -194,7 +194,7 @@ export default function WorkPaymentForm({ initial, sessions = [], defaultSession
           <div className="shrink-0 px-5 pt-2" style={{ paddingBottom: "max(20px, calc(env(safe-area-inset-bottom, 0px) + 8px))" }}>
             <motion.button type="submit" disabled={loading || form.amount <= 0}
               whileTap={{ scale: 0.97 }} transition={tapTransition}
-              className="w-full py-3.5 rounded-2xl text-sm font-bold text-white transition-all disabled:opacity-40"
+              className="w-full py-3.5 rounded-xl text-sm font-bold text-white transition-all disabled:opacity-40"
               style={{ background: `linear-gradient(135deg, ${RING}, ${RING}bb)` }}>
               <AnimatePresence mode="wait">
                 {loading ? (
@@ -217,3 +217,4 @@ export default function WorkPaymentForm({ initial, sessions = [], defaultSession
     </div>
   );
 }
+

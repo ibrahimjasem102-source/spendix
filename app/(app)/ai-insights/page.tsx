@@ -269,7 +269,7 @@ export default function AIInsightsPage() {
             onClick={() => generate(true)}
             disabled={isBusy}
             className="flex items-center gap-2 px-4 py-2 text-white rounded-xl text-sm font-semibold transition-all pressable disabled:opacity-50"
-            style={{ background: "linear-gradient(135deg, #06B6D4, #7C3AED)" }}
+            style={{ background: "#06B6D4", color: "#0D1117" }}
           >
             {generating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
             {generating ? t("ai_insights.analyzing") : t("ai_insights.generate")}
@@ -323,8 +323,7 @@ export default function AIInsightsPage() {
       {/* Empty state */}
       {!loading && insights.length === 0 && (
         <motion.div {...fadeBlur} className="card py-16 text-center">
-          <div className="w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center"
-            style={{ background: "linear-gradient(135deg, rgba(6,182,212,0.15), rgba(124,58,237,0.15))" }}>
+          <div className="w-12 h-12 rounded-xl mx-auto mb-4 flex items-center justify-center bg-cyan-500/10">
             <Sparkles className="w-6 h-6 text-cyan-400" />
           </div>
           <p className="text-sm font-semibold t1 mb-1">{t("ai_insights.no_data_title")}</p>

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
@@ -122,7 +122,7 @@ export default function SubscriptionQuickForm({ onSubmit, onClose }: Props) {
 
         <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: "1px solid hsl(var(--border-2))" }}>
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-purple-500/15 text-purple-400">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-purple-500/15 text-purple-400">
               <RefreshCw className="h-5 w-5" />
             </div>
             <div>
@@ -130,19 +130,19 @@ export default function SubscriptionQuickForm({ onSubmit, onClose }: Props) {
               <p className="text-xs t3">{t("hub.action_subscription_desc")}</p>
             </div>
           </div>
-          <button type="button" onClick={onClose} className="flex h-9 w-9 items-center justify-center rounded-2xl t3" style={{ backgroundColor: "hsl(var(--bg-input))" }}>
+          <button type="button" onClick={onClose} className="flex h-9 w-9 items-center justify-center rounded-xl t3" style={{ backgroundColor: "hsl(var(--bg-input))" }}>
             <X className="h-4 w-4" />
           </button>
         </div>
 
         <div className="flex-1 min-h-0 space-y-4 overflow-y-auto px-5 py-5 overscroll-contain">
           {error && (
-            <div className="rounded-2xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm font-medium text-red-300">
+            <div className="rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm font-medium text-red-300">
               {error}
             </div>
           )}
 
-          {/* 1 ── Amount (big, centered) ───────────────────── */}
+          {/* 1 â”€â”€ Amount (big, centered) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
           <div className="text-center">
             <p className="text-[10px] font-semibold t3 uppercase tracking-[0.14em] mb-3">{t("subscriptions.amount")}</p>
             <div className="relative flex items-center justify-center gap-2">
@@ -168,19 +168,19 @@ export default function SubscriptionQuickForm({ onSubmit, onClose }: Props) {
           {/* Separator */}
           <div className="h-px bg-[hsl(var(--border-2))]" />
 
-          {/* 2 ── Name ─────────────────────────────────────── */}
+          {/* 2 â”€â”€ Name â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
           <label className="block">
             <span className="mb-2 block text-[10px] font-bold uppercase t3">{t("subscriptions.name")}</span>
             <input
               value={name}
               onChange={(event) => setName(event.target.value)}
               placeholder={t("subscriptions.name_placeholder")}
-              className="w-full rounded-2xl px-4 py-3 text-sm font-semibold t1 outline-none"
+              className="w-full rounded-xl px-4 py-3 text-sm font-semibold t1 outline-none"
               style={{ backgroundColor: "hsl(var(--bg-input))", border: "1px solid hsl(var(--border))" }}
             />
           </label>
 
-          {/* 3 ── Billing cycle ────────────────────────────── */}
+          {/* 3 â”€â”€ Billing cycle â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
           <div>
             <span className="mb-2 block text-[10px] font-bold uppercase t3">{t("subscriptions.month")}</span>
             <div className="grid grid-cols-4 gap-2">
@@ -191,7 +191,7 @@ export default function SubscriptionQuickForm({ onSubmit, onClose }: Props) {
                   onClick={() => setBillingCycle(cycle)}
                   whileTap={{ scale: 0.96 }}
                   transition={tapTransition}
-                  className="rounded-2xl px-2 py-2 text-[11px] font-bold"
+                  className="rounded-xl px-2 py-2 text-[11px] font-bold"
                   style={{
                     backgroundColor: billingCycle === cycle ? "#A855F7" : "hsl(var(--bg-input))",
                     color: billingCycle === cycle ? "white" : "hsl(var(--text-2))",
@@ -204,10 +204,10 @@ export default function SubscriptionQuickForm({ onSubmit, onClose }: Props) {
             </div>
           </div>
 
-          {/* 4 ── Next billing date ────────────────────────── */}
+          {/* 4 â”€â”€ Next billing date â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
           <label className="block">
             <span className="mb-2 block text-[10px] font-bold uppercase t3">{t("subscriptions.next_billing")}</span>
-            <div className="flex items-center gap-2 rounded-2xl px-4 py-3" style={{ backgroundColor: "hsl(var(--bg-input))", border: "1px solid hsl(var(--border))" }}>
+            <div className="flex items-center gap-2 rounded-xl px-4 py-3" style={{ backgroundColor: "hsl(var(--bg-input))", border: "1px solid hsl(var(--border))" }}>
               <CalendarClock className="h-4 w-4 t3" />
               <input
                 type="date"
@@ -221,7 +221,7 @@ export default function SubscriptionQuickForm({ onSubmit, onClose }: Props) {
           {accounts.length > 0 && (
             <label className="block">
               <span className="mb-2 block text-[10px] font-bold uppercase t3">{t("subscriptions.account")}</span>
-              <div className="flex items-center gap-2 rounded-2xl px-4 py-3" style={{ backgroundColor: "hsl(var(--bg-input))", border: "1px solid hsl(var(--border))" }}>
+              <div className="flex items-center gap-2 rounded-xl px-4 py-3" style={{ backgroundColor: "hsl(var(--bg-input))", border: "1px solid hsl(var(--border))" }}>
                 <WalletCards className="h-4 w-4 t3" />
                 <select
                   value={accountId ?? ""}
@@ -242,11 +242,11 @@ export default function SubscriptionQuickForm({ onSubmit, onClose }: Props) {
           <button
             type="button"
             onClick={() => setAutoCreateTransaction((value) => !value)}
-            className="flex w-full items-center justify-between gap-3 rounded-2xl p-3 text-start"
+            className="flex w-full items-center justify-between gap-3 rounded-xl p-3 text-start"
             style={{ backgroundColor: "hsl(var(--bg-card-2))", border: "1px solid hsl(var(--border))" }}
           >
             <span className="flex items-center gap-3">
-              <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-purple-500/12 text-purple-400">
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-500/12 text-purple-400">
                 <Zap className="h-4 w-4" />
               </span>
               <span>
@@ -268,7 +268,7 @@ export default function SubscriptionQuickForm({ onSubmit, onClose }: Props) {
               onChange={(event) => setNotes(event.target.value)}
               placeholder={t("subscriptions.notes_placeholder")}
               rows={3}
-              className="w-full resize-none rounded-2xl px-4 py-3 text-sm t1 outline-none"
+              className="w-full resize-none rounded-xl px-4 py-3 text-sm t1 outline-none"
               style={{ backgroundColor: "hsl(var(--bg-input))", border: "1px solid hsl(var(--border))" }}
             />
           </label>
@@ -280,7 +280,7 @@ export default function SubscriptionQuickForm({ onSubmit, onClose }: Props) {
             onClick={onClose}
             whileTap={{ scale: 0.97 }}
             transition={tapTransition}
-            className="h-12 flex-1 rounded-2xl text-sm font-bold t2"
+            className="h-12 flex-1 rounded-xl text-sm font-bold t2"
             style={{ backgroundColor: "hsl(var(--bg-input))" }}
           >
             {t("common.cancel")}
@@ -290,7 +290,7 @@ export default function SubscriptionQuickForm({ onSubmit, onClose }: Props) {
             disabled={saving}
             whileTap={{ scale: 0.97 }}
             transition={tapTransition}
-            className="flex h-12 flex-[1.4] items-center justify-center gap-2 rounded-2xl bg-purple-500 text-sm font-bold text-white disabled:opacity-60"
+            className="flex h-12 flex-[1.4] items-center justify-center gap-2 rounded-xl bg-purple-500 text-sm font-bold text-white disabled:opacity-60"
           >
             <Check className="h-4 w-4" />
             {saving ? t("common.saving") : t("subscriptions.add_subscription")}
@@ -301,3 +301,4 @@ export default function SubscriptionQuickForm({ onSubmit, onClose }: Props) {
     document.body
   );
 }
+

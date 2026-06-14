@@ -1,80 +1,37 @@
 "use client";
 
-import { createContext, useContext, useEffect } from "react";
-import { createClient } from "@/lib/supabase/client";
-import { setAuthToken, getAuthToken, storeRefreshToken, getRefreshToken } from "@/lib/auth/token-store";
+import { createContext, useContext, useEffect, useState } from "react";
+import { getSessionState, subscribe, init, type SessionState } from "@/lib/auth/session-manager";
 
 interface GuestContextType {
-  isGuest:   boolean;
+  isGuest: boolean;
   isLoading: boolean;
 }
 
-// Middleware enforces auth on all (app) routes.
-// isGuest is always false — users can only reach these pages authenticated.
-const GuestContext = createContext<GuestContextType>({ isGuest: false, isLoading: false });
-
-async function syncSessionCookie(accessToken: string, refreshToken: string | null | undefined) {
-  if (!refreshToken) return;
-  await fetch("/api/auth/set-session", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ access_token: accessToken, refresh_token: refreshToken }),
-  }).catch(() => undefined);
-}
+const GuestContext = createContext<GuestContextType>({ isGuest: true, isLoading: true });
 
 export function GuestProvider({ children }: { children: React.ReactNode }) {
-  // Background: keep session tokens refreshed and server cookie in sync
+  // Initialize from current singleton state (may already be known if init() ran earlier)
+  const [session, setSession] = useState<SessionState>(() => getSessionState());
+
   useEffect(() => {
-    const supabase = createClient();
-    let active = true;
+    // Trigger one-time async session restore (no-op if already initialized)
+    init().catch(() => undefined);
 
-    void (async () => {
-      const localToken = getAuthToken();
-      if (!localToken) return;
+    // Subscribe to all future state changes (login, logout, token refresh)
+    const unsubscribe = subscribe(setSession);
 
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!active) return;
+    // Sync with any state update that completed between the render and this effect
+    setSession(getSessionState());
 
-        if (session?.access_token) {
-          setAuthToken(session.access_token);
-          if (session.refresh_token) storeRefreshToken(session.refresh_token);
-          void syncSessionCookie(session.access_token, session.refresh_token);
-          return;
-        }
-
-        const storedRefresh = getRefreshToken();
-        if (storedRefresh) {
-          const { data } = await supabase.auth.refreshSession({ refresh_token: storedRefresh });
-          if (!active) return;
-          if (data.session?.access_token) {
-            setAuthToken(data.session.access_token);
-            if (data.session.refresh_token) storeRefreshToken(data.session.refresh_token);
-            void syncSessionCookie(data.session.access_token, data.session.refresh_token);
-          }
-        }
-      } catch {
-        // Network error — SessionRestorer retries on focus
-      }
-    })();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (!active) return;
-      if (session?.access_token) {
-        setAuthToken(session.access_token);
-        if (session.refresh_token) storeRefreshToken(session.refresh_token);
-        void syncSessionCookie(session.access_token, session.refresh_token);
-      }
-    });
-
-    return () => {
-      active = false;
-      subscription.unsubscribe();
-    };
+    return unsubscribe;
   }, []);
 
   return (
-    <GuestContext.Provider value={{ isGuest: false, isLoading: false }}>
+    <GuestContext.Provider value={{
+      isGuest: !session.isAuthenticated,
+      isLoading: session.isLoading,
+    }}>
       {children}
     </GuestContext.Provider>
   );

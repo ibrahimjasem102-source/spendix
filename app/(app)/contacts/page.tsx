@@ -1,6 +1,7 @@
-"use client";
+﻿"use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Users, User, UserRound, Building2, Building, Package,
@@ -8,12 +9,13 @@ import {
   ChevronRight, Trash2, Pencil, X, AlertCircle,
   ArrowUpRight, ArrowDownLeft, Smartphone, Loader2,
 } from "lucide-react";
+import { FormShell, FormFooter, FormSaveBtn } from "@/components/ui/FormShell";
+import SheetDragHandle from "@/components/ui/SheetDragHandle";
 import { useTranslation } from "@/lib/i18n";
 import { useCurrency } from "@/lib/currency";
 import { useToast } from "@/hooks/useToast";
 import ToastList from "@/components/ui/Toast";
 import ConfirmModal from "@/components/ui/ConfirmModal";
-import ContactDetailModal from "@/components/contacts/ContactDetailModal";
 import {
   useContacts, useCreateContact, useUpdateContact, useDeleteContact,
   useDebts,
@@ -24,20 +26,28 @@ import { ROUTES } from "@/lib/routes";
 import Link from "next/link";
 import type { ContactType, FinancialContact, ContactFormData } from "@/types";
 
-// ── Type helpers ──────────────────────────────────────────────
+// â"€â"€ Type helpers â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
 const TYPE_ICON: Record<ContactType, React.ElementType> = {
-  person:  User,
-  company: Building2,
-  bank:    Building,
-  other:   Package,
+  person:   User,
+  company:  Building2,
+  bank:     Building,
+  other:    Package,
+  family:   UserRound,
+  friend:   User,
+  client:   Package,
+  employer: Building2,
 };
 
 const TYPE_COLORS: Record<ContactType, { icon: string; bg: string }> = {
-  person:  { icon: "text-blue-400",   bg: "bg-blue-400/15"   },
-  company: { icon: "text-purple-400", bg: "bg-purple-400/15" },
-  bank:    { icon: "text-emerald-400",bg: "bg-emerald-400/15"},
-  other:   { icon: "text-gray-400",   bg: "bg-gray-400/15"   },
+  person:   { icon: "text-blue-400",    bg: "bg-blue-400/15"    },
+  company:  { icon: "text-purple-400",  bg: "bg-purple-400/15"  },
+  bank:     { icon: "text-emerald-400", bg: "bg-emerald-400/15" },
+  other:    { icon: "text-gray-400",    bg: "bg-gray-400/15"    },
+  family:   { icon: "text-rose-400",    bg: "bg-rose-400/15"    },
+  friend:   { icon: "text-teal-400",    bg: "bg-teal-400/15"    },
+  client:   { icon: "text-amber-400",   bg: "bg-amber-400/15"   },
+  employer: { icon: "text-indigo-400",  bg: "bg-indigo-400/15"  },
 };
 
 type ContactFilter = ContactType | "all";
@@ -50,9 +60,9 @@ interface ContactWithStats extends FinancialContact {
   overdueDebts:    number;
 }
 
-// ── ContactFormModal ─────────────────────────────────────────
+// â"€â"€ ContactFormModal â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
-const CONTACT_TYPES: ContactType[] = ["person", "company", "bank", "other"];
+const CONTACT_TYPES: ContactType[] = ["person", "family", "friend", "client", "employer", "company", "bank", "other"];
 
 function ContactFormModal({
   initial,
@@ -79,11 +89,6 @@ function ContactFormModal({
   const isEditing = !!initial;
   const busy = createMut.isPending || updateMut.isPending;
 
-  // Hide the bottom navigation while this sheet is open
-  useEffect(() => {
-    window.dispatchEvent(new CustomEvent("spendix:nav-hide"));
-    return () => { window.dispatchEvent(new CustomEvent("spendix:nav-show")); };
-  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -97,53 +102,41 @@ function ContactFormModal({
         email: form.email?.trim() || null,
         notes: form.notes?.trim() || null,
       };
-      console.log("[Contact] payload:", payload);
       if (isEditing) {
-        const result = await updateMut.mutateAsync({ id: initial.id, data: payload });
-        console.log("[Contact] API response:", result);
+        await updateMut.mutateAsync({ id: initial.id, data: payload });
         onSaved(t("contacts.updated"));
       } else {
-        const result = await createMut.mutateAsync(payload);
-        console.log("[Contact] API response:", result);
+        await createMut.mutateAsync(payload);
         onSaved(t("contacts.created"));
       }
       onClose();
     } catch (err) {
-      console.error("[Contact] save error:", err);
       const msg = err instanceof Error ? err.message : t("contacts.save_error");
       setError(msg);
     }
   }
 
   return (
-    <motion.div
-      initial={{ y: "100%", opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      exit={{ y: "100%", opacity: 0 }}
-      transition={{ type: "spring", stiffness: 380, damping: 34 }}
-      className="fixed inset-0 z-[60] flex flex-col"
-      style={{ backgroundColor: "hsl(var(--bg-card))" }}
-    >
-      {/* ── Header ─────────────────────────────────────── */}
-      <div
-        className="flex items-center justify-between px-5 border-b border-[hsl(var(--border-2))] flex-shrink-0"
-        style={{
-          paddingTop:    "max(20px, env(safe-area-inset-top, 20px))",
-          paddingBottom: "16px",
-        }}
-      >
-        <h2 className="font-bold text-base t1">
-          {isEditing ? t("contacts.edit") : t("contacts.add")}
-        </h2>
-        <button
-          onClick={onClose}
-          className="p-2 rounded-xl hover:bg-[hsl(var(--bg-input))] t3 transition-colors"
-        >
-          <X className="w-5 h-5" />
-        </button>
+    <FormShell onClose={onClose}>
+      {/* Header */}
+      <div className="shrink-0 px-5 pt-4 pb-4 border-b border-[hsl(var(--border))]" style={{ background: "#60a5fa10" }}>
+        <div className="mb-2 sm:hidden">
+          <SheetDragHandle onClose={onClose} />
+        </div>
+        <div className="flex items-center justify-between">
+          <h2 className="font-bold text-base t1">
+            {isEditing ? t("contacts.edit") : t("contacts.add")}
+          </h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-xl p-2 t3 transition-all hover:bg-white/5 hover:t1"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
-      {/* ── Scrollable form body ────────────────────────── */}
       <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
         <div className="flex-1 overflow-y-auto px-5 py-5 space-y-5">
 
@@ -230,130 +223,115 @@ function ContactFormModal({
           )}
         </div>
 
-        {/* ── Sticky footer — Save always visible ─────────── */}
-        <div
-          className="flex-shrink-0 px-5 pt-4 border-t border-[hsl(var(--border-2))]"
-          style={{ paddingBottom: "max(20px, env(safe-area-inset-bottom, 20px))" }}
-        >
-          <div className="flex gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 py-3 rounded-xl border border-[hsl(var(--border))] text-sm font-medium t2 hover:t1 transition-colors"
-            >
-              {t("common.cancel")}
-            </button>
-            <button
-              type="submit"
-              disabled={busy || !form.name.trim()}
-              className="flex-1 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold transition-colors disabled:opacity-50"
-            >
-              {busy ? "…" : t("common.save")}
-            </button>
-          </div>
-        </div>
+        {/* â"€â"€ Sticky footer â€" Save always visible â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
+        <FormFooter className="border-t border-[hsl(var(--border))]">
+          <FormSaveBtn
+            loading={busy}
+            disabled={!form.name.trim()}
+            accentHex="#60a5fa"
+            label={isEditing ? t("common.save") : t("contacts.add")}
+          />
+        </FormFooter>
       </form>
-    </motion.div>
+    </FormShell>
   );
 }
 
-// ── ContactCard ───────────────────────────────────────────────
+// â"€â"€ ContactCard â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
 function ContactCard({
   contact,
-  onOpen,
   onEdit,
   onDelete,
 }: {
   contact:  ContactWithStats;
-  onOpen:   () => void;
   onEdit:   () => void;
   onDelete: () => void;
 }) {
-  const { t }    = useTranslation();
+  const { t }      = useTranslation();
   const { format } = useCurrency();
-  const Icon     = TYPE_ICON[contact.type];
-  const clr      = TYPE_COLORS[contact.type];
+  const router     = useRouter();
+  const Icon       = TYPE_ICON[contact.type];
+  const clr        = TYPE_COLORS[contact.type];
 
   const isPositive = contact.netBalance > 0;
   const isNegative = contact.netBalance < 0;
-  const isSettled  = contact.netBalance === 0 && contact.activeDebts === 0;
 
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, y: 10 }}
+      initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className="card p-4 flex items-center gap-3 group relative hover:border-white/20 transition-colors cursor-pointer"
-      onClick={onOpen}
+      className="card overflow-hidden group relative"
     >
-      {/* Avatar */}
-      <div className={`w-11 h-11 rounded-2xl ${clr.bg} flex items-center justify-center shrink-0`}>
-        <Icon className={`w-5 h-5 ${clr.icon}`} />
-      </div>
-
-      {/* Info */}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <span className="font-semibold text-sm t1 truncate">{contact.name}</span>
-          {contact.overdueDebts > 0 && (
-            <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-red-500/15 text-red-400 font-bold shrink-0">
-              {contact.overdueDebts} {t("contacts.overdue_debts")}
-            </span>
-          )}
+      {/* Clickable main body → contact profile */}
+      <button
+        type="button"
+        onClick={() => router.push(`/contacts/${contact.id}`)}
+        className="flex items-center gap-3 w-full p-4 text-start hover:bg-[hsl(var(--bg-input))] transition-colors"
+      >
+        {/* Avatar with initials */}
+        <div className={`w-11 h-11 rounded-xl ${clr.bg} flex items-center justify-center shrink-0`}>
+          <span className={`text-sm font-bold ${clr.icon}`}>
+            {contact.name.trim().split(/\s+/).slice(0, 2).map((w) => w[0]?.toUpperCase()).join("") || "?"}
+          </span>
         </div>
-        <div className="flex items-center gap-2 mt-0.5">
-          <span className="text-xs t3 capitalize">{t(`contacts.type_${contact.type}`)}</span>
-          {contact.activeDebts > 0 && (
+
+        {/* Info */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <span className="font-semibold text-sm t1 truncate">{contact.name}</span>
+            {contact.overdueDebts > 0 && (
+              <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-rose-500/15 text-rose-400 font-bold shrink-0">
+                {contact.overdueDebts} overdue
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2 mt-0.5">
+            <span className="text-xs t3 capitalize">{t(`contacts.type_${contact.type}`)}</span>
+            {contact.activeDebts > 0 && (
+              <>
+                <span className="text-xs t3">·</span>
+                <span className="text-xs t3">{contact.activeDebts} {t("contacts.active_debts")}</span>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Balance */}
+        <div className="text-end shrink-0 me-1">
+          {isPositive ? (
             <>
-              <span className="text-xs t3">·</span>
-              <span className="text-xs t3">{contact.activeDebts} {t("contacts.active_debts")}</span>
+              <p className="text-sm font-bold text-emerald-400 tabular-nums">+{format(contact.netBalance)}</p>
+              <p className="text-[10px] text-emerald-400/60">{t("contacts.owe_you")}</p>
             </>
+          ) : isNegative ? (
+            <>
+              <p className="text-sm font-bold text-rose-400 tabular-nums">−{format(Math.abs(contact.netBalance))}</p>
+              <p className="text-[10px] text-rose-400/60">{t("contacts.you_owe")}</p>
+            </>
+          ) : (
+            <p className="text-xs t3">{t("contacts.settled")}</p>
           )}
         </div>
-      </div>
 
-      {/* Balance */}
-      <div className="text-end shrink-0 me-1">
-        {isSettled && contact.activeDebts === 0 ? (
-          <span className="text-xs t3">{t("contacts.settled")}</span>
-        ) : isPositive ? (
-          <div className="flex items-center gap-0.5 text-emerald-400">
-            <ArrowDownLeft className="w-3.5 h-3.5" />
-            <span className="font-bold text-sm">{format(contact.netBalance)}</span>
-          </div>
-        ) : isNegative ? (
-          <div className="flex items-center gap-0.5 text-red-400">
-            <ArrowUpRight className="w-3.5 h-3.5" />
-            <span className="font-bold text-sm">{format(Math.abs(contact.netBalance))}</span>
-          </div>
-        ) : (
-          <span className="text-xs t3">{t("contacts.settled")}</span>
-        )}
-        {!isSettled && (
-          <div className={`text-[10px] mt-0.5 ${isPositive ? "text-emerald-400/70" : "text-red-400/70"}`}>
-            {isPositive ? t("contacts.owe_you") : t("contacts.you_owe")}
-          </div>
-        )}
-      </div>
+        <ChevronRight className="w-4 h-4 t3 shrink-0" />
+      </button>
 
-      {/* Chevron */}
-      <ChevronRight className="w-4 h-4 t3 shrink-0" />
-
-      {/* Action buttons (hover) */}
+      {/* Hover action bar */}
       <div
         className="absolute top-2 end-2 hidden group-hover:flex items-center gap-1 z-10"
         onClick={(e) => e.stopPropagation()}
       >
         <button
           onClick={onEdit}
-          className="p-1.5 rounded-lg bg-[hsl(var(--bg-input))] t3 hover:t1 hover:bg-white/10 transition-colors"
+          className="p-1.5 rounded-lg bg-[hsl(var(--bg-card))] border border-[hsl(var(--border))] t3 hover:t1 hover:bg-white/5 transition-colors"
         >
           <Pencil className="w-3 h-3" />
         </button>
         <button
           onClick={onDelete}
-          className="p-1.5 rounded-lg bg-[hsl(var(--bg-input))] t3 hover:text-red-400 hover:bg-red-400/10 transition-colors"
+          className="p-1.5 rounded-lg bg-[hsl(var(--bg-card))] border border-[hsl(var(--border))] t3 hover:text-rose-400 hover:bg-rose-400/10 transition-colors"
         >
           <Trash2 className="w-3 h-3" />
         </button>
@@ -362,20 +340,20 @@ function ContactCard({
   );
 }
 
-// ── Page ──────────────────────────────────────────────────────
+// â"€â"€ Page â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
 export default function ContactsPage() {
-  const { t }    = useTranslation();
+  const { t }      = useTranslation();
   const { format } = useCurrency();
+  const router     = useRouter();
   const { toasts, addToast, dismiss } = useToast();
   const { isGuest } = useGuest();
 
-  const [search,     setSearch]     = useState("");
-  const [filter,     setFilter]     = useState<ContactFilter>("all");
-  const [detailId,   setDetailId]   = useState<string | null>(null);
+  const [search,      setSearch]      = useState("");
+  const [filter,      setFilter]      = useState<ContactFilter>("all");
   const [editContact, setEditContact] = useState<FinancialContact | undefined>();
-  const [showForm,   setShowForm]   = useState(false);
-  const [deleteId,   setDeleteId]   = useState<string | null>(null);
+  const [showForm,    setShowForm]    = useState(false);
+  const [deleteId,    setDeleteId]    = useState<string | null>(null);
 
   const { data: contacts = [], isLoading: loadC, isError: contactsError, error: contactsFetchError } = useContacts();
   const { data: debtsData }                         = useDebts(!isGuest);
@@ -480,7 +458,7 @@ export default function ContactsPage() {
       if (added > 0) addToast(`${t("contacts.imported")} (${added})`, "success");
       else addToast(t("contacts.import_no_new"), "info");
     } catch {
-      // user cancelled picker — do nothing
+      // user cancelled picker â€" do nothing
     } finally {
       setImporting(false);
     }
@@ -500,7 +478,7 @@ export default function ContactsPage() {
       {/* Header */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2.5">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-rose-400/10">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-400/10">
             <UserRound className="h-4 w-4 text-rose-400" />
           </div>
           <div className="min-w-0">
@@ -591,7 +569,7 @@ export default function ContactsPage() {
         <div className="space-y-3">
           {[1, 2, 3].map((n) => (
             <div key={n} className="card p-4 animate-pulse flex items-center gap-3">
-              <div className="w-11 h-11 rounded-2xl bg-white/10" />
+              <div className="w-11 h-11 rounded-xl bg-white/10" />
               <div className="flex-1 space-y-2">
                 <div className="h-4 bg-white/10 rounded w-1/3" />
                 <div className="h-3 bg-white/10 rounded w-1/5" />
@@ -608,7 +586,7 @@ export default function ContactsPage() {
           animate={{ opacity: 1 }}
           className="card py-16 text-center"
         >
-          <div className="w-14 h-14 rounded-2xl bg-red-500/10 mx-auto mb-4 flex items-center justify-center">
+          <div className="w-14 h-14 rounded-xl bg-red-500/10 mx-auto mb-4 flex items-center justify-center">
             <AlertCircle className="w-6 h-6 text-red-400" />
           </div>
           <p className="text-sm font-semibold t1 mb-1">
@@ -625,7 +603,7 @@ export default function ContactsPage() {
           animate={{ opacity: 1 }}
           className="card py-16 text-center"
         >
-          <div className="w-14 h-14 rounded-2xl bg-blue-500/10 mx-auto mb-4 flex items-center justify-center">
+          <div className="w-14 h-14 rounded-xl bg-blue-500/10 mx-auto mb-4 flex items-center justify-center">
             <Users className="w-6 h-6 text-blue-400" />
           </div>
           <p className="text-sm font-semibold t1 mb-1">
@@ -642,18 +620,50 @@ export default function ContactsPage() {
         </motion.div>
       )}
 
-      {/* Contact list */}
+      {/* Contact list — grouped by balance direction */}
       {!loadC && filtered.length > 0 && (
-        <div className="space-y-2">
-          {filtered.map((c) => (
-            <ContactCard
-              key={c.id}
-              contact={c}
-              onOpen={() => setDetailId(c.id)}
-              onEdit={() => { setEditContact(c); setShowForm(true); }}
-              onDelete={() => setDeleteId(c.id)}
-            />
-          ))}
+        <div className="space-y-5">
+          {[
+            {
+              key:   "oweYou",
+              label: t("contacts.section_owe_you"),
+              dot:   "bg-emerald-400",
+              items: filtered.filter((c) => c.netBalance > 0).sort((a, b) => b.netBalance - a.netBalance),
+            },
+            {
+              key:   "youOwe",
+              label: t("contacts.section_you_owe"),
+              dot:   "bg-rose-400",
+              items: filtered.filter((c) => c.netBalance < 0).sort((a, b) => Math.abs(b.netBalance) - Math.abs(a.netBalance)),
+            },
+            {
+              key:   "settled",
+              label: t("contacts.section_settled"),
+              dot:   "bg-gray-400",
+              items: filtered.filter((c) => c.netBalance === 0).sort((a, b) => a.name.localeCompare(b.name)),
+            },
+          ].map(({ key, label, dot, items }) =>
+            items.length > 0 ? (
+              <section key={key}>
+                <div className="flex items-center gap-2 mb-2 px-1">
+                  <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${dot}`} />
+                  <p className="text-[10px] font-bold t3 uppercase tracking-[0.15em]">
+                    {label} <span className="font-normal opacity-60">({items.length})</span>
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  {items.map((c) => (
+                    <ContactCard
+                      key={c.id}
+                      contact={c}
+                      onEdit={() => { setEditContact(c); setShowForm(true); }}
+                      onDelete={() => setDeleteId(c.id)}
+                    />
+                  ))}
+                </div>
+              </section>
+            ) : null,
+          )}
         </div>
       )}
 
@@ -682,13 +692,6 @@ export default function ContactsPage() {
         )}
       </AnimatePresence>
 
-      {detailId && (
-        <ContactDetailModal
-          contactId={detailId}
-          onClose={() => setDetailId(null)}
-        />
-      )}
-
       {deleteId && (
         <ConfirmModal
           title={t("contacts.delete")}
@@ -703,3 +706,4 @@ export default function ContactsPage() {
     </div>
   );
 }
+

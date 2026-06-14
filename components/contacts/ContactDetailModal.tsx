@@ -1,8 +1,8 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import {
-  X, User, Building2, Landmark, HelpCircle,
+  X, User, Building2, Landmark, HelpCircle, Heart, UserRound, Package,
   Phone, Mail, FileText, TrendingUp, TrendingDown,
   CheckCircle, AlertTriangle, Clock, Loader2,
 } from "lucide-react";
@@ -20,6 +20,7 @@ interface Props {
 
 const TYPE_ICONS: Record<ContactType, React.ElementType> = {
   person: User, company: Building2, bank: Landmark, other: HelpCircle,
+  family: Heart, friend: UserRound, client: Package, employer: Building2,
 };
 
 const STATUS_CONFIG: Record<DebtStatus, { icon: React.ElementType; color: string; bg: string }> = {
@@ -148,7 +149,7 @@ export default function ContactDetailModal({ contactId, onClose }: Props) {
         {/* Header */}
         <div className="flex items-start justify-between px-6 py-5 border-b border-[hsl(var(--border))] shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-400/20 to-purple-500/20 border border-white/10 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center">
               <TypeIcon className="w-5 h-5 text-cyan-400" />
             </div>
             <div>
@@ -192,7 +193,7 @@ export default function ContactDetailModal({ contactId, onClose }: Props) {
           )}
 
           {/* Net balance statement */}
-          <div className={`rounded-2xl p-4 ${
+          <div className={`rounded-xl p-4 ${
             netBalance > 0 ? "bg-emerald-400/5 border border-emerald-400/20" :
             netBalance < 0 ? "bg-rose-400/5 border border-rose-400/20" :
             "bg-[hsl(var(--bg-input))] border border-[hsl(var(--border))]"
@@ -399,3 +400,4 @@ export default function ContactDetailModal({ contactId, onClose }: Props) {
     </div>
   );
 }
+

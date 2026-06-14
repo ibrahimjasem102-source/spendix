@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -78,7 +78,7 @@ export default function WorkSessionForm({ initial, onSubmit, onClose }: Props) {
           </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-2xl bg-cyan-400/10">
+              <div className="p-2.5 rounded-xl bg-cyan-400/10">
                 <Briefcase className="w-5 h-5 text-cyan-400" />
               </div>
               <div>
@@ -117,7 +117,7 @@ export default function WorkSessionForm({ initial, onSubmit, onClose }: Props) {
                 className="field" placeholder={t("work.employer_placeholder") || "e.g. Company X, Ahmed..."} />
             </div>
 
-            {/* Rate × Hours — side by side large inputs */}
+            {/* Rate Ã— Hours â€” side by side large inputs */}
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-medium t3 uppercase tracking-wide mb-2">
@@ -129,7 +129,7 @@ export default function WorkSessionForm({ initial, onSubmit, onClose }: Props) {
                     value={rawRate}
                     onChange={(e) => { setRawRate(e.target.value); set("hourly_rate", parseFloat(e.target.value) || 0); }}
                     placeholder="0.00"
-                    className="w-full ps-7 pe-3 py-3 text-xl font-bold number-display rounded-2xl bg-[hsl(var(--bg-input))] border focus:outline-none transition-all"
+                    className="w-full ps-7 pe-3 py-3 text-xl font-bold number-display rounded-xl bg-[hsl(var(--bg-input))] border focus:outline-none transition-all"
                     style={{
                       color: rawRate ? RING : undefined,
                       borderColor: rawRate ? `${RING}40` : "hsl(var(--border))",
@@ -144,7 +144,7 @@ export default function WorkSessionForm({ initial, onSubmit, onClose }: Props) {
                   value={rawHours}
                   onChange={(e) => { setRawHours(e.target.value); set("hours_worked", parseFloat(e.target.value) || 0); }}
                   placeholder="0"
-                  className="w-full px-3 py-3 text-xl font-bold number-display rounded-2xl bg-[hsl(var(--bg-input))] border focus:outline-none transition-all"
+                  className="w-full px-3 py-3 text-xl font-bold number-display rounded-xl bg-[hsl(var(--bg-input))] border focus:outline-none transition-all"
                   style={{
                     color: rawHours ? RING : undefined,
                     borderColor: rawHours ? `${RING}40` : "hsl(var(--border))",
@@ -156,7 +156,7 @@ export default function WorkSessionForm({ initial, onSubmit, onClose }: Props) {
             <AnimatePresence>
               {expected > 0 && (
                 <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                  className="flex items-center justify-between px-4 py-3 rounded-2xl border bg-cyan-400/8 border-cyan-400/20">
+                  className="flex items-center justify-between px-4 py-3 rounded-xl border bg-cyan-400/8 border-cyan-400/20">
                   <span className="text-xs t2">{t("work.expected_amount")}</span>
                   <span className="text-sm font-bold number-display text-cyan-400">
                     {symbol}{expected.toFixed(2)}
@@ -228,7 +228,7 @@ export default function WorkSessionForm({ initial, onSubmit, onClose }: Props) {
           <div className="shrink-0 px-5 pt-2" style={{ paddingBottom: "max(20px, calc(env(safe-area-inset-bottom, 0px) + 8px))" }}>
             <motion.button type="submit" disabled={loading || form.hours_worked <= 0}
               whileTap={{ scale: 0.97 }} transition={tapTransition}
-              className="w-full py-3.5 rounded-2xl text-sm font-bold text-white transition-all disabled:opacity-40"
+              className="w-full py-3.5 rounded-xl text-sm font-bold text-white transition-all disabled:opacity-40"
               style={{ background: `linear-gradient(135deg, ${RING}, ${RING}bb)` }}>
               <AnimatePresence mode="wait">
                 {loading ? (
@@ -251,3 +251,4 @@ export default function WorkSessionForm({ initial, onSubmit, onClose }: Props) {
     </div>
   );
 }
+

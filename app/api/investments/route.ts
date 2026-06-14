@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { InvestmentFormData } from "@/types";
 import { notify } from "@/lib/notifications/service";
 import { insertLinkedTransaction, updateTransactionSourceLink } from "@/lib/finance/serverTransactions";
+import { writeLedgerEntry } from "@/lib/ledger/writer";
 
 const INVESTMENT_SELECT =
   "id,user_id,asset_name,asset_type,amount_invested,current_value,investment_date,notes,transaction_id,created_at,updated_at";
@@ -70,6 +71,18 @@ export async function POST(request: Request) {
     body.asset_name,
     Number(body.amount_invested).toFixed(2),
   );
+
+  // Write unified ledger entry (best-effort)
+  void writeLedgerEntry(supabase, {
+    user_id:       user.id,
+    source_module: "investment",
+    source_id:     investment.id,
+    entry_type:    "investment",
+    direction:     "outflow",
+    amount:        Number(body.amount_invested),
+    description:   `Investment: ${body.asset_name}`,
+    transaction_id: tx.id,
+  });
 
   return NextResponse.json({ investment }, { status: 201 });
 }

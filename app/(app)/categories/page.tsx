@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -171,7 +171,7 @@ function CategorySheet({
         </div>
         <div className="flex items-center justify-between border-b border-[hsl(var(--border))] px-5 py-4">
           <div className="flex items-center gap-3">
-            <div className={`rounded-2xl p-2.5 ${sectionConfig.bg}`}>
+            <div className={`rounded-xl p-2.5 ${sectionConfig.bg}`}>
               <sectionConfig.Icon className={`h-5 w-5 ${sectionConfig.color}`} />
             </div>
             <div>
@@ -187,7 +187,7 @@ function CategorySheet({
         </div>
 
         <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-5 py-5">
-          <div className="rounded-2xl border border-[hsl(var(--border-2))] bg-[hsl(var(--bg-card-2))] p-4">
+          <div className="rounded-xl border border-[hsl(var(--border-2))] bg-[hsl(var(--bg-card-2))] p-4">
             <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.14em] t3">{t("categories.preview")}</p>
             <div className="flex items-center gap-3">
               <CategoryIcon icon={form.icon} color={form.color} size="md" />
@@ -211,7 +211,7 @@ function CategorySheet({
             <p className="mt-3 text-xs leading-relaxed t3">{t(sectionConfig.useKey)}</p>
           </div>
 
-          <div className="space-y-3 rounded-2xl border border-[hsl(var(--border-2))] bg-[hsl(var(--bg-input))]/45 p-4">
+          <div className="space-y-3 rounded-xl border border-[hsl(var(--border-2))] bg-[hsl(var(--bg-input))]/45 p-4">
             <div className="flex items-center gap-2">
               <Info className="h-3.5 w-3.5 t3" />
               <p className="text-xs font-bold t2">{t("categories.details")}</p>
@@ -244,7 +244,7 @@ function CategorySheet({
             </div>
           </div>
 
-          <div className="space-y-3 rounded-2xl border border-[hsl(var(--border-2))] bg-[hsl(var(--bg-input))]/45 p-4">
+          <div className="space-y-3 rounded-xl border border-[hsl(var(--border-2))] bg-[hsl(var(--bg-input))]/45 p-4">
             <label className="text-xs font-bold t2">{t("categories.color_palette")}</label>
             <div className="grid grid-cols-6 gap-2 sm:grid-cols-9">
               {COLOR_PALETTE.map((color) => (
@@ -264,7 +264,7 @@ function CategorySheet({
             </div>
           </div>
 
-          <div className="space-y-3 rounded-2xl border border-[hsl(var(--border-2))] bg-[hsl(var(--bg-input))]/45 p-4">
+          <div className="space-y-3 rounded-xl border border-[hsl(var(--border-2))] bg-[hsl(var(--bg-input))]/45 p-4">
             <label className="text-xs font-bold t2">{t("categories.icon_palette")}</label>
             <div className="grid grid-cols-6 gap-2 sm:grid-cols-8">
               {ICON_NAMES.map((icon) => (
@@ -293,7 +293,7 @@ function CategorySheet({
             disabled={busy}
             whileTap={{ scale: 0.97 }}
             transition={tapTransition}
-            className="w-full rounded-2xl py-3.5 text-sm font-bold text-white disabled:opacity-50"
+            className="w-full rounded-xl py-3.5 text-sm font-bold text-white disabled:opacity-50"
             style={{ backgroundColor: form.color }}
           >
             {initial ? t("common.save") : t("categories.create")}
@@ -364,7 +364,7 @@ export default function CategoriesPage() {
 
       <section className="card overflow-hidden">
         <div className="flex items-center gap-4 px-4 py-4">
-          <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-cyan-400/10 text-cyan-300">
+          <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-cyan-400/10 text-cyan-300">
             <Layers3 className="h-5 w-5" />
           </div>
           <div className="min-w-0 flex-1">
@@ -397,7 +397,7 @@ export default function CategoriesPage() {
               key={id}
               type="button"
               onClick={() => setActive(id)}
-              className={`min-h-[92px] rounded-2xl border px-3 py-3 text-start transition-all ${
+              className={`min-h-[92px] rounded-xl border px-3 py-3 text-start transition-all ${
                 selected ? `${bg} border-current ${color}` : "border-[hsl(var(--border))] bg-[hsl(var(--bg-input))] t2 hover:t1"
               }`}
             >
@@ -449,7 +449,7 @@ export default function CategoriesPage() {
 
         {isLoading ? (
           <div className="space-y-2 p-4">
-            {[1, 2, 3].map((item) => <div key={item} className="h-14 animate-pulse rounded-2xl bg-white/5" />)}
+            {[1, 2, 3].map((item) => <div key={item} className="h-14 animate-pulse rounded-xl bg-white/5" />)}
           </div>
         ) : visible.length === 0 ? (
           <div className="grid place-items-center px-4 py-16 text-center">
@@ -541,3 +541,4 @@ export default function CategoriesPage() {
     </div>
   );
 }
+

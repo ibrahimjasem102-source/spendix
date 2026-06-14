@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -81,23 +81,22 @@ export default function SignupPage() {
   return (
     <div
       className="min-h-screen flex items-center justify-center px-4"
-      style={{ backgroundColor: "hsl(214 28% 5%)" }}
+      style={{ background: "hsl(216 30% 7%)" }}
     >
       <div className="w-full max-w-md relative z-10">
         {/* Logo */}
         <div className="flex flex-col items-center mb-8">
-          <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4"
-            style={{ background: "linear-gradient(135deg, #7C3AED, #06B6D4)" }}>
-            <Wallet className="w-7 h-7 text-white" />
+          <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 bg-cyan-500">
+            <Wallet className="w-6 h-6 text-white" />
           </div>
-          <h1 className="text-2xl font-black text-white tracking-tight">Spendix</h1>
+          <h1 className="text-2xl font-bold text-[hsl(210_20%_94%)] tracking-tight">Spendix</h1>
           <p className="text-sm mt-1" style={{ color: "hsl(215 18% 55%)" }}>
             {t("auth.signup_title")}
           </p>
         </div>
 
         {/* Card */}
-        <div className="rounded-[1.5rem] p-7 space-y-5"
+        <div className="rounded-xl p-6 space-y-5"
           style={{
             background: "hsl(215 26% 10%)",
             border: "1px solid hsl(0 0% 100% / 0.08)",
@@ -127,7 +126,7 @@ export default function SignupPage() {
                   border: "1px solid hsl(0 0% 100% / 0.08)",
                   color: "hsl(210 25% 96%)",
                 }}
-                onFocus={(e) => e.target.style.borderColor = "rgba(124,58,237,0.5)"}
+                onFocus={(e) => e.target.style.borderColor = "rgba(6,182,212,0.50)"}
                 onBlur={(e) => e.target.style.borderColor = "hsl(0 0% 100% / 0.08)"}
               />
             </div>
@@ -148,7 +147,7 @@ export default function SignupPage() {
                     border: "1px solid hsl(0 0% 100% / 0.08)",
                     color: "hsl(210 25% 96%)",
                   }}
-                  onFocus={(e) => e.target.style.borderColor = "rgba(124,58,237,0.5)"}
+                  onFocus={(e) => e.target.style.borderColor = "rgba(6,182,212,0.50)"}
                   onBlur={(e) => e.target.style.borderColor = "hsl(0 0% 100% / 0.08)"}
                 />
                 <button type="button" onClick={() => setShowPw(!showPw)}
@@ -168,7 +167,7 @@ export default function SignupPage() {
 
             <button type="submit" disabled={loading}
               className="w-full py-3 rounded-xl text-sm font-semibold text-white transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-              style={{ background: loading ? "#6D28D9" : "linear-gradient(135deg, #7C3AED, #6D28D9)" }}>
+              style={{ background: "#06B6D4", color: "#0D1117" }}>
               {loading ? <><Loader2 className="w-4 h-4 animate-spin" />{t("auth.creating_account")}</> : t("auth.create_account")}
             </button>
           </form>
@@ -177,7 +176,7 @@ export default function SignupPage() {
 
           <p className="text-center text-xs pt-2" style={{ color: "hsl(215 18% 45%)" }}>
             {t("auth.already_have_account")}{" "}
-            <Link href="/login" className="font-semibold text-purple-400 hover:text-purple-300 transition-colors">
+            <Link href="/login" className="font-semibold transition-colors" style={{ color: "#22D3EE" }}>
               {t("auth.sign_in")}
             </Link>
           </p>
@@ -192,3 +191,4 @@ export default function SignupPage() {
     </div>
   );
 }
+

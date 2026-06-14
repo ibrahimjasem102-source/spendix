@@ -1,16 +1,16 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
-import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  X, Briefcase, Banknote, Check, Loader2,
+  X, Briefcase, Banknote, Check,
   CalendarDays, FileText, Building2, RefreshCcw, AlarmClock,
 } from "lucide-react";
+import { FormShell, FormFooter, FormSaveBtn } from "@/components/ui/FormShell";
 import type { WorkSessionFormData, WorkPaymentFormData, WorkRecurrence, WorkSession, WorkPayment } from "@/types";
 import { useTranslation } from "@/lib/i18n";
 import { useCurrency } from "@/lib/currency";
-import { spring, tapTransition } from "@/lib/motion";
+import { tapTransition } from "@/lib/motion";
 import SheetDragHandle from "@/components/ui/SheetDragHandle";
 
 type WorkTab = "session" | "payment";
@@ -47,7 +47,7 @@ export default function WorkForm({
   const isEditSession = !!initialSession;
   const isEditPayment = !!initialPayment;
 
-  // ── Session state ──────────────────────────────────────────────
+  // â”€â”€ Session state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const [sf, setSf] = useState<WorkSessionFormData>(() => initialSession ? {
     title: initialSession.title,
     employer_or_client: initialSession.employer_or_client,
@@ -67,7 +67,7 @@ export default function WorkForm({
   const [sLoading, setSLoading] = useState(false);
   const [sError,   setSError]   = useState("");
 
-  // ── Payment state ──────────────────────────────────────────────
+  // â”€â”€ Payment state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const [pf, setPf] = useState<WorkPaymentFormData>(() => initialPayment ? {
     employer_or_client: initialPayment.employer_or_client,
     amount: Number(initialPayment.amount),
@@ -122,23 +122,9 @@ export default function WorkForm({
   const accent  = tab === "session" ? SESSION_COLOR : PAYMENT_COLOR;
   const unpaid  = sessions.filter((s) => s.status !== "paid");
 
-  if (typeof document === "undefined") return null;
-
-  return createPortal(
-    <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
-      style={{ backgroundColor: "rgba(19,26,34,0.68)", backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)" }}
-      onClick={(e) => e.target === e.currentTarget && onClose()}
-    >
-      <motion.div
-        initial={{ y: 60, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        exit={{ y: 60, opacity: 0 }}
-        transition={spring}
-        className="w-full sm:max-w-lg rounded-t-[1.75rem] sm:rounded-[1.5rem] overflow-hidden flex flex-col"
-        style={{ backgroundColor: "hsl(var(--bg-card))", border: "1px solid hsl(var(--border))", maxHeight: "92dvh" }}
-      >
-        {/* ── Header ─────────────────────────────────────────── */}
+  return (
+    <FormShell onClose={onClose}>
+        {/* â”€â”€ Header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <div
           className="shrink-0 px-5 pt-4 pb-4 border-b border-[hsl(var(--border))] transition-colors duration-300"
           style={{ background: `${accent}10` }}
@@ -158,7 +144,7 @@ export default function WorkForm({
           </div>
 
           {/* Tab toggle */}
-          <div className="flex gap-1 bg-black/12 rounded-2xl p-1">
+          <div className="flex gap-1 bg-black/12 rounded-xl p-1">
             {(["session", "payment"] as const).map((item) => {
               const isActive = tab === item;
               const col = item === "session" ? SESSION_COLOR : PAYMENT_COLOR;
@@ -182,7 +168,7 @@ export default function WorkForm({
           </div>
         </div>
 
-        {/* ── Form body ──────────────────────────────────────── */}
+        {/* â”€â”€ Form body â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <AnimatePresence mode="wait" initial={false}>
           {tab === "session" ? (
 
@@ -197,13 +183,13 @@ export default function WorkForm({
             >
               <div className="px-5 py-5 space-y-5 flex-1">
 
-                {/* ── 1. Rate × Hours (amount first) ─────────── */}
+                {/* â”€â”€ 1. Rate Ã— Hours (amount first) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
                 <section
-                  className="rounded-2xl border p-4"
+                  className="rounded-xl border p-4"
                   style={{ borderColor: `${SESSION_COLOR}30`, backgroundColor: `${SESSION_COLOR}08` }}
                 >
                   <label className="mb-3 block text-[10px] font-semibold uppercase tracking-wide t3">
-                    {t("work.hourly_rate")} × {t("work.hours_worked")}
+                    {t("work.hourly_rate")} Ã— {t("work.hours_worked")}
                   </label>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1.5">
@@ -215,7 +201,7 @@ export default function WorkForm({
                           value={rawRate}
                           onChange={(e) => { setRawRate(e.target.value); setS("hourly_rate", parseFloat(e.target.value) || 0); }}
                           placeholder="0.00"
-                          className="w-full ps-7 pe-3 py-3 text-xl font-bold number-display rounded-2xl bg-[hsl(var(--bg-card))] border focus:outline-none transition-all"
+                          className="w-full ps-7 pe-3 py-3 text-xl font-bold number-display rounded-xl bg-[hsl(var(--bg-card))] border focus:outline-none transition-all"
                           style={{ color: rawRate ? SESSION_COLOR : undefined, borderColor: rawRate ? `${SESSION_COLOR}40` : "hsl(var(--border))" }}
                         />
                       </div>
@@ -227,7 +213,7 @@ export default function WorkForm({
                         value={rawHours}
                         onChange={(e) => { setRawHours(e.target.value); setS("hours_worked", parseFloat(e.target.value) || 0); }}
                         placeholder="0"
-                        className="w-full px-3 py-3 text-xl font-bold number-display rounded-2xl bg-[hsl(var(--bg-card))] border focus:outline-none transition-all"
+                        className="w-full px-3 py-3 text-xl font-bold number-display rounded-xl bg-[hsl(var(--bg-card))] border focus:outline-none transition-all"
                         style={{ color: rawHours ? SESSION_COLOR : undefined, borderColor: rawHours ? `${SESSION_COLOR}40` : "hsl(var(--border))" }}
                       />
                     </div>
@@ -237,7 +223,7 @@ export default function WorkForm({
                     {expected > 0 && (
                       <motion.div
                         initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                        className="flex items-center justify-between mt-3 px-4 py-3 rounded-2xl"
+                        className="flex items-center justify-between mt-3 px-4 py-3 rounded-xl"
                         style={{ backgroundColor: `${SESSION_COLOR}15`, border: `1px solid ${SESSION_COLOR}30` }}
                       >
                         <span className="text-xs t2">{t("work.expected_amount")}</span>
@@ -249,8 +235,8 @@ export default function WorkForm({
                   </AnimatePresence>
                 </section>
 
-                {/* ── 2. Title + Employer ────────────────────── */}
-                <section className="space-y-3 rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--bg-input))]/50 p-4">
+                {/* â”€â”€ 2. Title + Employer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+                <section className="space-y-3 rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--bg-input))]/50 p-4">
                   <div className="space-y-1.5">
                     <label className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wide t3">
                       <Briefcase className="w-3.5 h-3.5" />{t("work.session_title")}
@@ -259,7 +245,7 @@ export default function WorkForm({
                       required value={sf.title}
                       onChange={(e) => setS("title", e.target.value)}
                       className="field text-sm"
-                      placeholder={t("work.session_title_placeholder") || "e.g. Web design, Programming…"}
+                      placeholder={t("work.session_title_placeholder") || "e.g. Web design, Programmingâ€¦"}
                     />
                   </div>
                   <div className="space-y-1.5">
@@ -275,8 +261,8 @@ export default function WorkForm({
                   </div>
                 </section>
 
-                {/* ── 3. Schedule ────────────────────────────── */}
-                <section className="space-y-3 rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--bg-input))]/50 p-4">
+                {/* â”€â”€ 3. Schedule â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+                <section className="space-y-3 rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--bg-input))]/50 p-4">
                   <div className="flex items-center gap-2">
                     <CalendarDays className="w-4 h-4 t3" />
                     <label className="text-[10px] font-semibold uppercase tracking-wide t3">{t("work.work_date")}</label>
@@ -348,31 +334,15 @@ export default function WorkForm({
                 </AnimatePresence>
               </div>
 
-              <div className="shrink-0 border-t border-[hsl(var(--border))] px-5 pt-3"
-                style={{ paddingBottom: "max(20px, calc(env(safe-area-inset-bottom,0px) + 8px))" }}>
-                <motion.button
-                  type="submit" disabled={sLoading || sf.hours_worked <= 0}
-                  whileTap={{ scale: 0.97 }} transition={tapTransition}
-                  className="w-full py-3.5 rounded-2xl text-sm font-bold text-[#0B0F14] transition-all disabled:opacity-40"
-                  style={{ background: `linear-gradient(135deg, ${SESSION_COLOR}, ${SESSION_COLOR}bb)` }}
-                >
-                  <AnimatePresence mode="wait">
-                    {sLoading ? (
-                      <motion.span key="load" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                        className="flex items-center justify-center gap-2">
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        {t("common.saving")}
-                      </motion.span>
-                    ) : (
-                      <motion.span key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                        className="flex items-center justify-center gap-2">
-                        <Briefcase className="w-4 h-4" />
-                        {isEditSession ? t("common.save") : t("work.add_session")}
-                      </motion.span>
-                    )}
-                  </AnimatePresence>
-                </motion.button>
-              </div>
+              <FormFooter className="border-t border-[hsl(var(--border))]">
+                <FormSaveBtn
+                  loading={sLoading}
+                  disabled={sf.hours_worked <= 0}
+                  accentHex={SESSION_COLOR}
+                  icon={<Briefcase className="w-4 h-4" />}
+                  label={isEditSession ? t("common.save") : t("work.add_session")}
+                />
+              </FormFooter>
             </motion.form>
 
           ) : (
@@ -390,7 +360,7 @@ export default function WorkForm({
 
                 {/* Amount */}
                 <section
-                  className="rounded-2xl border p-4"
+                  className="rounded-xl border p-4"
                   style={{ borderColor: `${PAYMENT_COLOR}30`, backgroundColor: `${PAYMENT_COLOR}08` }}
                 >
                   <div className="mb-3 flex items-center justify-between gap-3">
@@ -409,14 +379,14 @@ export default function WorkForm({
                       value={rawAmount}
                       onChange={(e) => { setRawAmount(e.target.value); setP("amount", parseFloat(e.target.value) || 0); }}
                       placeholder="0.00"
-                      className="w-full ps-12 pe-4 py-4 text-4xl font-black number-display rounded-2xl bg-[hsl(var(--bg-card))] border focus:outline-none transition-all"
+                      className="w-full ps-12 pe-4 py-4 text-4xl font-black number-display rounded-xl bg-[hsl(var(--bg-card))] border focus:outline-none transition-all"
                       style={{ color: rawAmount ? PAYMENT_COLOR : undefined, borderColor: rawAmount ? `${PAYMENT_COLOR}40` : "hsl(var(--border))" }}
                     />
                   </div>
                 </section>
 
                 {/* Details */}
-                <section className="space-y-3 rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--bg-input))]/50 p-4">
+                <section className="space-y-3 rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--bg-input))]/50 p-4">
                   {unpaid.length > 0 && (
                     <div>
                       <label className="text-xs font-semibold uppercase tracking-wide t2 mb-2 block">
@@ -429,10 +399,10 @@ export default function WorkForm({
                         className="field text-sm"
                         style={{ backgroundColor: "hsl(var(--bg-input))" }}
                       >
-                        <option value="">— {t("work.sessions")} —</option>
+                        <option value="">â€” {t("work.sessions")} â€”</option>
                         {unpaid.map((s) => (
                           <option key={s.id} value={s.id}>
-                            {s.title} · {s.employer_or_client} ({format(s.expected_amount)})
+                            {s.title} Â· {s.employer_or_client} ({format(s.expected_amount)})
                           </option>
                         ))}
                       </select>
@@ -484,37 +454,20 @@ export default function WorkForm({
                 </AnimatePresence>
               </div>
 
-              <div className="shrink-0 border-t border-[hsl(var(--border))] px-5 pt-3"
-                style={{ paddingBottom: "max(20px, calc(env(safe-area-inset-bottom,0px) + 8px))" }}>
-                <motion.button
-                  type="submit" disabled={pLoading || pf.amount <= 0}
-                  whileTap={{ scale: 0.97 }} transition={tapTransition}
-                  className="w-full py-3.5 rounded-2xl text-sm font-bold text-[#0B0F14] transition-all disabled:opacity-40"
-                  style={{ background: `linear-gradient(135deg, ${PAYMENT_COLOR}, ${PAYMENT_COLOR}bb)` }}
-                >
-                  <AnimatePresence mode="wait">
-                    {pLoading ? (
-                      <motion.span key="load" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                        className="flex items-center justify-center gap-2">
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        {t("common.saving")}
-                      </motion.span>
-                    ) : (
-                      <motion.span key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                        className="flex items-center justify-center gap-2">
-                        <Banknote className="w-4 h-4" />
-                        {isEditPayment ? t("common.save") : t("work.add_payment")}
-                      </motion.span>
-                    )}
-                  </AnimatePresence>
-                </motion.button>
-              </div>
+              <FormFooter className="border-t border-[hsl(var(--border))]">
+                <FormSaveBtn
+                  loading={pLoading}
+                  disabled={pf.amount <= 0}
+                  accentHex={PAYMENT_COLOR}
+                  icon={<Banknote className="w-4 h-4" />}
+                  label={isEditPayment ? t("common.save") : t("work.add_payment")}
+                />
+              </FormFooter>
             </motion.form>
 
           )}
         </AnimatePresence>
-      </motion.div>
-    </div>,
-    document.body
+    </FormShell>
   );
 }
+

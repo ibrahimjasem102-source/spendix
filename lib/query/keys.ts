@@ -72,4 +72,16 @@ export const queryKeys = {
     summary: () => [...queryKeys.household.all, "summary"] as const,
     pending: () => [...queryKeys.household.all, "pending"] as const,
   },
+  ledger: {
+    all:  ["ledger"] as const,
+    list: (params?: Record<string, string>) => [...(["ledger", "list"] as const), params ?? {}] as const,
+  },
+  family: {
+    all:  ["family"] as const,
+    list: () => [...(["family", "list"] as const)] as const,
+  },
+  contactSummary: {
+    all:    ["contactSummary"] as const,
+    detail: (id: string) => [...(["contactSummary", "detail"] as const), id] as const,
+  },
 };

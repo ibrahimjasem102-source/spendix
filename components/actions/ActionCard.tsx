@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { motion } from "framer-motion";
 import { tapTransition } from "@/lib/motion";
@@ -19,7 +19,7 @@ export default function ActionCard({ icon: Icon, label, description, color, onCl
       onClick={onClick}
       whileTap={{ scale: 0.93 }}
       transition={tapTransition}
-      className="flex flex-col gap-3 p-4 rounded-2xl text-start w-full"
+      className="flex flex-col gap-3 p-4 rounded-xl text-start w-full"
       style={{
         backgroundColor: "hsl(var(--bg-card-2))",
         border: "1px solid hsl(var(--border))",
@@ -42,3 +42,4 @@ export default function ActionCard({ icon: Icon, label, description, color, onCl
     </motion.button>
   );
 }
+

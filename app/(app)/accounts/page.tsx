@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -17,7 +17,7 @@ import SheetDragHandle from "@/components/ui/SheetDragHandle";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 import type { Account, AccountFormData, AccountType } from "@/types";
 
-// ── Account type meta ────────────────────────────────────────
+// â”€â”€ Account type meta â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const ACCOUNT_META: Record<AccountType, { icon: React.ElementType; color: string; labelKey: string }> = {
   cash:        { icon: Banknote,    color: "#10B981", labelKey: "accounts.type_cash"        },
@@ -25,11 +25,12 @@ const ACCOUNT_META: Record<AccountType, { icon: React.ElementType; color: string
   credit_card: { icon: CreditCard,  color: "#8B5CF6", labelKey: "accounts.type_credit_card" },
   wallet:      { icon: Wallet,      color: "#F59E0B", labelKey: "accounts.type_wallet"      },
   savings:     { icon: PiggyBank,   color: "#06B6D4", labelKey: "accounts.type_savings"     },
+  investment:  { icon: TrendingUp,  color: "#6366F1", labelKey: "accounts.type_investment"  },
 };
 
-const ACCOUNT_TYPES: AccountType[] = ["cash", "bank", "credit_card", "wallet", "savings"];
+const ACCOUNT_TYPES: AccountType[] = ["cash", "bank", "credit_card", "wallet", "savings", "investment"];
 
-// ── Account Form Modal ───────────────────────────────────────
+// â”€â”€ Account Form Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 interface AccountFormProps {
   initial?: Account;
@@ -122,7 +123,7 @@ function AccountFormModal({ initial, onSubmit, onClose }: AccountFormProps) {
                       key={type} type="button"
                       onClick={() => set("type", type)}
                       whileTap={{ scale: 0.93 }} transition={tapTransition}
-                      className="flex flex-col items-center gap-1.5 py-3 rounded-2xl border transition-all"
+                      className="flex flex-col items-center gap-1.5 py-3 rounded-xl border transition-all"
                       style={isActive ? {
                         backgroundColor: `${meta.color}14`,
                         borderColor: `${meta.color}45`,
@@ -219,7 +220,7 @@ function AccountFormModal({ initial, onSubmit, onClose }: AccountFormProps) {
               type="submit"
               disabled={loading || !form.name.trim()}
               whileTap={{ scale: 0.97 }} transition={tapTransition}
-              className="w-full py-4 rounded-2xl text-sm font-bold text-white transition-all disabled:opacity-40"
+              className="w-full py-4 rounded-xl text-sm font-bold text-white transition-all disabled:opacity-40"
               style={{ background: `linear-gradient(135deg, ${accent} 0%, ${accent}99 100%)`, boxShadow: `0 4px 20px ${accent}35` }}
             >
               <AnimatePresence mode="wait">
@@ -245,9 +246,9 @@ function AccountFormModal({ initial, onSubmit, onClose }: AccountFormProps) {
   );
 }
 
-// ── Delete Confirm ───────────────────────────────────────────
+// â”€â”€ Delete Confirm â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-// ── Account Card ─────────────────────────────────────────────
+// â”€â”€ Account Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 interface AccountCardProps {
   account: Account;
@@ -345,7 +346,7 @@ function AccountCard({ account, onEdit, onDelete }: AccountCardProps) {
   );
 }
 
-// ── Main Page ────────────────────────────────────────────────
+// â”€â”€ Main Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export default function AccountsPage() {
   const { t } = useTranslation();
@@ -426,7 +427,7 @@ export default function AccountsPage() {
       {/* Page header */}
       <div className="flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2.5">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-blue-400/10">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-400/10">
             <CreditCard className="h-4 w-4 text-blue-400" />
           </div>
           <div className="min-w-0">
@@ -439,7 +440,7 @@ export default function AccountsPage() {
             <motion.button
               onClick={() => setShowTransfer(true)}
               whileTap={{ scale: 0.93 }} transition={tapTransition}
-              className="flex h-10 w-10 items-center justify-center rounded-2xl bg-teal-400/10 text-teal-400 hover:bg-teal-400/20 transition-all"
+              className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-400/10 text-teal-400 hover:bg-teal-400/20 transition-all"
               title={t("accounts.transfer")}
             >
               <ArrowLeftRight className="w-4 h-4" />
@@ -448,7 +449,7 @@ export default function AccountsPage() {
           <motion.button
             onClick={() => setShowForm(true)}
             whileTap={{ scale: 0.93 }} transition={tapTransition}
-            className="flex shrink-0 items-center gap-2 px-4 py-2.5 rounded-2xl text-sm font-bold text-white"
+            className="flex shrink-0 items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-white"
             style={{ background: "linear-gradient(135deg, #3B82F6, #2563EB)", boxShadow: "0 4px 16px #3B82F640" }}
           >
             <Plus className="w-4 h-4" />
@@ -544,7 +545,7 @@ export default function AccountsPage() {
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }}
           className="text-center py-16 space-y-4"
         >
-          <div className="w-16 h-16 rounded-3xl bg-blue-500/10 flex items-center justify-center mx-auto">
+          <div className="w-16 h-16 rounded-xl bg-blue-500/10 flex items-center justify-center mx-auto">
             <Wallet className="w-8 h-8 text-blue-400/60" />
           </div>
           <div>
@@ -554,7 +555,7 @@ export default function AccountsPage() {
           <motion.button
             onClick={() => setShowForm(true)}
             whileTap={{ scale: 0.95 }} transition={tapTransition}
-            className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl text-sm font-bold text-white mx-auto"
+            className="inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-bold text-white mx-auto"
             style={{ background: "linear-gradient(135deg, #3B82F6, #2563EB)" }}
           >
             <Plus className="w-4 h-4" />
@@ -600,7 +601,7 @@ export default function AccountsPage() {
               <SheetDragHandle onClose={() => setShowTransfer(false)} />
               <div className="px-5 pt-2 pb-4 border-b border-[hsl(var(--border-2))]">
                 <div className="flex items-center gap-2.5 mb-1">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-teal-400/10">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-teal-400/10">
                     <ArrowLeftRight className="h-4 w-4 text-teal-400" />
                   </div>
                   <p className="text-base font-black t1">{t("accounts.transfer")}</p>
@@ -614,7 +615,7 @@ export default function AccountsPage() {
                     <select value={transferFrom} onChange={(e) => setTransferFrom(e.target.value)} required className="field text-sm">
                       <option value="">{t("common.select")}</option>
                       {accounts.filter((a) => a.id !== transferTo).map((a) => (
-                        <option key={a.id} value={a.id}>{a.name} — {format(a.balance ?? a.initial_balance)}</option>
+                        <option key={a.id} value={a.id}>{a.name} â€” {format(a.balance ?? a.initial_balance)}</option>
                       ))}
                     </select>
                   </div>
@@ -623,7 +624,7 @@ export default function AccountsPage() {
                     <select value={transferTo} onChange={(e) => setTransferTo(e.target.value)} required className="field text-sm">
                       <option value="">{t("common.select")}</option>
                       {accounts.filter((a) => a.id !== transferFrom).map((a) => (
-                        <option key={a.id} value={a.id}>{a.name} — {format(a.balance ?? a.initial_balance)}</option>
+                        <option key={a.id} value={a.id}>{a.name} â€” {format(a.balance ?? a.initial_balance)}</option>
                       ))}
                     </select>
                   </div>
@@ -647,7 +648,7 @@ export default function AccountsPage() {
                 <div className="shrink-0 px-5 pt-2" style={{ paddingBottom: "max(80px, calc(env(safe-area-inset-bottom,0px) + 72px))" }}>
                   <motion.button type="submit" disabled={transferring || !transferFrom || !transferTo || !transferAmount}
                     whileTap={{ scale: 0.97 }} transition={tapTransition}
-                    className="flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-bold text-white disabled:opacity-40"
+                    className="flex w-full items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-bold text-white disabled:opacity-40"
                     style={{ background: "linear-gradient(135deg, #2dd4bf, #0d9488)" }}>
                     {transferring ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowLeftRight className="h-4 w-4" />}
                     {transferring ? t("common.saving") : t("accounts.transfer_confirm")}
@@ -661,3 +662,5 @@ export default function AccountsPage() {
     </div>
   );
 }
+
+

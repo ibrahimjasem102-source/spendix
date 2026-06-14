@@ -483,7 +483,7 @@ export function useCreateDebt() {
       });
       financialBus.emit("debt:created", { debtId: debt.id, amount: debt.total_amount, debtType: debt.debt_type });
     },
-    onSettled: () => void qc.invalidateQueries({ queryKey: listKey }),
+    onSettled: () => invalidateDebts(qc),
   });
 }
 
@@ -520,7 +520,7 @@ export function useUpdateDebt() {
       });
       financialBus.emit("debt:updated", { debtId: debt.id });
     },
-    onSettled: () => void qc.invalidateQueries({ queryKey: listKey }),
+    onSettled: () => invalidateDebts(qc),
   });
 }
 
@@ -547,7 +547,7 @@ export function useDeleteDebt() {
       if (ctx?.previous !== undefined) qc.setQueryData(listKey, ctx.previous);
     },
     onSuccess: (id) => { financialBus.emit("debt:deleted", { debtId: id }); },
-    onSettled: () => void qc.invalidateQueries({ queryKey: listKey }),
+    onSettled: () => invalidateDebts(qc),
   });
 }
 
@@ -590,7 +590,7 @@ export function useCreateDebtPayment() {
         debtId: updatedDebt.id, amount: data.amount, debtType: updatedDebt.debt_type,
       });
     },
-    onSettled: () => void qc.invalidateQueries({ queryKey: listKey }),
+    onSettled: () => invalidateDebts(qc),
   });
 }
 
@@ -665,7 +665,7 @@ export function useCreateInvestment() {
       ]);
       financialBus.emit("investment:added", { id: inv.id, amount: inv.amount_invested });
     },
-    onSettled: () => void qc.invalidateQueries({ queryKey: listKey }),
+    onSettled: () => invalidateInvestments(qc),
   });
 }
 
@@ -700,7 +700,7 @@ export function useUpdateInvestment() {
         id: inv.id, previousValue: inv.amount_invested, currentValue: inv.current_value ?? inv.amount_invested,
       });
     },
-    onSettled: () => void qc.invalidateQueries({ queryKey: listKey }),
+    onSettled: () => invalidateInvestments(qc),
   });
 }
 
@@ -722,7 +722,7 @@ export function useDeleteInvestment() {
     },
     onError: (_e, _id, ctx) => { if (ctx?.previous) qc.setQueryData(listKey, ctx.previous); },
     onSuccess: (id) => { financialBus.emit("investment:deleted", { id }); },
-    onSettled: () => void qc.invalidateQueries({ queryKey: listKey }),
+    onSettled: () => invalidateInvestments(qc),
   });
 }
 
@@ -1748,5 +1748,137 @@ export function useUpdateHouseholdMemberRole() {
         body: JSON.stringify({ target_user_id, role }),
       }),
     onSettled: () => settleHousehold(qc),
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
+// LEDGER (DB-backed audit log — read-only from client)
+// ══════════════════════════════════════════════════════════════
+
+export interface LedgerEntriesParams {
+  limit?:     number;
+  offset?:    number;
+  module?:    string;
+  direction?: "inflow" | "outflow" | "neutral";
+  date_from?: string;
+  date_to?:   string;
+}
+
+export interface LedgerEntrySummary {
+  inflow:  number;
+  outflow: number;
+  net:     number;
+}
+
+export interface LedgerEntriesResult {
+  entries: {
+    id: string;
+    user_id: string;
+    source_module: string;
+    source_id: string;
+    entry_type: string;
+    direction: "inflow" | "outflow" | "neutral";
+    amount: number;
+    description: string;
+    transaction_id: string | null;
+    account_id: string | null;
+    category_id: string | null;
+    contact_id: string | null;
+    created_at: string;
+  }[];
+  count:   number;
+  summary: LedgerEntrySummary;
+}
+
+export function useLedgerEntries(params: LedgerEntriesParams = {}, enabled = true) {
+  const { isGuest } = useGuest();
+  const qs = new URLSearchParams();
+  if (params.limit    !== undefined) qs.set("limit",     String(params.limit));
+  if (params.offset   !== undefined) qs.set("offset",    String(params.offset));
+  if (params.module)                 qs.set("module",    params.module);
+  if (params.direction)              qs.set("direction", params.direction);
+  if (params.date_from)              qs.set("date_from", params.date_from);
+  if (params.date_to)                qs.set("date_to",   params.date_to);
+  const search = qs.toString();
+
+  return useQuery({
+    queryKey: queryKeys.ledger.list(Object.fromEntries(qs) as Record<string, string>),
+    enabled: enabled && !isGuest,
+    queryFn: async (): Promise<LedgerEntriesResult> => {
+      const data = await fetchJson<LedgerEntriesResult>(`/api/ledger${search ? `?${search}` : ""}`);
+      return {
+        entries: data.entries ?? [],
+        count:   data.count   ?? 0,
+        summary: data.summary ?? { inflow: 0, outflow: 0, net: 0 },
+      };
+    },
+    staleTime: 30_000,
+  });
+}
+
+// ── Family Members ────────────────────────────────────────────────────────────
+
+import type { FamilyMember, FamilyMemberFormData } from "@/types";
+
+export function useFamilyMembers(enabled = true) {
+  const { isGuest } = useGuest();
+  return useQuery({
+    queryKey: queryKeys.family.list(),
+    enabled:  enabled && !isGuest,
+    queryFn:  async () => {
+      const data = await fetchJson<{ members: FamilyMember[] }>("/api/family");
+      return data.members ?? [];
+    },
+    staleTime: 60_000,
+  });
+}
+
+export function useCreateFamilyMember() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: FamilyMemberFormData) =>
+      fetchJson<{ member: FamilyMember }>("/api/family", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(input),
+      }),
+    onSettled: () => void qc.invalidateQueries({ queryKey: queryKeys.family.all }),
+  });
+}
+
+export function useUpdateFamilyMember() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...data }: FamilyMemberFormData & { id: string }) =>
+      fetchJson<{ member: FamilyMember }>(`/api/family/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      }),
+    onSettled: () => void qc.invalidateQueries({ queryKey: queryKeys.family.all }),
+  });
+}
+
+export function useDeleteFamilyMember() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) =>
+      fetch(`/api/family/${id}`, { method: "DELETE" }),
+    onSettled: () => void qc.invalidateQueries({ queryKey: queryKeys.family.all }),
+  });
+}
+
+// ── Contact Summary (for profile page) ───────────────────────────────────────
+
+export function useContactSummary(contactId: string | null, enabled = true) {
+  const { isGuest } = useGuest();
+  return useQuery({
+    queryKey: queryKeys.contactSummary.detail(contactId ?? ""),
+    enabled:  enabled && !isGuest && !!contactId,
+    queryFn:  async () => {
+      const data = await fetchJson<Record<string, unknown>>(`/api/contacts/${contactId}/summary`);
+      return data;
+    },
+    staleTime: 30_000,
   });
 }

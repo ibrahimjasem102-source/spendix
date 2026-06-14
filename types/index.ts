@@ -99,7 +99,7 @@ export interface CreateNotificationData {
   scheduled_for?: string | null;
 }
 // ── Accounts ──────────────────────────────────────────────────
-export type AccountType = "cash" | "bank" | "credit_card" | "wallet" | "savings";
+export type AccountType = "cash" | "bank" | "credit_card" | "wallet" | "savings" | "investment";
 
 export interface Account {
   id: string;
@@ -125,7 +125,7 @@ export interface AccountFormData {
   is_default?: boolean;
 }
 
-export type TransactionSource = "manual" | "investment" | "debt" | "debt_payment" | "work" | "work_payment" | "subscription";
+export type TransactionSource = "manual" | "investment" | "debt" | "debt_payment" | "work" | "work_payment" | "subscription" | "goal_contribution" | "transfer" | "recurring";
 
 // ── Calendar ──────────────────────────────────────────────────
 export type CalendarEventType =
@@ -199,7 +199,8 @@ export type InsightType       = "tip" | "warning" | "positive";
 export type AssetType         = "stock" | "crypto" | "etf" | "real_estate" | "other";
 export type DebtType          = "payable" | "receivable";
 export type DebtStatus        = "active" | "partially_paid" | "paid" | "overdue";
-export type ContactType       = "person" | "company" | "bank" | "other";
+export type ContactType       = "person" | "company" | "bank" | "other" | "family" | "friend" | "client" | "employer";
+export type FamilyRelationship = "spouse" | "parent" | "child" | "sibling" | "grandparent" | "grandchild" | "uncle_aunt" | "cousin" | "other";
 
 // ── Financial Contacts ────────────────────────────────────────
 export interface FinancialContact {
@@ -220,6 +221,26 @@ export interface ContactFormData {
   phone?: string | null;
   email?: string | null;
   notes?: string | null;
+}
+
+// ── Family Members ────────────────────────────────────────────
+export interface FamilyMember {
+  id:           string;
+  user_id:      string;
+  name:         string;
+  relationship: FamilyRelationship | string;
+  birth_date?:  string | null;
+  notes?:       string | null;
+  avatar_color?: string | null;
+  created_at:   string;
+  updated_at:   string;
+}
+
+export interface FamilyMemberFormData {
+  name:         string;
+  relationship: string;
+  birth_date?:  string | null;
+  notes?:       string | null;
 }
 
 export interface ContactSummary {

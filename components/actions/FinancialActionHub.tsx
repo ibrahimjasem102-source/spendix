@@ -1,14 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
   ArrowDownRight, ArrowUpRight,
-  Target, TrendingUp, Landmark, CreditCard,
-  RefreshCw, User, Briefcase,
+  Target, TrendingUp, Landmark,
+  User, Briefcase, PiggyBank,
 } from "lucide-react";
 import { useGlobalActions, type ModalType } from "@/contexts/GlobalActionsContext";
 import { useTranslation } from "@/lib/i18n";
@@ -16,73 +15,52 @@ import { backdropVariants, ease, sheetTransition } from "@/lib/motion";
 import SheetDragHandle from "@/components/ui/SheetDragHandle";
 
 interface Action {
-  icon: React.ElementType;
-  label: string;
-  color: string;
+  icon:   React.ElementType;
+  label:  string;
+  color:  string;
   action: () => void;
 }
 
 interface Section {
-  title: string;
+  title:   string;
   actions: Action[];
 }
 
 export default function FinancialActionHub() {
-  const { openModal } = useGlobalActions();
-  const { t } = useTranslation();
-  const router = useRouter();
-  const [fabOpen, setFabOpen] = useState(false);
+  const { fabOpen, closeFAB, openModal } = useGlobalActions();
+  const { t }                            = useTranslation();
+  const router                           = useRouter();
 
-  const toggleFAB = useCallback(() => {
-    setFabOpen((open) => !open);
-    import("@/lib/haptics").then(({ haptic }) => haptic("medium")).catch(() => undefined);
-  }, []);
-  const closeFAB  = useCallback(() => setFabOpen(false), []);
-
-  useEffect(() => {
-    window.addEventListener("spendix:toggle-fab", toggleFAB);
-    return () => window.removeEventListener("spendix:toggle-fab", toggleFAB);
-  }, [toggleFAB]);
-
-  useEffect(() => {
-    if (fabOpen) {
-      window.dispatchEvent(new CustomEvent("spendix:nav-hide"));
-    } else {
-      window.dispatchEvent(new CustomEvent("spendix:nav-show"));
-    }
-  }, [fabOpen]);
-
-  const go = useCallback((path: string) => { closeFAB(); router.push(path); }, [closeFAB, router]);
-  const modal = useCallback((type: ModalType) => { setFabOpen(false); openModal(type); }, [openModal]);
+  const go    = (path: string) => { closeFAB(); router.push(path); };
+  const modal = (type: ModalType) => { closeFAB(); openModal(type); };
 
   const sections: Section[] = [
     {
       title: t("hub.section_transactions"),
       actions: [
-        { icon: ArrowDownRight, label: t("transactions.expense"),  color: "#F43F5E", action: () => modal("expense")     },
-        { icon: ArrowUpRight,   label: t("transactions.income"),   color: "#10B981", action: () => modal("income")      },
+        { icon: ArrowDownRight, label: t("transactions.expense"),  color: "#F43F5E", action: () => go("/transactions/new?type=expense") },
+        { icon: ArrowUpRight,   label: t("transactions.income"),   color: "#10B981", action: () => go("/transactions/new?type=income")  },
       ],
     },
     {
       title: t("hub.section_assets"),
       actions: [
-        { icon: TrendingUp, label: t("hub.action_investment"), color: "#8B5CF6", action: () => modal("investment") },
-        { icon: Target,     label: t("hub.action_goal"),       color: "#F59E0B", action: () => modal("goal")       },
+        { icon: TrendingUp, label: t("hub.action_investment"), color: "#8B5CF6", action: () => modal("investment")    },
+        { icon: Target,     label: t("hub.action_goal"),       color: "#F59E0B", action: () => go("/goals/new")       },
+        { icon: PiggyBank,  label: t("hub.action_budget"),     color: "#34D399", action: () => go("/budgets")         },
       ],
     },
     {
       title: t("hub.section_liabilities"),
       actions: [
-        { icon: Landmark,  label: t("hub.action_debt"),         color: "#F43F5E", action: () => modal("debt")         },
-        { icon: RefreshCw, label: t("hub.action_subscription"), color: "#A855F7", action: () => modal("subscription") },
+        { icon: Landmark, label: t("hub.action_debt"), color: "#F43F5E", action: () => go("/debts/new") },
       ],
     },
     {
       title: t("hub.section_manage"),
       actions: [
-        { icon: Briefcase,  label: t("hub.action_work"),         color: "#F59E0B", action: () => modal("work_session") },
-        { icon: CreditCard, label: t("hub.action_account"),      color: "#3B82F6", action: () => go("/accounts")       },
-        { icon: User,       label: t("hub.action_contact"),      color: "#06B6D4", action: () => go("/contacts")       },
+        { icon: Briefcase, label: t("hub.action_work"),    color: "#F59E0B", action: () => modal("work_session") },
+        { icon: User,      label: t("hub.action_contact"), color: "#06B6D4", action: () => go("/contacts")       },
       ],
     },
   ];
@@ -100,7 +78,11 @@ export default function FinancialActionHub() {
             initial="hidden" animate="visible" exit="exit"
             transition={ease}
             className="fixed inset-0 z-[100]"
-            style={{ backgroundColor: "rgba(11,15,20,0.82)", backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)" }}
+            style={{
+              backgroundColor: "rgba(11,15,20,0.82)",
+              backdropFilter: "blur(6px)",
+              WebkitBackdropFilter: "blur(6px)",
+            }}
             onClick={closeFAB}
           />
 
@@ -153,12 +135,9 @@ export default function FinancialActionHub() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: si * 0.04, duration: 0.2, ease: "easeOut" }}
                 >
-                  {/* Section label */}
                   <p className="text-[10px] font-bold uppercase tracking-[0.12em] t3 mb-2.5 px-0.5">
                     {section.title}
                   </p>
-
-                  {/* Actions grid — 3 columns */}
                   <div className="grid grid-cols-3 gap-2">
                     {section.actions.map((a) => {
                       const Icon = a.icon;
@@ -169,7 +148,7 @@ export default function FinancialActionHub() {
                           onClick={a.action}
                           whileTap={{ scale: 0.93 }}
                           transition={{ type: "tween", duration: 0.1 }}
-                          className="flex flex-col items-center gap-2 py-3.5 px-2 rounded-2xl transition-colors active:opacity-70"
+                          className="flex flex-col items-center gap-2 py-3.5 px-2 rounded-xl transition-colors active:opacity-70"
                           style={{
                             backgroundColor: "hsl(var(--bg-card-2))",
                             border: "1px solid hsl(var(--border))",
@@ -195,6 +174,6 @@ export default function FinancialActionHub() {
         </>
       )}
     </AnimatePresence>,
-    document.body
+    document.body,
   );
 }

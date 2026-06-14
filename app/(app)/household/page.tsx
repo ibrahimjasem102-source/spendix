@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useState, useMemo } from "react";
@@ -22,14 +22,14 @@ import { spring, tapTransition } from "@/lib/motion";
 import type { HouseholdRole, HouseholdSummary } from "@/types";
 import PlanGate from "@/components/plans/PlanGate";
 
-// ── Helpers ────────────────────────────────────────────────────
+// â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const AVATAR_COLORS = [
-  { bg: "from-cyan-400/40 to-violet-400/40",   text: "text-cyan-300"    },
-  { bg: "from-emerald-400/40 to-teal-400/40",  text: "text-emerald-300" },
-  { bg: "from-rose-400/40 to-pink-400/40",     text: "text-rose-300"    },
-  { bg: "from-amber-400/40 to-orange-400/40",  text: "text-amber-300"   },
-  { bg: "from-indigo-400/40 to-purple-400/40", text: "text-indigo-300"  },
+  { bg: "bg-cyan-500/20",    text: "text-cyan-300"    },
+  { bg: "bg-emerald-500/20", text: "text-emerald-300" },
+  { bg: "bg-rose-500/20",    text: "text-rose-300"    },
+  { bg: "bg-amber-500/20",   text: "text-amber-300"   },
+  { bg: "bg-indigo-500/20",  text: "text-indigo-300"  },
 ];
 
 function avatarColor(index: number) {
@@ -52,7 +52,7 @@ function RoleBadge({ role }: { role: string }) {
   );
 }
 
-// ── Member card (redesigned) ───────────────────────────────────
+// â”€â”€ Member card (redesigned) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function MemberCard({
   member, index, isMe, isOwner, canRemove, canManageRole,
@@ -91,7 +91,7 @@ function MemberCard({
     >
       {/* Header row */}
       <div className="flex items-center gap-3">
-        <div className={`w-11 h-11 rounded-2xl bg-gradient-to-br ${ac.bg} flex items-center justify-center shrink-0`}>
+        <div className={`w-10 h-10 rounded-xl ${ac.bg} flex items-center justify-center shrink-0`}>
           <span className={`text-sm font-black ${ac.text}`}>{initials}</span>
         </div>
         <div className="flex-1 min-w-0">
@@ -105,7 +105,7 @@ function MemberCard({
           </div>
         </div>
         {/* Net balance badge */}
-        <div className={`shrink-0 rounded-2xl px-3 py-1.5 text-sm font-black tabular-nums ${
+        <div className={`shrink-0 rounded-xl px-3 py-1.5 text-sm font-black tabular-nums ${
           isPositive ? "bg-emerald-400/10 text-emerald-400" : "bg-rose-400/10 text-rose-400"
         }`}>
           {isPositive ? "+" : ""}{format(member.net_balance)}
@@ -197,7 +197,7 @@ function MemberCard({
   );
 }
 
-// ── Insight card ───────────────────────────────────────────────
+// â”€â”€ Insight card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function InsightCard({ icon: Icon, text, tone }: {
   icon: typeof Sparkles;
@@ -210,14 +210,14 @@ function InsightCard({ icon: Icon, text, tone }: {
     info:     "border-cyan-400/20    bg-cyan-400/5    text-cyan-300",
   };
   return (
-    <div className={`flex items-start gap-2.5 rounded-2xl border px-3 py-2.5 ${colors[tone]}`}>
+    <div className={`flex items-start gap-2.5 rounded-xl border px-3 py-2.5 ${colors[tone]}`}>
       <Icon className="w-3.5 h-3.5 shrink-0 mt-0.5" />
       <p className="text-xs font-medium leading-relaxed">{text}</p>
     </div>
   );
 }
 
-// ── Main page ──────────────────────────────────────────────────
+// â”€â”€ Main page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function HouseholdPageInner() {
   const { t } = useTranslation();
@@ -258,7 +258,7 @@ function HouseholdPageInner() {
   const canInvite = myRole === "owner" || myRole === "admin";
   const myUserId  = (householdData as { user_id?: string } | null)?.user_id;
 
-  // ── Aggregates ───────────────────────────────────────────────
+  // â”€â”€ Aggregates â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const totalIncome   = summary.reduce((s, m) => s + m.monthly_income,   0);
   const totalExpenses = summary.reduce((s, m) => s + m.monthly_expenses, 0);
   const totalBalance  = summary.reduce((s, m) => s + m.net_balance,      0);
@@ -340,7 +340,7 @@ function HouseholdPageInner() {
     try { await updateRole.mutateAsync({ target_user_id: userId, role }); } finally { setUpdatingRoleId(null); }
   }
 
-  // ── Loading / guest ──────────────────────────────────────────
+  // â”€â”€ Loading / guest â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   if (guestLoading || hhLoading) {
     return (
@@ -356,7 +356,7 @@ function HouseholdPageInner() {
       <div className="mx-auto max-w-xl space-y-4">
         <div className="rounded-[24px] border border-cyan-400/20 bg-cyan-400/5 p-6">
           <div className="mb-5 flex items-start gap-3">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-cyan-400/10">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-cyan-400/10">
               <Users className="h-6 w-6 text-cyan-400" />
             </div>
             <div className="min-w-0">
@@ -372,14 +372,14 @@ function HouseholdPageInner() {
     );
   }
 
-  // ── No household ─────────────────────────────────────────────
+  // â”€â”€ No household â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   if (!household) {
     return (
       <div className="space-y-5 max-w-xl mx-auto">
         {/* Header */}
         <div className="flex min-w-0 items-center gap-2.5">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-cyan-400/10">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-cyan-400/10">
             <Home className="h-4 w-4 text-cyan-400" />
           </div>
           <div className="min-w-0">
@@ -419,7 +419,7 @@ function HouseholdPageInner() {
           <div className="card p-4 space-y-3">
             <p className="text-sm font-bold t1">{t("household.pending_received")}</p>
             {pending!.received.map((inv) => (
-              <div key={inv.id} className="flex items-center gap-3 p-3 bg-[hsl(var(--bg-input))] rounded-2xl">
+              <div key={inv.id} className="flex items-center gap-3 p-3 bg-[hsl(var(--bg-input))] rounded-xl">
                 <div className="w-8 h-8 rounded-xl bg-cyan-400/10 flex items-center justify-center shrink-0">
                   <Mail className="w-4 h-4 text-cyan-400" />
                 </div>
@@ -444,7 +444,7 @@ function HouseholdPageInner() {
 
         {/* Empty state */}
         <div className="card py-12 px-5 flex flex-col items-center gap-3 text-center">
-          <div className="p-4 rounded-2xl bg-cyan-400/10">
+          <div className="p-4 rounded-xl bg-cyan-400/10">
             <Users className="w-10 h-10 text-cyan-400 opacity-60" />
           </div>
           <p className="text-sm font-semibold t1">{t("household.empty")}</p>
@@ -503,12 +503,12 @@ function HouseholdPageInner() {
     );
   }
 
-  // ── Has household ─────────────────────────────────────────────
+  // â”€â”€ Has household â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   return (
     <div className="space-y-5 max-w-2xl mx-auto">
 
-      {/* ── Hero banner ────────────────────────────────────────── */}
+      {/* â”€â”€ Hero banner â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <motion.div
         initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={spring}
         className="relative overflow-hidden rounded-[1.75rem] p-5"
@@ -523,7 +523,7 @@ function HouseholdPageInner() {
         {/* Top row */}
         <div className="relative z-10 flex items-start justify-between gap-3 mb-5">
           <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-cyan-400/15 border border-cyan-400/20">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-cyan-400/15 border border-cyan-400/20">
               <Home className="h-5 w-5 text-cyan-400" />
             </div>
             <div className="min-w-0">
@@ -561,7 +561,7 @@ function HouseholdPageInner() {
             { label: t("household.net_balance"), value: (totalBalance >= 0 ? "+" : "") + format(totalBalance), color: totalBalance >= 0 ? "text-emerald-400" : "text-rose-400", Icon: TrendingUp },
             { label: t("household.savings"),    value: `${savingsRate}%`,     color: "text-cyan-400",    Icon: BarChart2 },
           ].map(({ label, value, color, Icon }) => (
-            <div key={label} className="rounded-2xl bg-white/5 border border-white/8 p-3">
+            <div key={label} className="rounded-xl bg-white/5 border border-white/8 p-3">
               <div className="flex items-center gap-1.5 mb-1.5">
                 <Icon className={`w-3.5 h-3.5 ${color}`} />
                 <span className="text-[9px] font-semibold text-white/40 uppercase tracking-wide">{label}</span>
@@ -585,7 +585,7 @@ function HouseholdPageInner() {
         )}
       </motion.div>
 
-      {/* ── Smart Insights ─────────────────────────────────────── */}
+      {/* â”€â”€ Smart Insights â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       {insights.length > 0 && (
         <div className="space-y-2">
           <div className="flex items-center gap-2 px-1">
@@ -598,7 +598,7 @@ function HouseholdPageInner() {
         </div>
       )}
 
-      {/* ── Invite form ─────────────────────────────────────────── */}
+      {/* â”€â”€ Invite form â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <AnimatePresence>
         {showInvite && (
           <motion.form key="invite"
@@ -614,7 +614,7 @@ function HouseholdPageInner() {
               <div className="grid grid-cols-2 gap-2">
                 {(["member", "admin"] as const).map((role) => (
                   <button key={role} type="button" onClick={() => setInviteRole(role)}
-                    className={`rounded-2xl border px-3 py-2.5 text-start transition-all ${
+                    className={`rounded-xl border px-3 py-2.5 text-start transition-all ${
                       inviteRole === role
                         ? "border-cyan-400/40 bg-cyan-400/10 text-cyan-300"
                         : "border-[hsl(var(--border))] bg-[hsl(var(--bg-card))] t2"
@@ -644,7 +644,7 @@ function HouseholdPageInner() {
         )}
       </AnimatePresence>
 
-      {/* ── Pending invitations ─────────────────────────────────── */}
+      {/* â”€â”€ Pending invitations â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       {(pending?.sent ?? []).length > 0 && (
         <div className="card overflow-hidden">
           <div className="px-4 py-3 border-b border-[hsl(var(--border-2))] flex items-center gap-2">
@@ -679,7 +679,7 @@ function HouseholdPageInner() {
         </div>
       )}
 
-      {/* ── Members ─────────────────────────────────────────────── */}
+      {/* â”€â”€ Members â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       {summaryLoading ? (
         <div className="py-10 flex items-center justify-center gap-2 t3">
           <Loader2 className="w-4 h-4 animate-spin" />
@@ -711,7 +711,7 @@ function HouseholdPageInner() {
         </div>
       )}
 
-      {/* ── Danger zone ─────────────────────────────────────────── */}
+      {/* â”€â”€ Danger zone â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <div className="card p-4 border border-rose-400/20">
         <p className="text-[10px] t3 font-semibold uppercase tracking-wide mb-3">{t("household.danger_zone")}</p>
         {isOwner ? (
@@ -746,8 +746,9 @@ function HouseholdPageInner() {
 
 export default function HouseholdPage() {
   return (
-    <PlanGate require="elite" featureName="الحسابات العائلية" overlay>
+    <PlanGate require="elite" featureName="Ø§Ù„Ø­Ø³Ø§Ø¨Ø§Øª Ø§Ù„Ø¹Ø§Ø¦Ù„ÙŠØ©" overlay>
       <HouseholdPageInner />
     </PlanGate>
   );
 }
+

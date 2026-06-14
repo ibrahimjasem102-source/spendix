@@ -1,24 +1,32 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Search, User, Building2, Landmark, HelpCircle, Plus, X, ChevronDown, Smartphone } from "lucide-react";
+import { Search, User, Building2, Landmark, HelpCircle, Heart, UserRound, Package, Plus, X, ChevronDown, Smartphone } from "lucide-react";
 import { FinancialContact, ContactType, ContactFormData } from "@/types";
 import { safeFetch } from "@/lib/fetch-safe";
 import { useTranslation } from "@/lib/i18n";
 import { usePhoneContactPicker } from "@/lib/hooks/usePhoneContactPicker";
 
 const TYPE_ICONS: Record<ContactType, React.ElementType> = {
-  person:  User,
-  company: Building2,
-  bank:    Landmark,
-  other:   HelpCircle,
+  person:   User,
+  company:  Building2,
+  bank:     Landmark,
+  other:    HelpCircle,
+  family:   Heart,
+  friend:   UserRound,
+  client:   Package,
+  employer: Building2,
 };
 
 const TYPE_COLORS: Record<ContactType, string> = {
-  person:  "text-cyan-400 bg-cyan-400/10",
-  company: "text-purple-400 bg-purple-400/10",
-  bank:    "text-emerald-400 bg-emerald-400/10",
-  other:   "text-gray-400 bg-gray-400/10",
+  person:   "text-cyan-400 bg-cyan-400/10",
+  company:  "text-purple-400 bg-purple-400/10",
+  bank:     "text-emerald-400 bg-emerald-400/10",
+  other:    "text-gray-400 bg-gray-400/10",
+  family:   "text-rose-400 bg-rose-400/10",
+  friend:   "text-teal-400 bg-teal-400/10",
+  client:   "text-amber-400 bg-amber-400/10",
+  employer: "text-indigo-400 bg-indigo-400/10",
 };
 
 interface Props {

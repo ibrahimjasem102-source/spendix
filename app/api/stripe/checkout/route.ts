@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/api/auth";
 import { getRequestId } from "@/lib/api/responses";
 import { stripe } from "@/lib/stripe";
-import { getStripePriceId } from "@/lib/stripe-prices";
+import { getStripePriceId, type BillingInterval } from "@/lib/stripe-prices";
 import type { PlanId } from "@/lib/plans";
 
 export const dynamic = "force-dynamic";
@@ -34,11 +34,13 @@ export async function POST(request: Request) {
     );
   }
 
-  // Parse and validate plan
+  // Parse and validate plan + interval
   let plan: PlanId;
+  let interval: BillingInterval = "monthly";
   try {
     const body = await request.json();
-    plan = body?.plan;
+    plan     = body?.plan;
+    interval = body?.interval === "yearly" ? "yearly" : "monthly";
   } catch {
     return NextResponse.json({ ok: false, error: "Invalid request body" }, { status: 400 });
   }
@@ -53,7 +55,7 @@ export async function POST(request: Request) {
   // Validate and get Price ID (throws if missing or invalid)
   let priceId: string;
   try {
-    priceId = getStripePriceId(plan as Exclude<PlanId, "free">);
+    priceId = getStripePriceId(plan as Exclude<PlanId, "free">, interval);
   } catch (err) {
     console.error("[checkout] Price ID error:", (err as Error).message);
     return NextResponse.json(
@@ -105,8 +107,8 @@ export async function POST(request: Request) {
     cancel_url:  `${origin}/plans?canceled=1`,
     client_reference_id: user.id,
     customer_email: !customerId ? (user.email ?? undefined) : undefined,
-    metadata: { user_id: user.id, plan },
-    subscription_data: { metadata: { user_id: user.id, plan } },
+    metadata: { user_id: user.id, plan, interval },
+    subscription_data: { metadata: { user_id: user.id, plan, interval } },
     allow_promotion_codes: true,
   });
 

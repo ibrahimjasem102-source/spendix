@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect } from "react";
 import { motion } from "framer-motion";
@@ -52,7 +52,7 @@ export default function ConfirmModal({
           border: "1px solid hsl(var(--border))",
         }}
       >
-        {/* Drag handle — mobile only */}
+        {/* Drag handle â€” mobile only */}
         <div className="flex justify-center pt-3 pb-0 sm:hidden">
           <SheetDragHandle onClose={onCancel} disabled={loading} />
         </div>
@@ -60,7 +60,7 @@ export default function ConfirmModal({
         <div className="flex flex-col items-center gap-5 px-6 pb-6 pt-6 text-center">
           {/* Icon */}
           <div
-            className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl"
+            className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl"
             style={{
               background: "radial-gradient(ellipse at top, rgba(244,63,94,0.18) 0%, rgba(244,63,94,0.06) 100%)",
               border: "1px solid rgba(244,63,94,0.2)",
@@ -82,7 +82,7 @@ export default function ConfirmModal({
             <button
               onClick={onConfirm}
               disabled={loading}
-              className="flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-bold text-white transition-all disabled:opacity-50 active:scale-[0.98]"
+              className="flex w-full items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-bold text-white transition-all disabled:opacity-50 active:scale-[0.98]"
               style={{
                 background: loading
                   ? "#9f1239"
@@ -97,7 +97,7 @@ export default function ConfirmModal({
             <button
               onClick={onCancel}
               disabled={loading}
-              className="w-full rounded-2xl py-3.5 text-sm font-semibold t2 hover:t1 transition-all disabled:opacity-50 active:scale-[0.98]"
+              className="w-full rounded-xl py-3.5 text-sm font-semibold t2 hover:t1 transition-all disabled:opacity-50 active:scale-[0.98]"
               style={{
                 background: "hsl(var(--bg-input))",
                 border: "1px solid hsl(var(--border))",
@@ -114,3 +114,4 @@ export default function ConfirmModal({
     </div>
   );
 }
+

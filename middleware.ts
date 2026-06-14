@@ -1,6 +1,7 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { validateServerEnv } from "@/lib/env";
+import { checkRequestAbuse } from "@/lib/security/abuse";
 
 // ── Global API rate limiter (100 req/min per IP) ─────────────────────────────
 const _rl = new Map<string, { n: number; t: number }>();
@@ -49,7 +50,9 @@ const APP_ROUTES = [
   "/ai-insights", "/work", "/household", "/plans", "/settings",
   "/profile", "/notifications", "/calendar", "/tags", "/recurring",
   "/contacts", "/export", "/net-worth", "/subscriptions", "/more",
-  "/categories", "/privacy",
+  "/categories", "/privacy", "/diagnostic",
+  "/invoices", "/projects", "/automation",
+  "/admin",
 ];
 
 function isAppRoute(pathname: string) {
@@ -59,6 +62,16 @@ function isAppRoute(pathname: string) {
 export async function middleware(request: NextRequest) {
   validateServerEnv();
 
+  const { pathname } = request.nextUrl;
+  const ua           = request.headers.get("user-agent") ?? "";
+  const queryLen     = request.nextUrl.search.length;
+
+  // Abuse / bot / probe detection — block before any auth logic
+  const abuse = checkRequestAbuse(pathname, ua, queryLen);
+  if (abuse.isSuspicious && abuse.severity !== "low") {
+    return new NextResponse(null, { status: 404 });
+  }
+
   // Rate limit API routes (Stripe webhook exempt — Stripe calls it directly)
   if (
     request.nextUrl.pathname.startsWith("/api/") &&
@@ -66,7 +79,7 @@ export async function middleware(request: NextRequest) {
   ) {
     // Use request.ip (set by Vercel edge — cannot be spoofed by the client).
     // Fall back to x-real-ip for other hosts, then a static key for local dev.
-    const ip = request.ip ?? request.headers.get("x-real-ip") ?? "local";
+    const ip = (request as NextRequest & { ip?: string }).ip ?? request.headers.get("x-real-ip") ?? "local";
     if (!apiAllowed(ip)) {
       return new NextResponse(JSON.stringify({ error: "Too many requests" }), {
         status: 429,
@@ -77,7 +90,6 @@ export async function middleware(request: NextRequest) {
 
   let supabaseResponse = NextResponse.next({ request });
 
-  const { pathname } = request.nextUrl;
   const isAuth = pathname.startsWith("/login") || pathname.startsWith("/signup");
 
   // API routes authenticate via Bearer token — skip cookie-based auth here to

@@ -9,7 +9,7 @@ export async function GET(request: Request) {
   if (response || !user) return response;
 
   const { data, error } = await supabase
-    .from("subscriptions")
+    .from("user_plans")
     .select("plan, status, current_period_end, cancel_at_period_end, stripe_subscription_id")
     .eq("user_id", user.id)
     .single();

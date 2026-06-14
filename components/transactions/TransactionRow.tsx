@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { ArrowDownRight, ArrowUpRight, CalendarDays, FileText } from "lucide-react";
 import CategoryIcon from "@/components/categories/CategoryIcon";
@@ -39,7 +39,7 @@ export default function TransactionRow({
     <Wrapper
       type={onClick ? "button" : undefined}
       onClick={onClick}
-      className={`group flex w-full items-center gap-3 rounded-2xl border px-3.5 ${py} text-start transition-all hover:-translate-y-0.5 hover:bg-[hsl(var(--bg-input))] hover:shadow-sm ${className}`}
+      className={`group flex w-full items-center gap-3 rounded-xl border px-3.5 ${py} text-start transition-all hover:-translate-y-0.5 hover:bg-[hsl(var(--bg-input))] hover:shadow-sm ${className}`}
       style={{
         backgroundColor: "hsl(var(--bg-card-2))",
         borderColor: "hsl(var(--border))",
@@ -53,7 +53,7 @@ export default function TransactionRow({
         />
       ) : (
         <div
-          className={`${density === "compact" ? "h-8 w-8 rounded-xl" : "h-10 w-10 rounded-2xl"} flex shrink-0 items-center justify-center`}
+          className={`${density === "compact" ? "h-8 w-8 rounded-xl" : "h-10 w-10 rounded-xl"} flex shrink-0 items-center justify-center`}
           style={{ backgroundColor: `${color}18` }}
         >
           {isIncome
@@ -112,3 +112,4 @@ export default function TransactionRow({
     </Wrapper>
   );
 }
+

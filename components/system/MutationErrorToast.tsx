@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -28,7 +28,7 @@ export default function MutationErrorToast() {
             initial={{ opacity: 0, y: -12, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -8, scale: 0.97 }}
-            className="flex items-center gap-3 rounded-2xl border border-rose-400/30 bg-rose-400/10 px-4 py-3 shadow-lg pointer-events-auto backdrop-blur-sm"
+            className="flex items-center gap-3 rounded-xl border border-rose-400/30 bg-rose-400/10 px-4 py-3 shadow-lg pointer-events-auto backdrop-blur-sm"
           >
             <AlertCircle className="h-4 w-4 shrink-0 text-rose-400" />
             <p className="flex-1 text-sm font-medium text-rose-300">{m.text}</p>
@@ -45,3 +45,4 @@ export default function MutationErrorToast() {
     </div>
   );
 }
+

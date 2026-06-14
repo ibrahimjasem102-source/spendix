@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
   ArrowDownRight,
@@ -66,7 +66,7 @@ function EntryRow({
 
   return (
     <div
-      className="group relative overflow-hidden rounded-2xl border transition-all hover:-translate-y-0.5 hover:shadow-lg"
+      className="group relative overflow-hidden rounded-xl border transition-all hover:-translate-y-0.5 hover:shadow-lg"
       style={{ backgroundColor: "hsl(var(--bg-card-2))", borderColor: "hsl(var(--border))" }}
     >
       {/* Color stripe */}
@@ -74,7 +74,7 @@ function EntryRow({
 
       <div className="flex items-center gap-3 px-3.5 py-3 ms-1">
         {/* Icon */}
-        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl ${cfg.bg}`}>
+        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${cfg.bg}`}>
           <Icon className={`h-[18px] w-[18px] ${cfg.color}`} />
         </div>
 
@@ -114,7 +114,7 @@ function EntryRow({
           <p className="text-[11px] font-medium t3">
             {formatDate(entry.date, { day: "numeric", month: "short" })}
           </p>
-          {/* Action buttons — always visible on mobile, hover on desktop */}
+          {/* Action buttons â€” always visible on mobile, hover on desktop */}
           {(canEdit || canDelete) && (
             <div className="flex items-center gap-0.5 mt-0.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
               {canEdit && (
@@ -172,9 +172,9 @@ export default function LedgerTimeline({
 
   if (entries.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center rounded-3xl border px-6 py-16 text-center t3"
+      <div className="flex flex-col items-center justify-center rounded-xl border px-6 py-16 text-center t3"
         style={{ borderColor: "hsl(var(--border))", backgroundColor: "hsl(var(--bg-card-2))" }}>
-        <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-[hsl(var(--bg-input))]">
+        <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-[hsl(var(--bg-input))]">
           <Minus className="h-5 w-5 opacity-50" />
         </div>
         <p className="text-sm font-semibold">{emptyMessage ?? t("ledger.empty")}</p>
@@ -196,7 +196,7 @@ export default function LedgerTimeline({
 
         return (
           <div key={monthKey} className="relative">
-            <div className="sticky top-0 z-10 -mx-1 mb-3 flex items-center justify-between gap-3 rounded-2xl px-1 py-2 backdrop-blur-md">
+            <div className="sticky top-0 z-10 -mx-1 mb-3 flex items-center justify-between gap-3 rounded-xl px-1 py-2 backdrop-blur-md">
               <div className="min-w-0">
                 <h3 className="truncate text-sm font-black t1">{monthLabel}</h3>
                 <p className="text-[11px] font-medium t3">{t("ledger.month_entries", { count: monthEntries.length })}</p>
@@ -226,3 +226,5 @@ export default function LedgerTimeline({
     </div>
   );
 }
+
+

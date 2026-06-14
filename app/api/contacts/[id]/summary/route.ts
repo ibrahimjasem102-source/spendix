@@ -31,6 +31,28 @@ export async function GET(_req: Request, { params }: Params) {
 
   const debts = rawDebts ?? [];
 
+  // ── Fetch transactions linked to this contact ────────────────
+  const { data: rawTx } = await supabase
+    .from("transactions")
+    .select("id,title,amount,type,source,transaction_date,created_at,category:categories(name,color,icon)")
+    .eq("user_id", user.id)
+    .eq("contact_id", contactId)
+    .order("transaction_date", { ascending: false })
+    .limit(50);
+
+  const transactions = rawTx ?? [];
+
+  // ── Fetch work sessions linked to this contact ───────────────
+  const { data: rawWork } = await supabase
+    .from("work_sessions")
+    .select("id,title,employer_or_client,expected_amount,work_date,status,notes")
+    .eq("user_id", user.id)
+    .or(`contact_id.eq.${contactId},employer_or_client.ilike.${contact.name.replace(/'/g, "''")}`)
+    .order("work_date", { ascending: false })
+    .limit(20);
+
+  const workSessions = rawWork ?? [];
+
   // ── Compute aggregates ───────────────────────────────────────
   let totalPayable = 0, totalReceivable = 0;
   let totalPayablePaid = 0, totalReceivablePaid = 0;
@@ -159,9 +181,21 @@ export async function GET(_req: Request, { params }: Params) {
 
   timeline.sort((a, b) => b.date.localeCompare(a.date));
 
+  // ── Transaction totals from linked transactions ──────────────
+  const txIncome  = transactions
+    .filter((tx) => tx.type === "income")
+    .reduce((s, tx) => s + Number(tx.amount), 0);
+  const txExpense = transactions
+    .filter((tx) => tx.type === "expense")
+    .reduce((s, tx) => s + Number(tx.amount), 0);
+
   return NextResponse.json({
     contact,
     debts,
+    transactions,
+    workSessions,
+    txIncome,
+    txExpense,
     totalPayable,
     totalReceivable,
     totalPaid,

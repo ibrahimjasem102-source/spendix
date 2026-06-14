@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useCallback } from "react";
+import { createContext, useContext, useState, useCallback, useEffect } from "react";
 
 export type ModalType =
   | "transaction"      // manual — income/expense toggle inside form
@@ -47,6 +47,12 @@ export function GlobalActionsProvider({ children }: { children: React.ReactNode 
   const closeModal = useCallback(() => setActiveModal(null), []);
   const toggleFAB  = useCallback(() => setFabOpen((p) => !p), []);
   const closeFAB   = useCallback(() => setFabOpen(false), []);
+
+  // Bridge: components that dispatch the legacy window event can still open the FAB.
+  useEffect(() => {
+    window.addEventListener("spendix:toggle-fab", toggleFAB);
+    return () => window.removeEventListener("spendix:toggle-fab", toggleFAB);
+  }, [toggleFAB]);
 
   return (
     <GlobalActionsContext.Provider value={{ activeModal, openModal, closeModal, fabOpen, toggleFAB, closeFAB }}>

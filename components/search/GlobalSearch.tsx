@@ -1,11 +1,11 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowUpRight, Briefcase, CalendarClock, Clock, CreditCard, DollarSign,
-  FileText, Landmark, Loader2, PieChart, Receipt, RefreshCw, Search, Target,
+  FileText, Heart, Landmark, Loader2, PieChart, Receipt, RefreshCw, Search, Target,
   Trash2, TrendingUp, UserRound, X,
 } from "lucide-react";
 import { safeFetch } from "@/lib/fetch-safe";
@@ -29,25 +29,27 @@ const TYPE_ICON: Record<SearchResult["type"], React.ElementType> = {
   account:      CreditCard,
   budget:       PieChart,
   recurring:    RefreshCw,
+  family_member: Heart,
 };
 
 const TYPE_CFG: Record<SearchResult["type"], { color: string; bg: string; labelKey: string }> = {
-  transaction:  { color: "text-cyan-400",    bg: "bg-cyan-400/10",    labelKey: "nav.transactions"     },
-  debt:         { color: "text-orange-400",  bg: "bg-orange-400/10",  labelKey: "nav.debts"            },
-  investment:   { color: "text-purple-400",  bg: "bg-purple-400/10",  labelKey: "nav.investments"      },
-  work_session: { color: "text-emerald-400", bg: "bg-emerald-400/10", labelKey: "nav.work"             },
-  work_payment: { color: "text-emerald-400", bg: "bg-emerald-400/10", labelKey: "actions.work_payment" },
-  goal:         { color: "text-indigo-400",  bg: "bg-indigo-400/10",  labelKey: "nav.goals"            },
-  contact:      { color: "text-rose-400",    bg: "bg-rose-400/10",    labelKey: "search.type_people"   },
-  subscription: { color: "text-sky-400",     bg: "bg-sky-400/10",     labelKey: "nav.subscriptions"    },
-  account:      { color: "text-violet-400",  bg: "bg-violet-400/10",  labelKey: "nav.accounts"         },
-  budget:       { color: "text-amber-400",   bg: "bg-amber-400/10",   labelKey: "nav.budgets"          },
-  recurring:    { color: "text-teal-400",    bg: "bg-teal-400/10",    labelKey: "nav.recurring"        },
+  transaction:   { color: "text-cyan-400",    bg: "bg-cyan-400/10",    labelKey: "nav.transactions"     },
+  debt:          { color: "text-orange-400",  bg: "bg-orange-400/10",  labelKey: "nav.debts"            },
+  investment:    { color: "text-purple-400",  bg: "bg-purple-400/10",  labelKey: "nav.investments"      },
+  work_session:  { color: "text-emerald-400", bg: "bg-emerald-400/10", labelKey: "nav.work"             },
+  work_payment:  { color: "text-emerald-400", bg: "bg-emerald-400/10", labelKey: "actions.work_payment" },
+  goal:          { color: "text-indigo-400",  bg: "bg-indigo-400/10",  labelKey: "nav.goals"            },
+  contact:       { color: "text-rose-400",    bg: "bg-rose-400/10",    labelKey: "search.type_people"   },
+  subscription:  { color: "text-sky-400",     bg: "bg-sky-400/10",     labelKey: "nav.subscriptions"    },
+  account:       { color: "text-violet-400",  bg: "bg-violet-400/10",  labelKey: "nav.accounts"         },
+  budget:        { color: "text-amber-400",   bg: "bg-amber-400/10",   labelKey: "nav.budgets"          },
+  recurring:     { color: "text-teal-400",    bg: "bg-teal-400/10",    labelKey: "nav.recurring"        },
+  family_member: { color: "text-rose-400",    bg: "bg-rose-400/10",    labelKey: "nav.family"           },
 };
 
 const TYPE_ORDER: SearchResult["type"][] = [
   "transaction", "subscription", "debt", "goal",
-  "investment", "account", "contact", "work_session", "work_payment",
+  "investment", "account", "contact", "family_member", "work_session", "work_payment",
   "budget", "recurring",
 ];
 
@@ -106,7 +108,7 @@ export default function GlobalSearch() {
 
   useEffect(() => { setRecents(loadRecents()); }, []);
 
-  // ⌘K / Ctrl+K focuses the input
+  // âŒ˜K / Ctrl+K focuses the input
   useEffect(() => {
     function handler(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
@@ -120,7 +122,7 @@ export default function GlobalSearch() {
     return () => document.removeEventListener("keydown", handler);
   }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Click outside → close dropdown
+  // Click outside â†’ close dropdown
   useEffect(() => {
     if (!open) return;
     function onDown(e: MouseEvent) {
@@ -217,8 +219,8 @@ export default function GlobalSearch() {
   return (
     <div ref={containerRef} className="relative flex-1 min-w-0">
 
-      {/* ── Search input bar ─────────────────────────────── */}
-      <div className={`flex items-center gap-2 rounded-2xl border px-3 py-2 transition-all ${
+      {/* â”€â”€ Search input bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      <div className={`flex items-center gap-2 rounded-xl border px-3 py-2 transition-all ${
         open
           ? "border-cyan-400/35 bg-[hsl(var(--bg-input))]"
           : "border-[hsl(var(--border))] bg-[hsl(var(--bg-input))] hover:border-cyan-400/20"
@@ -251,12 +253,12 @@ export default function GlobalSearch() {
             className="hidden shrink-0 items-center rounded-lg border border-[hsl(var(--border))] px-1.5 py-0.5 text-[10px] font-semibold t3 sm:flex"
             style={{ backgroundColor: "hsl(var(--bg-card))" }}
           >
-            ⌘K
+            âŒ˜K
           </kbd>
         )}
       </div>
 
-      {/* ── Dropdown panel ───────────────────────────────── */}
+      {/* â”€â”€ Dropdown panel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <AnimatePresence>
         {open && (
           <motion.div
@@ -265,7 +267,7 @@ export default function GlobalSearch() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -4, scale: 0.99 }}
             transition={{ ...spring, duration: 0.15 }}
-            className="absolute top-full mt-2 inset-x-0 z-[200] overflow-hidden rounded-2xl"
+            className="absolute top-full mt-2 inset-x-0 z-[200] overflow-hidden rounded-xl"
             style={{
               backgroundColor: "hsl(var(--bg-card))",
               border: "1px solid hsl(var(--border))",
@@ -275,7 +277,7 @@ export default function GlobalSearch() {
             }}
           >
 
-            {/* ── Hint (no query, no recents) ── */}
+            {/* â”€â”€ Hint (no query, no recents) â”€â”€ */}
             {showHint && (
               <div className="flex items-center gap-2.5 px-4 py-3.5">
                 <Search className="w-3.5 h-3.5 t3 shrink-0" />
@@ -285,7 +287,7 @@ export default function GlobalSearch() {
               </div>
             )}
 
-            {/* ── Recent searches ── */}
+            {/* â”€â”€ Recent searches â”€â”€ */}
             {showRecents && (
               <>
                 <div className="flex items-center justify-between px-4 pt-3 pb-1.5">
@@ -325,7 +327,7 @@ export default function GlobalSearch() {
               </>
             )}
 
-            {/* ── Loading ── */}
+            {/* â”€â”€ Loading â”€â”€ */}
             {showLoading && (
               <div className="flex items-center justify-center gap-2.5 py-8">
                 <Loader2 className="w-4 h-4 t3 animate-spin" />
@@ -333,10 +335,10 @@ export default function GlobalSearch() {
               </div>
             )}
 
-            {/* ── Empty state ── */}
+            {/* â”€â”€ Empty state â”€â”€ */}
             {showEmpty && (
               <div className="flex flex-col items-center gap-2.5 py-9 px-4 text-center">
-                <div className="w-10 h-10 rounded-2xl bg-[hsl(var(--bg-input))] flex items-center justify-center">
+                <div className="w-10 h-10 rounded-xl bg-[hsl(var(--bg-input))] flex items-center justify-center">
                   <Search className="w-4 h-4 t3 opacity-40" />
                 </div>
                 <p className="text-sm font-semibold t1">{t("search.no_results")}</p>
@@ -344,7 +346,7 @@ export default function GlobalSearch() {
               </div>
             )}
 
-            {/* ── Results ── */}
+            {/* â”€â”€ Results â”€â”€ */}
             {showResults && (
               <>
                 {/* Filter chips + count */}
@@ -412,7 +414,7 @@ export default function GlobalSearch() {
                           result.amountType === "expense" ? "text-rose-400"    : "t2";
                         const amountSign  =
                           result.amountType === "income"  ? "+" :
-                          result.amountType === "expense" ? "−" : "";
+                          result.amountType === "expense" ? "âˆ’" : "";
 
                         return (
                           <motion.button
@@ -458,8 +460,8 @@ export default function GlobalSearch() {
 
                 {/* Footer keyboard hints */}
                 <div className="border-t border-[hsl(var(--border-2))] px-3 py-2 flex items-center justify-between">
-                  <p className="text-[10px] t3">↑↓ {t("search.navigate")} · Enter {t("search.select")} · Esc {t("search.close")}</p>
-                  <p className="text-[10px] t3">⌘K</p>
+                  <p className="text-[10px] t3">â†‘â†“ {t("search.navigate")} Â· Enter {t("search.select")} Â· Esc {t("search.close")}</p>
+                  <p className="text-[10px] t3">âŒ˜K</p>
                 </div>
               </>
             )}
@@ -470,3 +472,4 @@ export default function GlobalSearch() {
     </div>
   );
 }
+

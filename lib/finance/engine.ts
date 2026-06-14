@@ -11,7 +11,7 @@ import {
   sortByDate,
 } from "@/lib/ledger/engine";
 import type { UnifiedLedgerEntry } from "@/lib/ledger/types";
-import type { Account, Investment, Debt, Goal, Subscription, Transaction, WorkSession, WorkPayment } from "@/types";
+import type { Account, AccountType, Investment, Debt, Goal, Subscription, Transaction, WorkSession, WorkPayment } from "@/types";
 
 // ── Real-type converters ───────────────────────────────────────
 
@@ -199,6 +199,14 @@ export interface FinancialSnapshot {
 
   /** Sum of all account balances (initial + transactions) */
   accountsTotal: number;
+  /** Balance grouped by account type — for dashboard summary and net worth breakdown */
+  accountsByType: Record<AccountType, { total: number; accounts: Account[] }>;
+  /**
+   * Net worth using account-based formula:
+   * liquidTotal (cash+bank+savings+wallet) + portfolioValue + debtReceivable - debtPayable
+   * Credit-card accounts are liabilities and reduce net worth automatically (negative balance).
+   */
+  netWorth: number;
 
   /** Raw arrays — single source of truth for all pages */
   transactions: Transaction[];
@@ -356,10 +364,30 @@ export function useFinancialEngine(): FinancialSnapshot {
     [workPayments]
   );
 
-  // ── Accounts total ───────────────────────────────────────────
+  // ── Accounts total & by-type breakdown ──────────────────────
   const accountsTotal = useMemo(
     () => accounts.reduce((s, a) => s + (Number(a.balance) || 0), 0),
     [accounts]
+  );
+
+  const accountsByType = useMemo(() => {
+    const map = {} as Record<AccountType, { total: number; accounts: Account[] }>;
+    for (const a of accounts) {
+      const t = a.type;
+      if (!map[t]) map[t] = { total: 0, accounts: [] };
+      map[t].total    += Number(a.balance) || 0;
+      map[t].accounts.push(a);
+    }
+    return map;
+  }, [accounts]);
+
+  // ── Net Worth (account-based formula) ────────────────────────
+  // Cash + Banks + Savings + Wallets + Investment accounts + Portfolio value
+  // + Receivable debts - Payable debts.
+  // Credit-card accounts have negative balance when in debt → automatically reduces NW.
+  const netWorth = useMemo(
+    () => accountsTotal + portfolioValue + debtReceivable - debtPayable,
+    [accountsTotal, portfolioValue, debtReceivable, debtPayable]
   );
 
   return {
@@ -381,6 +409,8 @@ export function useFinancialEngine(): FinancialSnapshot {
     debtRecoveryRate,
     workIncome,
     accountsTotal,
+    accountsByType,
+    netWorth,
     ledgerEntries,
     transactions,
     debts,
@@ -401,16 +431,21 @@ export function useBalance() {
 }
 
 export function useNetWorth() {
-  const { balance, portfolioValue, debtReceivable, debtPayable, isLoading, isError } =
+  const { netWorth, accountsTotal, portfolioValue, debtReceivable, debtPayable, accountsByType, isLoading, isError } =
     useFinancialEngine();
   return {
-    netWorth: balance + portfolioValue + debtReceivable - debtPayable,
+    netWorth,
+    accountsTotal,
+    portfolioValue,
+    debtReceivable,
+    debtPayable,
+    accountsByType,
     isLoading,
     isError,
   };
 }
 
-export function useLedger() {
-  const { ledgerEntries, isLoading, isError } = useFinancialEngine();
-  return { ledgerEntries, isLoading, isError };
-}
+// NOTE: useLedger is intentionally NOT exported from engine.ts to avoid
+// naming collision with contexts/LedgerContext.tsx.
+// Use useFinancialEngine().ledgerEntries directly for raw engine entries,
+// or import useLedger from @/contexts/LedgerContext for the context-aware version.

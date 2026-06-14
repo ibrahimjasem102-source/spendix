@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React from "react";
 import { AlertTriangle, RefreshCw } from "lucide-react";
@@ -61,7 +61,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
     }
 
     return (
-      <div className="rounded-2xl border border-rose-400/20 bg-rose-400/5 p-4">
+      <div className="rounded-xl border border-rose-400/20 bg-rose-400/5 p-4">
         <div className="flex items-start gap-3">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-rose-400/10">
             <AlertTriangle className="h-4 w-4 text-rose-400" />
@@ -114,3 +114,4 @@ export function PageErrorBoundary({
     </ErrorBoundary>
   );
 }
+

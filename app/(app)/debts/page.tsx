@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -29,6 +29,7 @@ import ConfirmModal from "@/components/ui/ConfirmModal";
 import DebtForm from "@/components/debts/DebtForm";
 import DebtPaymentForm from "@/components/debts/DebtPaymentForm";
 import ContactDetailModal from "@/components/contacts/ContactDetailModal";
+import DebtTimeline from "@/components/debts/DebtTimeline";
 
 type DebtTab = "all" | "payable" | "receivable" | "paid";
 type TFn = (key: string, params?: Record<string, string | number>) => string;
@@ -40,7 +41,7 @@ const STATUS_CFG: Record<DebtStatus, { icon: React.ElementType; color: string; b
   overdue:        { icon: AlertTriangle, color: "text-rose-400",    bar: "#F43F5E", bg: "bg-rose-400/10"    },
 };
 
-// ── DTI Health Ring ────────────────────────────────────────────
+// â”€â”€ DTI Health Ring â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function DTICard({ ratio, t }: { ratio: number; t: TFn }) {
   const pct = Math.min(ratio * 100, 100);
   const color = pct >= 40 ? "#F43F5E" : pct >= 20 ? "#F59E0B" : "#10B981";
@@ -75,7 +76,7 @@ function DTICard({ ratio, t }: { ratio: number; t: TFn }) {
   );
 }
 
-// ── Monthly rate card ──────────────────────────────────────────
+// â”€â”€ Monthly rate card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function MonthlyCard({
   avgPayment, activeDebts, dtiRatio, t, format,
 }: { avgPayment: number; activeDebts: number; dtiRatio: number; t: TFn; format: (n: number) => string }) {
@@ -99,7 +100,7 @@ function MonthlyCard({
   );
 }
 
-// ── Upcoming timeline item ─────────────────────────────────────
+// â”€â”€ Upcoming timeline item â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function TimelineRow({
   name, amount, daysLeft, format, t,
 }: { name: string; amount: number; daysLeft: number; format: (n: number) => string; t: TFn }) {
@@ -124,7 +125,7 @@ function TimelineRow({
   );
 }
 
-// ── Debt trend chart ───────────────────────────────────────────
+// â”€â”€ Debt trend chart â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function TrendChart({
   totalRemaining, avgMonthly, t, locale,
 }: { totalRemaining: number; avgMonthly: number; t: TFn; locale: string }) {
@@ -180,7 +181,7 @@ function TrendChart({
   );
 }
 
-// ── AI Insights ────────────────────────────────────────────────
+// â”€â”€ AI Insights â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function AIPanel({
   debts, totalPaid, totalOriginal, overdueCount, dtiRatio, avgMonthly, t, format,
 }: {
@@ -198,11 +199,11 @@ function AIPanel({
     const activeDebts = debts.filter((d) => d.status !== "paid");
 
     if (activeDebts.length === 0) {
-      return [{ icon: "🎉", text: t("debts.ai_debt_free"), positive: true }];
+      return [{ icon: "ðŸŽ‰", text: t("debts.ai_debt_free"), positive: true }];
     }
 
     if (overdueCount > 0) {
-      list.push({ icon: "⚠️", text: t("debts.ai_overdue", { count: overdueCount }), positive: false });
+      list.push({ icon: "âš ï¸", text: t("debts.ai_overdue", { count: overdueCount }), positive: false });
     }
 
     const totalRemaining = activeDebts.reduce(
@@ -210,11 +211,11 @@ function AIPanel({
     );
     const paidPct = totalOriginal > 0 ? Math.round((totalPaid / totalOriginal) * 100) : 0;
     if (paidPct > 0) {
-      list.push({ icon: "📊", text: t("debts.ai_progress", { pct: paidPct }), positive: paidPct >= 40 });
+      list.push({ icon: "ðŸ“Š", text: t("debts.ai_progress", { pct: paidPct }), positive: paidPct >= 40 });
     }
 
     if (dtiRatio >= 0.3) {
-      list.push({ icon: "📉", text: t("debts.ai_dti_warning", { pct: Math.round(dtiRatio * 100) }), positive: false });
+      list.push({ icon: "ðŸ“‰", text: t("debts.ai_dti_warning", { pct: Math.round(dtiRatio * 100) }), positive: false });
     }
 
     if (avgMonthly > 0 && totalRemaining > 0) {
@@ -223,7 +224,7 @@ function AIPanel({
       const monthsExtra = Math.ceil(totalRemaining / (avgMonthly + extra));
       const saved = monthsNow - monthsExtra;
       if (saved > 0) {
-        list.push({ icon: "💡", text: t("debts.ai_payoff_tip", { amount: format(extra), n: saved }), positive: true });
+        list.push({ icon: "ðŸ’¡", text: t("debts.ai_payoff_tip", { amount: format(extra), n: saved }), positive: true });
       }
     }
 
@@ -237,7 +238,7 @@ function AIPanel({
       const months = share > 0 ? Math.ceil((smallest.remaining_amount ?? 0) / share) : 0;
       if (months > 0 && months <= 6) {
         list.push({
-          icon: "🏆",
+          icon: "ðŸ†",
           text: t("debts.ai_fastest_payoff", { name: smallest.person_or_entity, months }),
           positive: true,
         });
@@ -269,9 +270,9 @@ function AIPanel({
   );
 }
 
-// ══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // Main Page
-// ══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 export default function DebtsPage() {
   const { isGuest }                       = useGuest();
   const { t, formatDate, locale }         = useTranslation();
@@ -301,7 +302,7 @@ export default function DebtsPage() {
     });
   }, []);
 
-  // ── Data ──────────────────────────────────────────────────
+  // â”€â”€ Data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const { data: result, isLoading } = useDebts();
   const debts   = result?.debts   ?? [];
   const summary = result?.summary ?? {
@@ -323,7 +324,7 @@ export default function DebtsPage() {
     setShowForm(true);
   }
 
-  // ── Computed ───────────────────────────────────────────────
+  // â”€â”€ Computed â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const totalOriginal = useMemo(() => debts.reduce((s, d) => s + Number(d.total_amount), 0), [debts]);
   const totalPaid     = useMemo(() => debts.reduce((s, d) => s + Number(d.paid_amount), 0),  [debts]);
   const netPosition   = summary.totalReceivable - summary.totalPayable;
@@ -418,7 +419,7 @@ export default function DebtsPage() {
     return error.message.includes(" ") ? error.message : fallback;
   }
 
-  // ── Handlers ──────────────────────────────────────────────
+  // â”€â”€ Handlers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   async function handleSubmit(data: DebtFormData) {
     try {
       if (editing) {
@@ -475,14 +476,14 @@ export default function DebtsPage() {
     }
   }
 
-  // ── Render ─────────────────────────────────────────────────
+  // â”€â”€ Render â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   return (
     <div className="space-y-5">
 
-      {/* ── Header ──────────────────────────────────────── */}
+      {/* â”€â”€ Header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2.5">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-orange-400/10">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-orange-400/10">
             <CreditCard className="h-4 w-4 text-orange-400" />
           </div>
           <div className="min-w-0">
@@ -504,7 +505,7 @@ export default function DebtsPage() {
 
       <section className="card overflow-hidden">
         <div className="flex items-start gap-3 px-4 py-4">
-          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-cyan-400/10 text-cyan-300">
+          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-cyan-400/10 text-cyan-300">
             <CreditCard className="h-[18px] w-[18px]" />
           </div>
           <div className="min-w-0 flex-1">
@@ -514,7 +515,7 @@ export default function DebtsPage() {
         </div>
       </section>
 
-      {/* ── Summary Hero ─────────────────────────────────── */}
+      {/* â”€â”€ Summary Hero â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       {!isLoading && debts.length > 0 && (
         <div
           className="relative rounded-[1.5rem] overflow-hidden p-5"
@@ -564,7 +565,7 @@ export default function DebtsPage() {
         </div>
       )}
 
-      {/* ── Health + Monthly ──────────────────────────────── */}
+      {/* â”€â”€ Health + Monthly â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       {!isLoading && debts.length > 0 && (
         <div className="grid grid-cols-2 gap-3">
           <DTICard ratio={dtiRatio} t={t} />
@@ -572,7 +573,7 @@ export default function DebtsPage() {
         </div>
       )}
 
-      {/* ── Tabs ─────────────────────────────────────────── */}
+      {/* â”€â”€ Tabs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <div className="flex gap-1 overflow-x-auto pb-0.5 tabs-row">
         {TABS.map((tb) => (
           <button
@@ -590,7 +591,7 @@ export default function DebtsPage() {
         ))}
       </div>
 
-      {/* ── Search ───────────────────────────────────────── */}
+      {/* â”€â”€ Search â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <div className="relative">
         <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 t3 pointer-events-none" />
         <input
@@ -602,7 +603,7 @@ export default function DebtsPage() {
         />
       </div>
 
-      {/* ── Debt Cards ───────────────────────────────────── */}
+      {/* â”€â”€ Debt Cards â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       {isLoading ? (
         <div className="space-y-2">
           {[1, 2, 3].map((n) => (
@@ -675,7 +676,7 @@ export default function DebtsPage() {
                       </span>
                       {debt.debt_type === "receivable" && (
                         <span className="text-[9px] px-1.5 py-0.5 rounded font-bold shrink-0 bg-emerald-400/10 text-emerald-400">
-                          ↑
+                          â†‘
                         </span>
                       )}
                     </div>
@@ -735,7 +736,7 @@ export default function DebtsPage() {
                           >
                             <User className="w-3 h-3" />
                             {debt.contact.name}
-                            <span className="t3">· {t(`contacts.types.${debt.contact.type}`)}</span>
+                            <span className="t3">Â· {t(`contacts.types.${debt.contact.type}`)}</span>
                           </button>
                         )}
 
@@ -755,52 +756,21 @@ export default function DebtsPage() {
                         {/* Notes */}
                         {debt.notes && <p className="text-xs t3 italic">{debt.notes}</p>}
 
-                        {/* Payment history */}
-                        {(debt.payments ?? []).length > 0 && (
-                          <div>
-                            <div className="flex items-center gap-1.5 mb-2">
-                              <Receipt className="w-3 h-3 t3" />
-                              <p className="text-[10px] font-bold t3 uppercase tracking-wide">
-                                {t("debts.payment_history")} ({debt.payments!.length})
-                              </p>
-                            </div>
-                            <div
-                              className="rounded-xl overflow-hidden"
-                              style={{ border: "1px solid hsl(var(--border-2))" }}
-                            >
-                              {debt.payments!.map((pmt, idx) => (
-                                <div
-                                  key={pmt.id}
-                                  className={`flex items-center gap-3 px-3 py-2.5 ${
-                                    idx < debt.payments!.length - 1
-                                      ? "border-b border-[hsl(var(--border-2))]"
-                                      : ""
-                                  }`}
-                                >
-                                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
-                                  <div className="flex-1 min-w-0">
-                                    <p className="text-[10px] t3">
-                                      {new Date(`${pmt.payment_date}T00:00:00`).toLocaleDateString(
-                                        locale === "ar" ? "ar" : locale === "de" ? "de-DE" : "en-US",
-                                        { day: "numeric", month: "short", year: "numeric" },
-                                      )}
-                                    </p>
-                                    {pmt.notes && (
-                                      <p className="text-[10px] t3 italic truncate mt-0.5">{pmt.notes}</p>
-                                    )}
-                                  </div>
-                                  <span
-                                    className={`text-xs font-bold shrink-0 tabular-nums ${
-                                      debt.debt_type === "receivable" ? "text-emerald-400" : "text-rose-400"
-                                    }`}
-                                  >
-                                    {debt.debt_type === "receivable" ? "+" : "-"}{format(Number(pmt.amount))}
-                                  </span>
-                                </div>
-                              ))}
-                            </div>
+                        {/* Debt Timeline */}
+                        <div>
+                          <div className="flex items-center gap-1.5 mb-3">
+                            <Receipt className="w-3 h-3 t3" />
+                            <p className="text-[10px] font-bold t3 uppercase tracking-wide">
+                              {t("debts.timeline")}
+                            </p>
                           </div>
-                        )}
+                          <DebtTimeline
+                            debt={debt}
+                            format={format}
+                            locale={locale}
+                            isReceivable={debt.debt_type === "receivable"}
+                          />
+                        </div>
 
                         {/* Action buttons */}
                         <div className="flex items-center gap-2 pt-1">
@@ -851,7 +821,7 @@ export default function DebtsPage() {
         </div>
       )}
 
-      {/* ── Upcoming Payments Timeline ────────────────────── */}
+      {/* â”€â”€ Upcoming Payments Timeline â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       {!isLoading && upcoming.length > 0 && (
         <div className="card p-4">
           <div className="flex items-center gap-2 mb-1">
@@ -872,7 +842,7 @@ export default function DebtsPage() {
         </div>
       )}
 
-      {/* ── Debt Reduction Trend ─────────────────────────── */}
+      {/* â”€â”€ Debt Reduction Trend â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       {!isLoading && (summary.totalPayable + summary.totalReceivable) > 0 && (
         <TrendChart
           totalRemaining={summary.totalPayable + summary.totalReceivable}
@@ -882,7 +852,7 @@ export default function DebtsPage() {
         />
       )}
 
-      {/* ── AI Insights ──────────────────────────────────── */}
+      {/* â”€â”€ AI Insights â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       {!isLoading && debts.length > 0 && (
         <AIPanel
           debts={debts}
@@ -896,7 +866,7 @@ export default function DebtsPage() {
         />
       )}
 
-      {/* ── Modals ───────────────────────────────────────── */}
+      {/* â”€â”€ Modals â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       {showForm && (
         <DebtForm
           initial={editing}
@@ -927,3 +897,4 @@ export default function DebtsPage() {
     </div>
   );
 }
+

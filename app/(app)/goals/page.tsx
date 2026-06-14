@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
@@ -22,7 +22,7 @@ import SheetDragHandle from "@/components/ui/SheetDragHandle";
 import GoalMilestonesProgress from "@/components/goals/GoalMilestonesProgress";
 import type { Goal, GoalCategory, GoalFormData, GoalMilestone, GoalTrackingType, GoalStatus } from "@/types";
 
-// ── Constants ─────────────────────────────────────────────────
+// â”€â”€ Constants â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const GOAL_CATEGORIES: GoalCategory[]   = ["emergency","home","travel","education","car","retirement","other"];
 const TRACKING_TYPES: GoalTrackingType[] = ["manual","income","investment","debt_payoff"];
@@ -66,7 +66,7 @@ const COLORS = ["#F59E0B","#3B82F6","#8B5CF6","#10B981","#06B6D4","#F97316","#EF
 function todayStr() { return new Date().toISOString().slice(0, 10); }
 function clamp(v: number) { return Math.max(0, Math.min(100, Math.round(v))); }
 
-// ── Goal form modal ───────────────────────────────────────────
+// â”€â”€ Goal form modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 interface MilestoneRow {
   id: string;
@@ -192,7 +192,7 @@ function GoalFormModal({ initial, onClose, onSubmit, debts, saving, saveError }:
           overflow: "hidden",
         }}
       >
-        {/* Drag handle — mobile only */}
+        {/* Drag handle â€” mobile only */}
         <div className="flex justify-center pt-3 pb-1 sm:hidden shrink-0">
           <SheetDragHandle onClose={onClose} disabled={saving} />
         </div>
@@ -211,18 +211,18 @@ function GoalFormModal({ initial, onClose, onSubmit, debts, saving, saveError }:
         {/* Scrollable body */}
         <div className="overflow-y-auto flex-1 p-5 space-y-4 overscroll-contain">
 
-          <div className="rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--bg-input))]/50 p-4">
+          <div className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--bg-input))]/50 p-4">
             <label className="mb-2 block text-xs font-semibold uppercase tracking-wide t2">{t("goals.title_field")}</label>
             <input className="field"
               placeholder={t("goals.title_placeholder")} value={form.title}
               onChange={(e) => set("title", e.target.value)} />
           </div>
 
-          <div className="rounded-2xl border p-4" style={{ borderColor: `${CAT[form.category].ring}30`, backgroundColor: `${CAT[form.category].ring}08` }}>
+          <div className="rounded-xl border p-4" style={{ borderColor: `${CAT[form.category].ring}30`, backgroundColor: `${CAT[form.category].ring}08` }}>
             <div>
               <label className="mb-2 block text-xs font-semibold uppercase tracking-wide t2">{t("goals.target_amount")}</label>
               <input type="number" min="0" step="1"
-                className="w-full rounded-2xl border bg-[hsl(var(--bg-card))] px-4 py-4 text-3xl font-black number-display focus:outline-none"
+                className="w-full rounded-xl border bg-[hsl(var(--bg-card))] px-4 py-4 text-3xl font-black number-display focus:outline-none"
                 style={{ borderColor: form.target_amount ? `${CAT[form.category].ring}55` : "hsl(var(--border))", color: form.target_amount ? CAT[form.category].ring : undefined }}
                 value={form.target_amount} onChange={(e) => set("target_amount", e.target.value)} />
             </div>
@@ -242,7 +242,7 @@ function GoalFormModal({ initial, onClose, onSubmit, debts, saving, saveError }:
                 const cfg = CAT[cat]; const Icon = cfg.icon;
                 return (
                   <button key={cat} type="button" onClick={() => set("category", cat)}
-                    className={`min-h-[68px] flex flex-col items-center justify-center gap-1.5 rounded-2xl px-2 py-2 text-[10px] font-bold border transition-all ${
+                    className={`min-h-[68px] flex flex-col items-center justify-center gap-1.5 rounded-xl px-2 py-2 text-[10px] font-bold border transition-all ${
                       form.category === cat ? `${cfg.bg} ${cfg.color} border-current` : "bg-[hsl(var(--bg-input))] t3 border-[hsl(var(--border))]"
                     }`}>
                     <Icon size={12} />{t(`goals.categories.${cat}`)}
@@ -284,7 +284,7 @@ function GoalFormModal({ initial, onClose, onSubmit, debts, saving, saveError }:
               <label className="mb-2 block text-xs font-semibold uppercase tracking-wide t2">{t("goals.linked_debt")}</label>
               <select className="field"
                 value={form.linked_debt_id} onChange={(e) => set("linked_debt_id", e.target.value)}>
-                <option value="">— select —</option>
+                <option value="">â€” select â€”</option>
                 {debts.map((d) => <option key={d.id} value={d.id}>{d.person_or_entity}</option>)}
               </select>
             </div>
@@ -299,7 +299,7 @@ function GoalFormModal({ initial, onClose, onSubmit, debts, saving, saveError }:
             </div>
           )}
 
-          {/* ── Milestones / Phases ── */}
+          {/* â”€â”€ Milestones / Phases â”€â”€ */}
           <div>
             <div className="flex items-center justify-between mb-2">
               <label className="text-xs font-semibold uppercase tracking-wide t2 flex items-center gap-1.5">
@@ -410,7 +410,7 @@ function GoalFormModal({ initial, onClose, onSubmit, debts, saving, saveError }:
   );
 }
 
-// ── Contribute modal ──────────────────────────────────────────
+// â”€â”€ Contribute modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function ContributeModal({ goal, onClose, onSubmit, format }: {
   goal: Goal;
@@ -491,7 +491,7 @@ function ContributeModal({ goal, onClose, onSubmit, format }: {
   );
 }
 
-// ── Section header ────────────────────────────────────────────
+// â”€â”€ Section header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function SectionHeader({ title, href }: { title: string; href?: string }) {
   const { t } = useTranslation();
@@ -508,7 +508,7 @@ function SectionHeader({ title, href }: { title: string; href?: string }) {
   );
 }
 
-// ── Goal row (compact) ────────────────────────────────────────
+// â”€â”€ Goal row (compact) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function GoalRow({ goal, onEdit, onDelete, onContribute, format, t, dir }: {
   goal: Goal;
@@ -614,9 +614,9 @@ function GoalRow({ goal, onEdit, onDelete, onContribute, format, t, dir }: {
   );
 }
 
-// ── Savings pot row ───────────────────────────────────────────
+// â”€â”€ Savings pot row â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-// ── Forecast row ──────────────────────────────────────────────
+// â”€â”€ Forecast row â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function ForecastRow({ goal, format, t }: {
   goal: Goal;
@@ -654,7 +654,7 @@ function ForecastRow({ goal, format, t }: {
   );
 }
 
-// ── Main page ─────────────────────────────────────────────────
+// â”€â”€ Main page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export default function GoalsPage() {
   const { t, dir } = useTranslation();
@@ -680,7 +680,7 @@ export default function GoalsPage() {
     [debts],
   );
 
-  // Last completed savings-type goal date — for auto-chain banner
+  // Last completed savings-type goal date â€” for auto-chain banner
   const summary = useMemo(() => {
     const active          = goals.filter((g) => g.status !== "completed");
     const totalTarget     = goals.reduce((s, g) => s + g.target_amount, 0);
@@ -727,9 +727,9 @@ export default function GoalsPage() {
   return (
     <div className="space-y-5">
 
-      {/* ── Header ──────────────────────────────────────── */}
+      {/* â”€â”€ Header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <div className="flex min-w-0 items-center gap-2.5">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-indigo-400/10">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-400/10">
           <Target className="h-4 w-4 text-indigo-400" />
         </div>
         <div className="min-w-0 flex-1">
@@ -738,14 +738,14 @@ export default function GoalsPage() {
         </div>
         <button
           onClick={() => { setEditing(undefined); setShowForm(true); }}
-          className="flex shrink-0 items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-[#0B0F17] rounded-xl text-sm font-semibold transition-all"
+          className="flex shrink-0 items-center gap-2 px-4 py-2 bg-cyan-500 hover:bg-cyan-400 text-[#0B0F17] rounded-xl text-sm font-semibold transition-colors"
         >
           <Plus className="w-3.5 h-3.5" />
           {t("goals.new_goal")}
         </button>
       </div>
 
-      {/* ── Overall banner ───────────────────────────────── */}
+      {/* â”€â”€ Overall banner â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       {goals.length > 0 && (
         <div
           className="relative overflow-hidden rounded-[1.5rem] border border-[hsl(var(--border))] p-5"
@@ -786,7 +786,7 @@ export default function GoalsPage() {
         </div>
       )}
 
-      {/* ── Goals section ────────────────────────────────── */}
+      {/* â”€â”€ Goals section â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <section>
         <SectionHeader title={t("goals.title")} />
         {isLoading ? (
@@ -804,14 +804,14 @@ export default function GoalsPage() {
           </div>
         ) : goals.length === 0 ? (
           <div className="card py-12 text-center space-y-3">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-400/10">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-amber-400/10">
               <Target className="h-5 w-5 text-amber-400" />
             </div>
             <p className="font-bold t1 text-sm">{t("goals.empty_title")}</p>
             <p className="text-xs t3 max-w-xs mx-auto">{t("goals.empty_body")}</p>
             <button
               onClick={() => { setEditing(undefined); setShowForm(true); }}
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-[#0B0F17] rounded-xl text-sm font-semibold transition-all"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-cyan-500 hover:bg-cyan-400 text-[#0B0F17] rounded-xl text-sm font-semibold transition-colors"
             >
               <Plus className="w-4 h-4" />
               {t("goals.new_goal")}
@@ -837,8 +837,8 @@ export default function GoalsPage() {
         )}
       </section>
 
-      {/* ── Savings section ──────────────────────────────── */}
-      {/* ── Forecast section ─────────────────────────────── */}
+      {/* â”€â”€ Savings section â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* â”€â”€ Forecast section â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       {forecastGoals.length > 0 && (
         <section>
           <SectionHeader title={t("goals.forecast_title")} />
@@ -850,7 +850,7 @@ export default function GoalsPage() {
         </section>
       )}
 
-      {/* ── Modals ───────────────────────────────────────── */}
+      {/* â”€â”€ Modals â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <AnimatePresence>
         {showForm && (
           <GoalFormModal
@@ -885,3 +885,4 @@ export default function GoalsPage() {
     </div>
   );
 }
+

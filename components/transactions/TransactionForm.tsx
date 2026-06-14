@@ -1,9 +1,9 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ArrowDownRight, ArrowUpRight, Check, ChevronLeft, ChevronRight, Banknote, Building2, CreditCard, Wallet, PiggyBank, Hash, Bookmark, Trash2 } from "lucide-react";
+import { FormShell, FormFooter } from "@/components/ui/FormShell";
+import { X, ArrowDownRight, ArrowUpRight, Check, ChevronLeft, ChevronRight, Banknote, Building2, CreditCard, Wallet, PiggyBank, TrendingUp, Hash, Bookmark, Trash2 } from "lucide-react";
 import { Account, AccountType, Category, FinancialContact, Tag, Transaction, TransactionFormData, TransactionType } from "@/types";
 import { useTranslation } from "@/lib/i18n";
 import { useCurrency } from "@/lib/currency";
@@ -22,10 +22,10 @@ import {
 import { saveDraft, loadDraft, clearDraft } from "@/lib/form-draft";
 
 const ACCOUNT_ICONS: Record<AccountType, React.ElementType> = {
-  cash: Banknote, bank: Building2, credit_card: CreditCard, wallet: Wallet, savings: PiggyBank,
+  cash: Banknote, bank: Building2, credit_card: CreditCard, wallet: Wallet, savings: PiggyBank, investment: TrendingUp,
 };
 const ACCOUNT_COLORS: Record<AccountType, string> = {
-  cash: "#10B981", bank: "#3B82F6", credit_card: "#8B5CF6", wallet: "#F59E0B", savings: "#06B6D4",
+  cash: "#10B981", bank: "#3B82F6", credit_card: "#8B5CF6", wallet: "#F59E0B", savings: "#06B6D4", investment: "#6366F1",
 };
 
 interface Props {
@@ -50,7 +50,7 @@ function isOtherCategory(category: Category) {
   return category.icon === "MoreHorizontal" ||
     category.id.toLowerCase().includes("other") ||
     category.name.toLowerCase().includes("other") ||
-    category.name.includes("أخرى");
+    category.name.includes("Ø£Ø®Ø±Ù‰");
 }
 
 function sectionForType(type: TransactionType): CategorySection {
@@ -287,8 +287,8 @@ export default function TransactionForm({ initial, initialType, onSubmit, onClos
   const filtered = categories
     .filter((c) => c.type === type)
     .sort((a, b) => {
-      const aOther = /other/i.test(a.name) || a.name.includes("أخرى");
-      const bOther = /other/i.test(b.name) || b.name.includes("أخرى");
+      const aOther = /other/i.test(a.name) || a.name.includes("Ø£Ø®Ø±Ù‰");
+      const bOther = /other/i.test(b.name) || b.name.includes("Ø£Ø®Ø±Ù‰");
       if (aOther && !bOther) return 1;
       if (!aOther && bOther) return -1;
       return 0;
@@ -313,29 +313,9 @@ export default function TransactionForm({ initial, initialType, onSubmit, onClos
 
   if (typeof document === "undefined") return null;
 
-  return createPortal(
-    <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
-      style={{
-        backgroundColor: "rgba(11,15,20,0.72)",
-        backdropFilter: "blur(8px)",
-        WebkitBackdropFilter: "blur(8px)",
-      }}
-      onClick={(e) => e.target === e.currentTarget && onClose()}
-    >
-      <motion.div
-        initial={{ y: 80, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        exit={{ y: 80, opacity: 0 }}
-        transition={{ ...spring }}
-        className="relative w-full sm:max-w-md rounded-t-[2rem] sm:rounded-[1.75rem] overflow-hidden flex flex-col"
-        style={{
-          backgroundColor: "hsl(var(--bg-card))",
-          border: "1px solid hsl(var(--border))",
-          maxHeight: "92dvh",
-        }}
-      >
-        {/* ── Header: drag handle + type toggle ────────── */}
+  return (
+    <FormShell onClose={onClose} maxWidth="sm:max-w-md">
+        {/* â”€â”€ Header: drag handle + type toggle â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <div className="shrink-0 px-5 pt-4 pb-3" style={{ background: `${accent}0D` }}>
           {/* Drag handle */}
           <div className="mb-1 sm:hidden">
@@ -347,7 +327,7 @@ export default function TransactionForm({ initial, initialType, onSubmit, onClos
               <p className="text-xs font-bold t3 uppercase tracking-widest">
                 {isEdit ? t("transactions.edit") : t("transactions.new")}
               </p>
-              {/* Templates button — only for new transactions */}
+              {/* Templates button â€” only for new transactions */}
               {!isEdit && templates.length > 0 && (
                 <button
                   type="button"
@@ -357,7 +337,7 @@ export default function TransactionForm({ initial, initialType, onSubmit, onClos
                   }`}
                 >
                   <Bookmark className="w-3 h-3" />
-                  {t("templates.label") || "قوالب"}
+                  {t("templates.label") || "Ù‚ÙˆØ§Ù„Ø¨"}
                 </button>
               )}
             </div>
@@ -368,7 +348,7 @@ export default function TransactionForm({ initial, initialType, onSubmit, onClos
           </div>
 
           {/* Type toggle */}
-          <div className="flex gap-1 bg-black/12 rounded-2xl p-1">
+          <div className="flex gap-1 bg-black/12 rounded-xl p-1">
             {(["expense", "income"] as const).map((item) => {
               const isActive = type === item;
               const col = item === "expense" ? "#F43F5E" : "#10B981";
@@ -393,14 +373,14 @@ export default function TransactionForm({ initial, initialType, onSubmit, onClos
             })}
           </div>
 
-          {/* ── Draft indicator ─────────────────────────── */}
+          {/* â”€â”€ Draft indicator â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
           {hasSavedDraft && (
             <p className="text-[9px] text-cyan-400/70 text-center mt-1">
-              {t("transactions.draft_restored") || "✓ تم استعادة المسودة المحفوظة"}
+              {t("transactions.draft_restored") || "âœ“ ØªÙ… Ø§Ø³ØªØ¹Ø§Ø¯Ø© Ø§Ù„Ù…Ø³ÙˆØ¯Ø© Ø§Ù„Ù…Ø­ÙÙˆØ¸Ø©"}
             </p>
           )}
 
-          {/* ── Templates list ───────────────────────────── */}
+          {/* â”€â”€ Templates list â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
           <AnimatePresence>
             {showTemplates && templates.length > 0 && (
               <motion.div
@@ -408,7 +388,7 @@ export default function TransactionForm({ initial, initialType, onSubmit, onClos
                 exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.18 }}
                 className="overflow-hidden mt-3"
               >
-                <p className="text-[9px] font-bold t3 uppercase tracking-wide mb-1.5">{t("templates.recent") || "القوالب الأخيرة"}</p>
+                <p className="text-[9px] font-bold t3 uppercase tracking-wide mb-1.5">{t("templates.recent") || "Ø§Ù„Ù‚ÙˆØ§Ù„Ø¨ Ø§Ù„Ø£Ø®ÙŠØ±Ø©"}</p>
                 <div className="space-y-1 max-h-[140px] overflow-y-auto">
                   {templates.map((tmpl) => (
                     <div key={tmpl.id} className="flex items-center gap-2 group">
@@ -441,7 +421,7 @@ export default function TransactionForm({ initial, initialType, onSubmit, onClos
             )}
           </AnimatePresence>
 
-          {/* ── Amount — PINNED, always visible ──────────── */}
+          {/* â”€â”€ Amount â€” PINNED, always visible â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
           <div className="mt-4 pb-4 border-b border-[hsl(var(--border-2))] text-center">
             <div className="relative flex items-center justify-center gap-2">
               <span className="text-xl font-bold t3 select-none">{symbol}</span>
@@ -476,11 +456,11 @@ export default function TransactionForm({ initial, initialType, onSubmit, onClos
           </div>
         </div>
 
-        {/* ── Scrollable body ───────────────────────────── */}
+        {/* â”€â”€ Scrollable body â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <form onSubmit={handleSubmit} className="flex-1 min-h-0 flex flex-col">
           <div className="flex-1 overflow-y-auto px-5 py-5 space-y-5">
 
-            {/* ── Title ─────────────────────────────────── */}
+            {/* â”€â”€ Title â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
             <div>
               <label className="block text-[10px] font-semibold t3 uppercase tracking-[0.12em] mb-2">
                 {t("transactions.title_field")}
@@ -494,7 +474,7 @@ export default function TransactionForm({ initial, initialType, onSubmit, onClos
               />
             </div>
 
-            {/* ── Category (horizontal scroll) ──────────── */}
+            {/* â”€â”€ Category (horizontal scroll) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
             {filtered.length > 0 && (
               <div>
                 <div className="flex items-center justify-between mb-2">
@@ -520,13 +500,13 @@ export default function TransactionForm({ initial, initialType, onSubmit, onClos
                 >
                   {/* No category */}
                   <button type="button" onClick={() => set("category_id", null)}
-                    className={`flex-none flex flex-col items-center gap-1.5 px-3 py-2.5 rounded-2xl border transition-all min-w-[64px] ${
+                    className={`flex-none flex flex-col items-center gap-1.5 px-3 py-2.5 rounded-xl border transition-all min-w-[64px] ${
                       !form.category_id
                         ? `${accentBg} ${accentBorder} border-[1.5px]`
                         : "bg-[hsl(var(--bg-input))] border-[hsl(var(--border))]"
                     }`}>
                     <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-[hsl(var(--bg-card-2))]">
-                      <span className="text-base t3">—</span>
+                      <span className="text-base t3">â€”</span>
                     </div>
                     <span className="text-[9px] font-semibold t3 whitespace-nowrap">{t("transactions.uncategorized")}</span>
                   </button>
@@ -544,7 +524,7 @@ export default function TransactionForm({ initial, initialType, onSubmit, onClos
                           }
                           set("category_id", cat.id);
                         }}
-                        className="flex-none flex flex-col items-center gap-1.5 px-3 py-2.5 rounded-2xl border transition-all min-w-[64px] relative"
+                        className="flex-none flex flex-col items-center gap-1.5 px-3 py-2.5 rounded-xl border transition-all min-w-[64px] relative"
                         style={isSelected ? {
                           backgroundColor: `${cat.color}14`,
                           borderColor: `${cat.color}45`,
@@ -571,7 +551,7 @@ export default function TransactionForm({ initial, initialType, onSubmit, onClos
               </div>
             )}
 
-            {/* ── Account ───────────────────────────────── */}
+            {/* â”€â”€ Account â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
             {accounts.length > 0 && (
               <div>
                 <div className="flex items-center justify-between mb-2">
@@ -596,13 +576,13 @@ export default function TransactionForm({ initial, initialType, onSubmit, onClos
                 >
                   {/* No account */}
                   <button type="button" onClick={() => set("account_id", null)}
-                    className={`flex-none flex flex-col items-center gap-1.5 px-3 py-2.5 rounded-2xl border transition-all min-w-[64px] ${
+                    className={`flex-none flex flex-col items-center gap-1.5 px-3 py-2.5 rounded-xl border transition-all min-w-[64px] ${
                       !form.account_id
                         ? `${accentBg} ${accentBorder} border-[1.5px]`
                         : "bg-[hsl(var(--bg-input))] border-[hsl(var(--border))]"
                     }`}>
                     <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-[hsl(var(--bg-card-2))]">
-                      <span className="text-base t3">—</span>
+                      <span className="text-base t3">â€”</span>
                     </div>
                     <span className="text-[9px] font-semibold t3 whitespace-nowrap">{t("transactions.no_account")}</span>
                   </button>
@@ -612,7 +592,7 @@ export default function TransactionForm({ initial, initialType, onSubmit, onClos
                     const Icon = ACCOUNT_ICONS[acc.type] ?? Wallet;
                     return (
                       <button key={acc.id} type="button" onClick={() => set("account_id", acc.id)}
-                        className="flex-none flex flex-col items-center gap-1.5 px-3 py-2.5 rounded-2xl border transition-all min-w-[64px] relative"
+                        className="flex-none flex flex-col items-center gap-1.5 px-3 py-2.5 rounded-xl border transition-all min-w-[64px] relative"
                         style={isSelected ? {
                           backgroundColor: `${color}14`,
                           borderColor: `${color}45`,
@@ -643,7 +623,7 @@ export default function TransactionForm({ initial, initialType, onSubmit, onClos
               </div>
             )}
 
-            {/* ── Date ──────────────────────────────────── */}
+            {/* â”€â”€ Date â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
             <div>
               <label className="block text-[10px] font-semibold t3 uppercase tracking-[0.12em] mb-2">
                 {t("transactions.date")}
@@ -672,7 +652,7 @@ export default function TransactionForm({ initial, initialType, onSubmit, onClos
               </div>
             </div>
 
-            {/* ── Notes ─────────────────────────────────── */}
+            {/* â”€â”€ Notes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
             <div>
               <label className="block text-[10px] font-semibold t3 uppercase tracking-[0.12em] mb-2">
                 {t("transactions.notes")}{" "}
@@ -687,7 +667,7 @@ export default function TransactionForm({ initial, initialType, onSubmit, onClos
               />
             </div>
 
-            {/* ── Contact ───────────────────────────────── */}
+            {/* â”€â”€ Contact â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
             {contactsReady && !isGuest && (
               <ContactSelector
                 value={form.contact_id ?? null}
@@ -697,7 +677,7 @@ export default function TransactionForm({ initial, initialType, onSubmit, onClos
               />
             )}
 
-            {/* ── Tags ──────────────────────────────────── */}
+            {/* â”€â”€ Tags â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
             {allTags.length > 0 && (
               <div>
                 <label className="block text-[10px] font-semibold t3 uppercase tracking-[0.12em] mb-2">
@@ -730,7 +710,7 @@ export default function TransactionForm({ initial, initialType, onSubmit, onClos
               </div>
             )}
 
-            {/* ── Save as template ──────────────────────── */}
+            {/* â”€â”€ Save as template â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
             {!isEdit && form.title.trim() && form.amount > 0 && (
               <motion.button
                 type="button"
@@ -743,11 +723,11 @@ export default function TransactionForm({ initial, initialType, onSubmit, onClos
                 }`}
               >
                 {savedTemplate ? <Check className="w-3.5 h-3.5" /> : <Bookmark className="w-3.5 h-3.5" />}
-                {savedTemplate ? (t("templates.saved") || "تم الحفظ") : (t("templates.save_as") || "حفظ كقالب")}
+                {savedTemplate ? (t("templates.saved") || "ØªÙ… Ø§Ù„Ø­ÙØ¸") : (t("templates.save_as") || "Ø­ÙØ¸ ÙƒÙ‚Ø§Ù„Ø¨")}
               </motion.button>
             )}
 
-            {/* ── Error ─────────────────────────────────── */}
+            {/* â”€â”€ Error â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
             <AnimatePresence>
               {error && (
                 <motion.p
@@ -761,14 +741,13 @@ export default function TransactionForm({ initial, initialType, onSubmit, onClos
 
           </div>
 
-          {/* ── Submit ────────────────────────────────────── */}
-          <div className="shrink-0 px-5 pt-2"
-            style={{ paddingBottom: "max(20px, calc(env(safe-area-inset-bottom, 0px) + 12px))" }}>
+          {/* â”€â”€ Submit â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+          <FormFooter>
             <motion.button
               type="submit"
               disabled={loading || form.amount <= 0}
               whileTap={{ scale: 0.97 }} transition={tapTransition}
-              className="w-full py-4 rounded-2xl text-sm font-bold text-white transition-all disabled:opacity-40 relative overflow-hidden"
+              className="w-full py-4 rounded-xl text-sm font-bold text-white transition-all disabled:opacity-40 relative overflow-hidden"
               style={{
                 background: `linear-gradient(135deg, ${accent} 0%, ${isExpense ? "#BE123C" : "#047857"} 100%)`,
                 boxShadow: `0 4px 20px ${accent}35`,
@@ -793,7 +772,7 @@ export default function TransactionForm({ initial, initialType, onSubmit, onClos
                 )}
               </AnimatePresence>
             </motion.button>
-          </div>
+          </FormFooter>
         </form>
 
         <AnimatePresence>
@@ -873,7 +852,7 @@ export default function TransactionForm({ initial, initialType, onSubmit, onClos
                   <button
                     type="submit"
                     disabled={createCategory.isPending}
-                    className="w-full rounded-2xl py-3 text-sm font-bold text-white disabled:opacity-50"
+                    className="w-full rounded-xl py-3 text-sm font-bold text-white disabled:opacity-50"
                     style={{ backgroundColor: newCategory.color }}
                   >
                     {t("categories.create_and_select")}
@@ -883,8 +862,7 @@ export default function TransactionForm({ initial, initialType, onSubmit, onClos
             </motion.div>
           )}
         </AnimatePresence>
-      </motion.div>
-    </div>,
-    document.body
+    </FormShell>
   );
 }
+

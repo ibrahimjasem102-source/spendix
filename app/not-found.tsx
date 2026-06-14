@@ -7,47 +7,22 @@ export default function NotFound() {
   return (
     <div
       className="min-h-screen flex items-center justify-center px-4"
-      style={{ background: "radial-gradient(ellipse 80% 60% at 50% 0%, hsl(214 60% 8%) 0%, hsl(214 28% 5%) 100%)" }}
+      style={{ background: "hsl(216 30% 7%)" }}
     >
-      {/* Glow */}
-      <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] opacity-10 blur-3xl rounded-full"
-          style={{ background: "radial-gradient(ellipse, #06B6D4 0%, #7C3AED 60%, transparent 100%)" }}
-        />
-      </div>
-
       <div className="text-center relative z-10 space-y-8">
         {/* Logo */}
         <div className="flex justify-center">
-          <div className="relative">
-            <div
-              className="w-16 h-16 rounded-2xl flex items-center justify-center"
-              style={{ background: "linear-gradient(135deg, #06B6D4, #7C3AED)" }}
-            >
-              <Wallet className="w-8 h-8 text-white" />
-            </div>
-            <div
-              className="absolute -inset-1 rounded-2xl opacity-30 blur-xl"
-              style={{ background: "linear-gradient(135deg, #06B6D4, #7C3AED)" }}
-            />
+          <div className="w-16 h-16 rounded-xl flex items-center justify-center bg-cyan-500">
+            <Wallet className="w-8 h-8 text-white" />
           </div>
         </div>
 
         {/* 404 number */}
         <div>
-          <p
-            className="text-9xl font-black leading-none"
-            style={{
-              background: "linear-gradient(135deg, #06B6D4, #7C3AED)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              backgroundClip: "text",
-            }}
-          >
+          <p className="text-9xl font-black leading-none text-cyan-400">
             404
           </p>
-          <p className="text-2xl font-bold text-white mt-3">الصفحة غير موجودة</p>
+          <p className="text-2xl font-bold text-[hsl(210_20%_94%)] mt-3">الصفحة غير موجودة</p>
           <p className="text-sm mt-1" style={{ color: "hsl(215 18% 45%)" }}>
             Page Not Found
           </p>
@@ -62,8 +37,8 @@ export default function NotFound() {
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
           <Link
             href="/dashboard"
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-white transition-opacity hover:opacity-90"
-            style={{ background: "linear-gradient(135deg, #06B6D4, #7C3AED)" }}
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[#0D1117] transition-colors hover:bg-cyan-400"
+            style={{ background: "#06B6D4" }}
           >
             <Home className="w-4 h-4" />
             العودة للرئيسية

@@ -13,7 +13,9 @@
     "sign_in": "Se connecter",
     "sign_out": "Se déconnecter",
     "collapse": "Réduire",
-    "plans": "Mon Plan"
+    "plans": "Mon Plan",
+    "family": "Famille",
+    "diagnostic": "Diagnostic"
   },
   "common": {
     "save": "Enregistrer",
@@ -109,7 +111,11 @@
       "paid": "Payé",
       "pending": "En attente",
       "overdue": "En retard"
-    }
+    },
+    "contact_required": "Veuillez sélectionner un contact",
+    "select_contact": "Contact",
+    "no_contacts_hint": "Aucun contact — créez-en un",
+    "timeline": "Chronologie"
   },
   "analytics": {
     "title": "Analyses",
@@ -197,6 +203,30 @@
     "group_data": "Données",
     "group_account": "Compte",
     "desc_subscriptions": "Gérer les abonnements",
-    "desc_net_worth": "Valeur nette"
+    "desc_net_worth": "Valeur nette",
+    "group_finance": "Finance",
+    "group_subscriptions": "Abonnements",
+    "group_family": "Famille",
+    "group_profile": "Profil",
+    "group_system": "Système",
+    "desc_diagnostic": "Santé système & diagnostics"
+  },
+  "offline": {
+    "offline_mode": "Mode hors ligne",
+    "pending": "en attente",
+    "synced": "Toutes les modifications synchronisées",
+    "sync_failed": "Certaines modifications n'ont pas pu être synchronisées",
+    "reconnected": "De retour en ligne",
+    "banner_text": "Vous êtes hors ligne. Les modifications seront synchronisées à la reconnexion."
+  },
+  "pwa": {
+    "update_title": "Mise à jour disponible",
+    "update_body": "Une nouvelle version de Spendix est prête.",
+    "update_now": "Mettre à jour maintenant"
+  },
+  "contacts": {
+    "section_owe_you": "Vous doivent",
+    "section_you_owe": "Vous devez",
+    "section_settled": "Soldé"
   }
 }
